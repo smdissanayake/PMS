@@ -24,3 +24,4 @@ Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'store']);
 
 Route::post('/patients', [PatientController::class, 'store']);
+Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByClinicRefNo']);

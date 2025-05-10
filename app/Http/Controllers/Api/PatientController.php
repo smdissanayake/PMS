@@ -14,7 +14,6 @@ class PatientController extends Controller
      */
     public function index()
     {
-        // Not typically used in this context, but can be implemented if needed
         return response()->json(Patient::all());
     }
 
@@ -53,6 +52,28 @@ class PatientController extends Controller
         if (!$patient) {
             return response()->json(['message' => 'Patient not found'], 404);
         }
+        return response()->json($patient);
+    }
+
+    /**
+     * Find a patient by Clinic Reference Number.
+     */
+    public function findByClinicRefNo(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clinicRefNo' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $patient = Patient::where('clinicRefNo', $request->clinicRefNo)->first();
+
+        if (!$patient) {
+            return response()->json(['message' => 'Patient not found with the provided Clinic Reference Number.'], 404);
+        }
+
         return response()->json($patient);
     }
 

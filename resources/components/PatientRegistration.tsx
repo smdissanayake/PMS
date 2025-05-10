@@ -53,6 +53,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+          'X-Requested-With': 'XMLHttpRequest',
         },
         body: JSON.stringify(formData),
       });
