@@ -1,112 +1,91 @@
-import React, { useState } from "react";
-import {
-    FileIcon,
-    AlertTriangleIcon,
-    CalendarIcon,
-    BedIcon,
-    PlusIcon,
-    ExternalLinkIcon,
-} from "lucide-react";
-import HistoryTimeline from "./HistoryTimeline";
-import AddNoteModal from "./AddNoteModal";
-import FileUploader from "./FileUploader";
-import ReportCard from "./ReportCard";
-import ViewerModal from "./ViewerModal";
-import OrderForm from "./OrderForm";
-import PrescriptionGenerator from "./PrescriptionGenerator";
-import WardAdmission from "./WardAdmission";
-import SurgeryNotesForm from "./SurgeryNotesForm";
-import PatientHistoryForm from "./PatientHistoryForm";
-import { InvestigationsTab } from "./InvestigationsTab";
+import React, { useState } from 'react';
+import { FileIcon, AlertTriangleIcon, CalendarIcon, BedIcon, PlusIcon, ExternalLinkIcon } from 'lucide-react';
+import HistoryTimeline from './HistoryTimeline';
+import AddNoteModal from './AddNoteModal';
+import FileUploader from './FileUploader';
+import ReportCard from './ReportCard';
+import ViewerModal from './ViewerModal';
+import OrderForm from './OrderForm';
+import PrescriptionGenerator from './PrescriptionGenerator';
+import WardAdmission from './WardAdmission';
+import SurgeryNotesForm from './SurgeryNotesForm';
+import PatientHistoryForm from './PatientHistoryForm';
 interface TabContentProps {
-    activeTab: string;
+  activeTab: string;
+  patientId?: number | null; // Make optional
+  patientClinicRefNo?: string | null; // Make optional
 }
-const TabContent = ({ activeTab }: TabContentProps) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] =
-        useState(false);
-    const [historyEntries, setHistoryEntries] = useState([
-        {
-            date: "May 15, 2023",
-            title: "Annual Check-up",
-            description:
-                "Regular check-up. Patient reports good compliance with maintenance inhaler. No acute asthma episodes in the past 3 months.",
-            medications: ["Albuterol Inhaler", "Loratadine 10mg"],
-            type: "check-up",
-        },
-        {
-            date: "March 3, 2023",
-            title: "Emergency Visit",
-            description:
-                "Acute asthma exacerbation. Patient presented with wheezing and shortness of breath. Responded well to nebulizer treatment.",
-            medications: ["Albuterol Nebulizer", "Prednisone 40mg"],
-            type: "emergency",
-        },
-        {
-            date: "January 15, 2023",
-            title: "Follow-up Visit",
-            description:
-                "Post-emergency follow-up. Symptoms have improved. Adjusted medication dosage.",
-            medications: ["Albuterol Inhaler", "Fluticasone 250mcg"],
-            type: "follow-up",
-        },
-    ]);
-    const handleAddNote = (newNote: any) => {
-        setHistoryEntries([newNote, ...historyEntries]);
-    };
-    const renderContent = () => {
-        switch (activeTab) {
-            case "history":
-                return (
-                    <div>
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-medium text-gray-900">
-                                Patient History
-                            </h3>
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={() =>
-                                        setIsPatientHistoryFormModalOpen(true)
-                                    }
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600 transition-colors"
-                                >
-                                    <ExternalLinkIcon
-                                        size={16}
-                                        className="mr-1.5"
-                                    />
-                                    Open Full History Form
-                                </button>
-                                <button
-                                    onClick={() => setIsModalOpen(true)}
-                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
-                                >
-                                    <PlusIcon size={16} className="mr-1.5" />
-                                    New Note
-                                </button>
-                            </div>
-                        </div>
-                        {/* PatientHistoryForm is now in a modal */}
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-blue-800">
-                                        Medical Summary
-                                    </h3>
-                                    <p className="text-sm text-blue-700 mt-1">
-                                        Patient has a history of asthma and
-                                        seasonal allergies. Regular follow-up
-                                        maintained. Last acute episode: March
-                                        2023.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <HistoryTimeline entries={historyEntries} />
-                        <AddNoteModal
-                            isOpen={isModalOpen}
-                            onClose={() => setIsModalOpen(false)}
-                            onSubmit={handleAddNote}
-                        />
+const TabContent = ({
+  activeTab,
+  patientId,
+  patientClinicRefNo
+}: TabContentProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState([{
+    date: 'May 15, 2023',
+    title: 'Annual Check-up',
+    description: 'Regular check-up. Patient reports good compliance with maintenance inhaler. No acute asthma episodes in the past 3 months.',
+    medications: ['Albuterol Inhaler', 'Loratadine 10mg'],
+    type: 'check-up'
+  }, {
+    date: 'March 3, 2023',
+    title: 'Emergency Visit',
+    description: 'Acute asthma exacerbation. Patient presented with wheezing and shortness of breath. Responded well to nebulizer treatment.',
+    medications: ['Albuterol Nebulizer', 'Prednisone 40mg'],
+    type: 'emergency'
+  }, {
+    date: 'January 15, 2023',
+    title: 'Follow-up Visit',
+    description: 'Post-emergency follow-up. Symptoms have improved. Adjusted medication dosage.',
+    medications: ['Albuterol Inhaler', 'Fluticasone 250mcg'],
+    type: 'follow-up'
+  }]);
+  const handleAddNote = (newNote: any) => {
+    setHistoryEntries([newNote, ...historyEntries]);
+  };
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'history':
+        return <div>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-medium text-gray-900">
+                Patient History
+              </h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setIsPatientHistoryFormModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600 transition-colors"
+                >
+                  <ExternalLinkIcon size={16} className="mr-1.5" />
+                  Open Full History Form
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  <PlusIcon size={16} className="mr-1.5" />
+                  New Note
+                </button>
+              </div>
+            </div>
+            {/* PatientHistoryForm is now in a modal */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Medical Summary
+                  </h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Patient has a history of asthma and seasonal allergies.
+                    Regular follow-up maintained. Last acute episode: March
+                    2023.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <HistoryTimeline entries={historyEntries} />
+            <AddNoteModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleAddNote} />
 
                         {isPatientHistoryFormModalOpen && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -148,6 +127,9 @@ const TabContent = ({ activeTab }: TabContentProps) => {
             case "investigations":
                 return (
                     <div className="p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            Investigations
+                        </h3>
                         <InvestigationsTab />
                     </div>
                 );
