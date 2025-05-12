@@ -87,72 +87,97 @@ const TabContent = ({
             <HistoryTimeline entries={historyEntries} />
             <AddNoteModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleAddNote} />
 
-                        {isPatientHistoryFormModalOpen && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                                <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl transform transition-all flex flex-col">
-                                    <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                                        <h4 className="text-lg font-semibold text-gray-800">
-                                            Patient Full History Form
-                                        </h4>
-                                        <button
-                                            onClick={() =>
-                                                setIsPatientHistoryFormModalOpen(
-                                                    false
-                                                )
-                                            }
-                                            className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
-                                        >
-                                            <svg
-                                                className="w-5 h-5"
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                    clipRule="evenodd"
-                                                ></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div className="p-6 max-h-[85vh] overflow-y-auto">
-                                        <PatientHistoryForm />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            case "investigations":
-                return (
-                    <div className="p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">
-                            Investigations
-                        </h3>
-                        <InvestigationsTab />
-                    </div>
-                );
-            case "orders":
-                return (
-                    <div className="p-6">
-                        <OrderForm />
-                    </div>
-                );
-            case "drugs":
-                return <PrescriptionGenerator />;
-            case "ward":
-                return <WardAdmission />;
-            case "surgery":
-                return <SurgeryNotesForm />;
-            default:
-                return <div className="p-4">Select a tab to view content</div>;
-        }
-    };
-    return (
-        <div className="p-6 transition-all duration-300 ease-in-out">
-            {renderContent()}
-        </div>
-    );
+            {isPatientHistoryFormModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl transform transition-all flex flex-col">
+                  <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-800">Patient Full History Form</h4>
+                    <button
+                      onClick={() => setIsPatientHistoryFormModalOpen(false)}
+                      className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                    </button>
+                  </div>
+                  <div className="p-6 max-h-[85vh] overflow-y-auto">
+                    <PatientHistoryForm 
+                      patientId={patientId} 
+                      patientClinicRefNo={patientClinicRefNo} 
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>;
+      case 'investigations':
+        const [selectedReport, setSelectedReport] = useState<any>(null);
+        const [reports] = useState([{
+          id: '1',
+          name: 'Complete Blood Count.pdf',
+          type: 'application/pdf',
+          date: 'May 15, 2023',
+          status: 'ready'
+        }, {
+          id: '2',
+          name: 'Chest X-Ray.jpg',
+          type: 'image/jpeg',
+          date: 'May 10, 2023',
+          status: 'ready',
+          thumbnail: 'https://images.unsplash.com/photo-1516069677018-378515003a6f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3'
+        }, {
+          id: '3',
+          name: 'MRI Report.pdf',
+          type: 'application/pdf',
+          date: 'May 5, 2023',
+          status: 'processing'
+        }]);
+        const handleFileSelect = (files: File[]) => {
+          console.log('Files selected:', files);
+        };
+        const handleViewReport = (id: string) => {
+          const report = reports.find(r => r.id === id);
+          setSelectedReport(report);
+        };
+        const handleDownloadReport = (id: string) => {
+          console.log('Downloading report:', id);
+        };
+        return <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">
+                Investigations & Reports
+              </h3>
+            </div>
+            <FileUploader onFileSelect={handleFileSelect} />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-700">Recent Reports</h4>
+                <button className="text-sm text-blue-600 font-medium flex items-center hover:text-blue-700">
+                  <FileIcon size={14} className="mr-1" />
+                  View All Reports
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                {reports.map(report => <ReportCard key={report.id} report={report} onView={handleViewReport} onDownload={handleDownloadReport} />)}
+              </div>
+            </div>
+            {selectedReport && <ViewerModal isOpen={!!selectedReport} onClose={() => setSelectedReport(null)} onDownload={() => handleDownloadReport(selectedReport.id)} fileUrl={selectedReport.thumbnail || ''} fileName={selectedReport.name} fileType={selectedReport.type} />}
+          </div>;
+      case 'orders':
+        return <div className="p-6">
+            <OrderForm />
+          </div>;
+      case 'drugs':
+        return <PrescriptionGenerator />;
+      case 'ward':
+        return <WardAdmission />;
+      case 'surgery':
+        return <SurgeryNotesForm />;
+      default:
+        return <div className="p-4">Select a tab to view content</div>;
+    }
+  };
+  return <div className="p-6 transition-all duration-300 ease-in-out">
+      {renderContent()}
+    </div>;
 };
 export default TabContent;
