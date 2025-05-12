@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { PlusIcon } from 'lucide-react'; // Assuming lucide-react is available
+import { SaveIcon, AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'; // Updated icons
 
-const PatientHistoryForm = () => {
-  // History State
+const PatientHistoryForm = ({ patientId, patientClinicRefNo }) => { // Added props
+  // Form States (existing states remain the same)
   const [headacheDuration, setHeadacheDuration] = useState('');
   const [headacheEpisode, setHeadacheEpisode] = useState('');
   const [headacheSite, setHeadacheSite] = useState('');
@@ -85,37 +85,16 @@ const PatientHistoryForm = () => {
   const [drugsAntiplatelets, setDrugsAntiplatelets] = useState(false);
   const [drugsAnticoagulant, setDrugsAnticoagulant] = useState(false);
 
+  // Removed local 'records' state as it's now managed in PatientProfile or fetched
+  // const [records, setRecords] = useState([]); 
 
-  const [records, setRecords] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
 
-  const handleSaveRecord = () => {
-    const newRecord = {
-      id: Date.now(),
-      timestamp: new Date().toLocaleString(),
-      history: {
-        headacheDuration, headacheEpisode, headacheSite, headacheAura, headacheEnt, headacheEye, headacheSen, headacheFocalSymptoms,
-        backacheDuration, backacheSite, backacheRadiation, backacheTrauma, backacheJointsInflamed,
-        neckacheFocalSymptoms, neckacheSen, neckacheMotor, neckacheNClaud, neckacheJointsInflamed,
-        otherTremors, otherNumbness, otherWeakness, otherGiddiness, otherOther,
-      },
-      examination: {
-        neuroHigherFunctions, neuroGcs, neuroTremors, neuroCranialNerves, neuroFundi,
-        cerebellumNystagmus, cerebellumAtaxia, cerebellumDysarthria, cerebellumDysmetria, cerebellumDysdiadochokinesia,
-        examMotor, examSensory, examReflex,
-        examGait, examSpDeformity, examSlr, examLs,
-        examHipsKnees,
-        tenderPointsCervical, tenderPointsLumbar, tenderPointsKnee, tenderPointsHip,
-        examWasting, examEhl, examFootWeakness,
-        examSens, examMotor2, examReflexes, examOther,
-        pastIllnessDm, pastIllnessHtn, pastIllnessDl,
-        allergiesFood, allergiesDrugs, allergiesPlasters, allergensInput, // Updated allergies & added allergens input
-        // Added drugs
-        drugsInput, drugsAspirin, drugsClopidogrel, drugsWarfarin, drugsAntiplatelets, drugsAnticoagulant,
-      }
-    };
-    setRecords([...records, newRecord]);
 
-    // Clear form fields
+  const clearFormFields = () => {
     setHeadacheDuration(''); setHeadacheEpisode(''); setHeadacheSite(''); setHeadacheAura(''); setHeadacheEnt(''); setHeadacheEye(''); setHeadacheSen(''); setHeadacheFocalSymptoms('');
     setBackacheDuration(''); setBackacheSite(''); setBackacheRadiation(''); setBackacheTrauma(''); setBackacheJointsInflamed('');
     setNeckacheFocalSymptoms(''); setNeckacheSen(''); setNeckacheMotor(''); setNeckacheNClaud(''); setNeckacheJointsInflamed('');
@@ -129,13 +108,133 @@ const PatientHistoryForm = () => {
     setExamWasting(''); setExamEhl(''); setExamFootWeakness('');
     setExamSens(''); setExamMotor2(''); setExamReflexes(''); setExamOther('');
     setPastIllnessDm(false); setPastIllnessHtn(false); setPastIllnessDl(false);
-    setAllergiesFood(false); setAllergiesDrugs(false); setAllergiesPlasters(false); setAllergensInput(''); // Updated allergies clear & clear allergens input
-    // Clear drugs state
+    setAllergiesFood(false); setAllergiesDrugs(false); setAllergiesPlasters(false); setAllergensInput('');
     setDrugsInput(''); setDrugsAspirin(false); setDrugsClopidogrel(false); setDrugsWarfarin(false); setDrugsAntiplatelets(false); setDrugsAnticoagulant(false);
+  }
+
+  const handleSaveRecord = async () => {
+    if (!patientId || !patientClinicRefNo) {
+      setSaveError("Patient not selected. Please search for a patient first.");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(null);
+    setValidationErrors({});
+
+    // Construct strings for checkbox groups
+    const cerebellumSignsList = [
+      cerebellumNystagmus && 'Nystagmus',
+      cerebellumAtaxia && 'Ataxia',
+      cerebellumDysarthria && 'Dysarthria',
+      cerebellumDysmetria && 'Dysmetria',
+      cerebellumDysdiadochokinesia && 'Dysdiadochokinesia',
+    ].filter(Boolean).join(', ');
+
+    const tenderPointsList = [
+      tenderPointsCervical && 'Cervical',
+      tenderPointsLumbar && 'Lumbar',
+      tenderPointsKnee && 'Knee',
+      tenderPointsHip && 'Hip',
+    ].filter(Boolean).join(', ');
+
+    const pastIllnessList = [
+      pastIllnessDm && 'DM',
+      pastIllnessHtn && 'HTN',
+      pastIllnessDl && 'DL',
+    ].filter(Boolean).join(', ');
+
+    const allergiesList = [
+      allergiesFood && 'Food',
+      allergiesDrugs && 'Drugs',
+      allergiesPlasters && 'Plasters',
+    ].filter(Boolean).join(', ');
+
+    const drugsTakenList = [
+      drugsAspirin && 'Aspirin',
+      drugsClopidogrel && 'Clopidogrel',
+      drugsWarfarin && 'Warfarin',
+      drugsAntiplatelets && 'Antiplatelets',
+      drugsAnticoagulant && 'Anticoagulant',
+    ].filter(Boolean).join(', ');
+
+    const payload = {
+      patient_id: patientId,
+      patient_clinic_ref_no: patientClinicRefNo,
+      // History fields (ensure all select values are captured directly from state)
+      headacheDuration, headacheEpisode, headacheSite, headacheAura, headacheEnt, headacheEye, headacheSen, headacheFocalSymptoms,
+      backacheDuration, backacheSite, backacheRadiation, backacheTrauma, backacheJointsInflamed,
+      neckacheFocalSymptoms, neckacheSen, neckacheMotor, neckacheNClaud, neckacheJointsInflamed,
+      otherTremors, otherNumbness, otherWeakness, otherGiddiness, otherOther,
+      // Examination fields
+      neuroHigherFunctions, neuroGcs, neuroTremors, neuroCranialNerves, neuroFundi,
+      cerebellumSigns: cerebellumSignsList, // Use consolidated string
+      examMotor, examSensory, examReflex,
+      examGait, examSpDeformity, examSlr, examLs,
+      examHipsKnees,
+      tenderPoints: tenderPointsList, // Use consolidated string
+      examWasting, examEhl, examFootWeakness,
+      examSens, examMotor2, examReflexes, examOther,
+      pastIllness: pastIllnessList, // Use consolidated string
+      allergies: allergiesList, // Use consolidated string
+      allergensInput,
+      drugsInput,
+      drugsTaken: drugsTakenList, // Use consolidated string
+    };
+
+    try {
+      const response = await fetch('/patient-history-examination', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]')?.content) || '',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 422 && responseData.errors) {
+          setValidationErrors(responseData.errors);
+          setSaveError('Please correct the validation errors.');
+        } else {
+          setSaveError(responseData.message || 'An unexpected error occurred.');
+        }
+        throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      setSaveSuccess(responseData.message || 'Record saved successfully!');
+      clearFormFields();
+      // Optionally, trigger a refresh of records in PatientProfile or close modal
+      // For now, local 'records' state is removed, so no local update here.
+      
+    } catch (err) {
+      console.error('Failed to save record:', err);
+      if (!saveError && Object.keys(validationErrors).length === 0) {
+        setSaveError('Failed to save the record. Please check your connection and try again.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="space-y-6"> {/* Use space-y for consistent vertical spacing */}
+    <div className="space-y-6">
+      {saveSuccess && (
+        <div className="mb-4 p-3 rounded-md bg-green-50 border border-green-300 text-green-700 flex items-center">
+          <CheckCircle2Icon size={18} className="mr-2" />
+          {saveSuccess}
+        </div>
+      )}
+      {saveError && (
+        <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-300 text-red-700 flex items-center">
+          <AlertCircleIcon size={18} className="mr-2" />
+          {saveError}
+        </div>
+      )}
       {/* History Section */}
       <section>
         <h3 className="text-lg font-medium text-gray-900 mb-2">History</h3>
@@ -149,33 +248,28 @@ const PatientHistoryForm = () => {
             <label className="block text-sm font-medium text-gray-600 mb-1">Duration</label>
             <select value={headacheDuration} onChange={(e) => setHeadacheDuration(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Duration</option>
-              <option value="">Less than 30 minutes</option>
-              <option value="">30 minutes to 1 hour</option>
-              <option value="">More than 1 hour</option>
-              {/* Add options later */}
+              <option value="Less than 30 minutes">Less than 30 minutes</option>
+              <option value="30 minutes to 1 hour">30 minutes to 1 hour</option>
+              <option value="More than 1 hour">More than 1 hour</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Episode</label>
             <select value={headacheEpisode} onChange={(e) => setHeadacheEpisode(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Episode</option>
-              <option value="">Less than 5 episode per week</option>
-              <option value="">More than 5 episode per week</option> 
-              {/* Add options later */}
+              <option value="Less than 5 episode per week">Less than 5 episode per week</option>
+              <option value="More than 5 episode per week">More than 5 episode per week</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Site</label>
             <select value={headacheSite} onChange={(e) => setHeadacheSite(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Site</option>
-              <option value="">Frontal</option>
-              <option value="">Occipital</option>
-              <option value="">Temporal</option>
-              <option value="">Parietal</option>
-              <option value="">Western</option>
-
-              
-              {/* Add options later */}
+              <option value="Frontal">Frontal</option>
+              <option value="Occipital">Occipital</option>
+              <option value="Temporal">Temporal</option>
+              <option value="Parietal">Parietal</option>
+              <option value="Western">Western</option>
             </select>
           </div>
           <div>
@@ -210,29 +304,22 @@ const PatientHistoryForm = () => {
             <label className="block text-sm font-medium text-gray-600 mb-1">Site</label>
             <select value={backacheSite} onChange={(e) => setBackacheSite(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Site</option>
-              <option value="">Upper lumbar</option>
-              <option value="">Middle lumbar</option>
-              <option value="">Lower lumbar</option>
-              <option value="">Sacroiliac</option>
-
-
-              {/* Add options later */}
+              <option value="Upper lumbar">Upper lumbar</option>
+              <option value="Middle lumbar">Middle lumbar</option>
+              <option value="Lower lumbar">Lower lumbar</option>
+              <option value="Sacroiliac">Sacroiliac</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Radiation</label>
             <select value={backacheRadiation} onChange={(e) => setBackacheRadiation(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Radiation</option>
-              <option value="">Left thigh</option>
-              <option value="">Right thigh</option>
-              <option value="">Bilateral thigh</option>
-              <option value="">Left leg </option>
-              <option value="">Right leg</option>
-              <option value="">Bilateral leg</option>
-
-
-
-              {/* Add options later */}
+              <option value="Left thigh">Left thigh</option>
+              <option value="Right thigh">Right thigh</option>
+              <option value="Bilateral thigh">Bilateral thigh</option>
+              <option value="Left leg">Left leg </option>
+              <option value="Right leg">Right leg</option>
+              <option value="Bilateral leg">Bilateral leg</option>
             </select>
           </div>
           <div>
@@ -243,12 +330,9 @@ const PatientHistoryForm = () => {
             <label className="block text-sm font-medium text-gray-600 mb-1">Number of Joints Inflamed</label>
             <select value={backacheJointsInflamed} onChange={(e) => setBackacheJointsInflamed(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Number</option>
-              <option value="">Less than 5</option>
-              <option value="">5 to 10</option>
-              <option value="">More than 10</option>
-
-
-              {/* Add options later */}
+              <option value="Less than 5">Less than 5</option>
+              <option value="5 to 10">5 to 10</option>
+              <option value="More than 10">More than 10</option>
             </select>
           </div>
 
@@ -275,10 +359,9 @@ const PatientHistoryForm = () => {
             <label className="block text-sm font-medium text-gray-600 mb-1">Number of Joints Inflamed</label>
             <select value={neckacheJointsInflamed} onChange={(e) => setNeckacheJointsInflamed(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select Number</option>
-              <option value="">Less than 5</option>
-              <option value="">5 to 10</option>
-              <option value="">More than 10</option>
-              {/* Add options later */}
+              <option value="Less than 5">Less than 5</option>
+              <option value="5 to 10">5 to 10</option>
+              <option value="More than 10">More than 10</option>
             </select>
           </div>
 
@@ -325,21 +408,19 @@ const PatientHistoryForm = () => {
             <label className="block text-sm font-medium text-gray-600 mb-1">GCS</label>
             <select value={neuroGcs} onChange={(e) => setNeuroGcs(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Select GCS Number</option>
-              <option value="">3</option>
-              <option value="">4</option>
-              <option value="">5</option>
-              <option value="">6</option>
-              <option value="">7</option>
-              <option value="">8</option>
-              <option value="">9</option>
-              <option value="">10</option>
-              <option value="">11</option>
-              <option value="">12</option>
-              <option value="">13</option>
-              <option value="">14</option>
-              <option value="">15</option>
-              
-              {/* Add options later */}
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="13">13</option>
+              <option value="14">14</option>
+              <option value="15">15</option>
             </select>
           </div>
           <div>
@@ -550,18 +631,13 @@ const PatientHistoryForm = () => {
       <div className="flex justify-end mt-6">
         <button
           onClick={handleSaveRecord}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={isSaving || !patientId}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          {/* Using a generic save icon if PlusIcon isn't suitable */}
-          {/* <SaveIcon size={16} className="mr-1.5" /> */}
-          Save Record
+          <SaveIcon size={16} className="mr-1.5" />
+          {isSaving ? 'Saving...' : 'Save Record'}
         </button>
       </div>
-
-      {/* Patient Records Section has been moved to PatientProfile.tsx */}
-      {/* The 'records' state and 'handleSaveRecord' function remain here for now, */}
-      {/* as this form is responsible for creating new records. */}
-      {/* Data flow for displaying these records in PatientProfile will need to be addressed. */}
     </div>
   );
 };
