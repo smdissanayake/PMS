@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SaveIcon, AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'; // Updated icons
 
-const PatientHistoryForm = ({ patientId, patientClinicRefNo }) => { // Added props
+const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) => { // Added props
   // Form States (existing states remain the same)
   const [headacheDuration, setHeadacheDuration] = useState('');
   const [headacheEpisode, setHeadacheEpisode] = useState('');
@@ -210,6 +210,9 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo }) => { // Added pro
       clearFormFields();
       // Optionally, trigger a refresh of records in PatientProfile or close modal
       // For now, local 'records' state is removed, so no local update here.
+      if (onRecordSaved) {
+        onRecordSaved();
+      }
       
     } catch (err) {
       console.error('Failed to save record:', err);
