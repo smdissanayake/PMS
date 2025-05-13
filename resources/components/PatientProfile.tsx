@@ -81,16 +81,17 @@ type PatientData = {
 
 
 const PatientProfile = () => {
-    const [activeTab, setActiveTab] = React.useState("history");
-    const [searchQuery, setSearchQuery] = React.useState("");
-    const [patientData, setPatientData] = React.useState<PatientData | null>(null);
-    const [searchError, setSearchError] = React.useState<string | null>(null);
-    const [isLoadingSearch, setIsLoadingSearch] = React.useState(false);
-    const [records, setRecords] = React.useState<HistoryExaminationRecord[]>([]);
-    const [isLoadingRecords, setIsLoadingRecords] = React.useState(false);
+    const [activeTab, setActiveTab] = useState("history");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [patientData, setPatientData] = useState(null as PatientData | null);
+    const [searchError, setSearchError] = useState(null as string | null);
+    const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+    const [records, setRecords] = useState([] as HistoryExaminationRecord[]);
+    const [isLoadingRecords, setIsLoadingRecords] = useState(false);
 
 
     const fetchHistoryExaminationRecords = async (patientId: number) => {
+        if (!patientId) return; // Guard clause if patientId is not available
         setIsLoadingRecords(true);
         setRecords([]); // Clear previous records
         try {
@@ -385,6 +386,7 @@ const PatientProfile = () => {
                             activeTab={activeTab} 
                             patientId={patientData.id}
                             patientClinicRefNo={patientData.clinicRefNo}
+                            onRecordSaved={() => fetchHistoryExaminationRecords(patientData.id)} // Pass the handler
                         />
                     </div>
                     <FloatingActionButton />

@@ -14,11 +14,13 @@ interface TabContentProps {
   activeTab: string;
   patientId?: number | null; // Make optional
   patientClinicRefNo?: string | null; // Make optional
+  onRecordSaved?: () => void; // Add this line
 }
 const TabContent = ({
   activeTab,
   patientId,
-  patientClinicRefNo
+  patientClinicRefNo,
+  onRecordSaved // Add this line
 }: TabContentProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] = useState(false);
@@ -102,7 +104,8 @@ const TabContent = ({
                   <div className="p-6 max-h-[85vh] overflow-y-auto">
                     <PatientHistoryForm 
                       patientId={patientId} 
-                      patientClinicRefNo={patientClinicRefNo} 
+                      patientClinicRefNo={patientClinicRefNo}
+                      onRecordSaved={onRecordSaved} // Pass the prop here
                     />
                   </div>
                 </div>
