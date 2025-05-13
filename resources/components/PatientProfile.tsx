@@ -11,6 +11,7 @@ import FloatingActionButton from "./FloatingActionButton";
 type HistoryExaminationRecord = {
     id: number;
     created_at: string; // Or a Date object if you parse it
+    updated_at: string; // Or a Date object if you parse it
     // Add all other fields from the patient_history_and_examination table
     headacheDuration?: string;
     headacheEpisode?: string;
@@ -214,7 +215,7 @@ const PatientProfile = () => {
 
             {patientData && (
                 <>
-                    <PatientInfoCard patient={patientData} />
+                    <PatientInfoCard patient={patientData} records={records} />
 
                     <section className="mt-8">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Patient Records</h3>
@@ -226,9 +227,14 @@ const PatientProfile = () => {
                             )}
                             {!isLoadingRecords && records.map((record) => (
                                 <div key={record.id} className="mb-6 pb-4 border-b last:border-b-0 last:mb-0">
-                                    <p className="text-sm text-gray-600 mb-3">
-                                        <span className="font-semibold">Record Date:</span> {new Date(record.created_at).toLocaleString()}
-                                    </p>
+                                    <div className="flex justify-between text-sm text-gray-600 mb-3">
+                                        <p>
+                                            <span className="font-semibold">Record Date:</span> {new Date(record.created_at).toLocaleString()}
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold">Last Updated:</span> {new Date(record.updated_at).toLocaleString()}
+                                        </p>
+                                    </div>
                                     
                                     {/* History Section Display */}
                                     <div className="mb-4 p-4 border border-gray-100 rounded-md bg-gray-50/50 space-y-4">
@@ -360,8 +366,8 @@ const PatientProfile = () => {
                                         {/* Allergies */}
                                         <div>
                                             <h5 className="text-md font-semibold text-gray-700 mb-1">Allergies</h5>
-                                            {record.allergies && <p className="text-sm">{record.allergies}</p>}
-                                            {record.allergensInput && <p className="text-sm"><span className="font-medium">Details:</span> {record.allergensInput}</p>}
+                                            {record.allergies && <p className={`text-sm ${record.allergies ? 'text-yellow-700 bg-yellow-50 p-1 rounded-md' : ''}`}>{record.allergies}</p>}
+                                            {record.allergensInput && <p className={`text-sm ${record.allergensInput ? 'text-yellow-700 bg-yellow-50 p-1 rounded-md' : ''}`}><span className="font-medium">Details:</span> {record.allergensInput}</p>}
                                         </div>
                                         <hr className="my-3 border-gray-200" />
                                         
@@ -369,7 +375,7 @@ const PatientProfile = () => {
                                         <div>
                                             <h5 className="text-md font-semibold text-gray-700 mb-1">Drugs</h5>
                                             {record.drugsInput && <p className="text-sm"><span className="font-medium">Details:</span> {record.drugsInput}</p>}
-                                            {record.drugsTaken && <p className="text-sm"><span className="font-medium">Specific Drugs Taken:</span> {record.drugsTaken}</p>}
+                                            {record.drugsTaken && <p className={`text-sm ${record.drugsTaken ? 'text-red-700 bg-red-50 p-1 rounded-md' : ''}`}><span className="font-medium">Specific Drugs Taken:</span> {record.drugsTaken}</p>}
                                         </div>
                                     </div>
                                 </div>
