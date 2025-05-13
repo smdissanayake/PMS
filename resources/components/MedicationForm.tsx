@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
+
+
 interface MedicationFormProps {
   onAdd: (medication: {
     name: string;
@@ -9,6 +11,8 @@ interface MedicationFormProps {
     instructions?: string;
   }) => void;
 }
+
+
 const MedicationForm = ({
   onAdd
 }: MedicationFormProps) => {
@@ -19,6 +23,7 @@ const MedicationForm = ({
     duration: '',
     instructions: ''
   });
+
   const commonMedications = [{
     name: 'Paracetamol 500mg',
     dosage: '500mg',
@@ -32,8 +37,12 @@ const MedicationForm = ({
     dosage: '400mg',
     frequency: 'Every 8 hours'
   }];
+
+
   const frequencyPresets = ['Once daily', 'Twice daily', 'Three times daily', 'Every 6 hours', 'Every 8 hours', 'As needed'];
+
   const durationPresets = ['3 days', '5 days', '7 days', '14 days', '1 month'];
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.dosage && formData.frequency && formData.duration) {

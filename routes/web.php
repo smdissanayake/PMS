@@ -9,6 +9,10 @@ Route::get('/add-user', function () {
     return inertia('AddUser');
 });
 
+Route::get('/add', function () {
+    return inertia('OrderForm');
+});
+
 Route::get('/test-data', function () {
     return response()->json([
         ['id' => 1, 'name' => 'Apple'],
