@@ -10,6 +10,7 @@ import PrescriptionGenerator from './PrescriptionGenerator';
 import WardAdmission from './WardAdmission';
 import SurgeryNotesForm from './SurgeryNotesForm';
 import PatientHistoryForm from './PatientHistoryForm';
+import { InvestigationsTab } from './InvestigationsTab';
 interface TabContentProps {
   activeTab: string;
   patientId?: number | null; // Make optional
@@ -113,58 +114,7 @@ const TabContent = ({
             )}
           </div>;
       case 'investigations':
-        const [selectedReport, setSelectedReport] = useState<any>(null);
-        const [reports] = useState([{
-          id: '1',
-          name: 'Complete Blood Count.pdf',
-          type: 'application/pdf',
-          date: 'May 15, 2023',
-          status: 'ready'
-        }, {
-          id: '2',
-          name: 'Chest X-Ray.jpg',
-          type: 'image/jpeg',
-          date: 'May 10, 2023',
-          status: 'ready',
-          thumbnail: 'https://images.unsplash.com/photo-1516069677018-378515003a6f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3'
-        }, {
-          id: '3',
-          name: 'MRI Report.pdf',
-          type: 'application/pdf',
-          date: 'May 5, 2023',
-          status: 'processing'
-        }]);
-        const handleFileSelect = (files: File[]) => {
-          console.log('Files selected:', files);
-        };
-        const handleViewReport = (id: string) => {
-          const report = reports.find(r => r.id === id);
-          setSelectedReport(report);
-        };
-        const handleDownloadReport = (id: string) => {
-          console.log('Downloading report:', id);
-        };
-        return <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">
-                Investigations & Reports
-              </h3>
-            </div>
-            <FileUploader onFileSelect={handleFileSelect} />
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-700">Recent Reports</h4>
-                <button className="text-sm text-blue-600 font-medium flex items-center hover:text-blue-700">
-                  <FileIcon size={14} className="mr-1" />
-                  View All Reports
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                {reports.map(report => <ReportCard key={report.id} report={report} onView={handleViewReport} onDownload={handleDownloadReport} />)}
-              </div>
-            </div>
-            {selectedReport && <ViewerModal isOpen={!!selectedReport} onClose={() => setSelectedReport(null)} onDownload={() => handleDownloadReport(selectedReport.id)} fileUrl={selectedReport.thumbnail || ''} fileName={selectedReport.name} fileType={selectedReport.type} />}
-          </div>;
+        return <InvestigationsTab />;
       case 'orders':
         return <div className="p-6">
             <OrderForm />
