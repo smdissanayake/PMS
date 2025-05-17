@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -32,8 +33,4 @@ Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByC
 Route::post('/patient-history-examination', [PatientController::class, 'storeHistoryExamination']);
 Route::get('/patient-history-examination/{patient_id}', [PatientController::class, 'getHistoryExaminationRecords']);
 Route::post('/patient-notes', [PatientController::class, 'storeNote']);
-<<<<<<<<< Temporary merge branch 1
 Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
-=========
-Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
->>>>>>>>> Temporary merge branch 2
