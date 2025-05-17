@@ -33,4 +33,3 @@ Route::post('/patient-history-examination', [PatientController::class, 'storeHis
 Route::get('/patient-history-examination/{patient_id}', [PatientController::class, 'getHistoryExaminationRecords']);
 Route::post('/patient-notes', [PatientController::class, 'storeNote']);
 Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
-
