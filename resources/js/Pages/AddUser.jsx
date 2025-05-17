@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React from 'react'
 
-export default function AddUser() {
-
-
+function AddUser() {
   return (
-    <div>
-      <p>hellow</p>
-    </div>
-  );
+    <div>AddUser</div>
+  )
 }
+
+export default AddUser
