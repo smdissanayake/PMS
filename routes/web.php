@@ -31,3 +31,5 @@ Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByClinicRefNo']);
 Route::post('/patient-history-examination', [PatientController::class, 'storeHistoryExamination']);
 Route::get('/patient-history-examination/{patient_id}', [PatientController::class, 'getHistoryExaminationRecords']);
+Route::post('/patient-notes', [PatientController::class, 'storeNote']);
+Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);

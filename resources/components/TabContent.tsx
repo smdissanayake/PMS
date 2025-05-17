@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileIcon, AlertTriangleIcon, CalendarIcon, BedIcon, PlusIcon, ExternalLinkIcon } from 'lucide-react';
+import { FileIcon, AlertTriangleIcon, CalendarIcon, BedIcon, PlusIcon, ExternalLinkIcon, XIcon } from 'lucide-react';
 import HistoryTimeline from './HistoryTimeline';
 import AddNoteModal from './AddNoteModal';
 import FileUploader from './FileUploader';
@@ -13,40 +13,32 @@ import PatientHistoryForm from './PatientHistoryForm';
 import { InvestigationsTab } from './InvestigationsTab';
 interface TabContentProps {
   activeTab: string;
+  patientData?: any | null;
   patientId?: number | null; // Make optional
   patientClinicRefNo?: string | null; // Make optional
-  onRecordSaved?: () => void; // Add this line
+  onRecordSaved?: (patientId: number) => void;
 }
 const TabContent = ({
   activeTab,
+  patientData,
   patientId,
   patientClinicRefNo,
-  onRecordSaved // Add this line
+  onRecordSaved
 }: TabContentProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] = useState(false);
-  const [historyEntries, setHistoryEntries] = useState([{
-    date: 'May 15, 2023',
-    title: 'Annual Check-up',
-    description: 'Regular check-up. Patient reports good compliance with maintenance inhaler. No acute asthma episodes in the past 3 months.',
-    medications: ['Albuterol Inhaler', 'Loratadine 10mg'],
-    type: 'check-up'
-  }, {
-    date: 'March 3, 2023',
-    title: 'Emergency Visit',
-    description: 'Acute asthma exacerbation. Patient presented with wheezing and shortness of breath. Responded well to nebulizer treatment.',
-    medications: ['Albuterol Nebulizer', 'Prednisone 40mg'],
-    type: 'emergency'
-  }, {
-    date: 'January 15, 2023',
-    title: 'Follow-up Visit',
-    description: 'Post-emergency follow-up. Symptoms have improved. Adjusted medication dosage.',
-    medications: ['Albuterol Inhaler', 'Fluticasone 250mcg'],
-    type: 'follow-up'
-  }]);
+  const [refreshNotes, setRefreshNotes] = useState(0);
+
   const handleAddNote = (newNote: any) => {
-    setHistoryEntries([newNote, ...historyEntries]);
+    if (typeof patientId === 'number') {
+      onRecordSaved?.(patientId);
+    }
   };
+
+  const handleNoteAdded = () => {
+    setRefreshNotes(prev => prev + 1);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'history':
@@ -87,26 +79,34 @@ const TabContent = ({
                 </div>
               </div>
             </div>
-            <HistoryTimeline entries={historyEntries} />
-            <AddNoteModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleAddNote} />
-
+            <HistoryTimeline 
+              clinicRefNo={patientClinicRefNo || undefined} 
+              key={refreshNotes}
+            />
+            <AddNoteModal 
+              isOpen={isModalOpen} 
+              onClose={() => setIsModalOpen(false)} 
+              onSubmit={handleAddNote} 
+              patientData={patientData}
+              onNoteAdded={handleNoteAdded}
+            />
             {isPatientHistoryFormModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl transform transition-all flex flex-col">
-                  <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-800">Patient Full History Form</h4>
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-gray-900">Patient History Form</h3>
                     <button
                       onClick={() => setIsPatientHistoryFormModalOpen(false)}
-                      className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                      className="text-gray-400 hover:text-gray-500 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                      <XIcon size={20} />
                     </button>
                   </div>
-                  <div className="p-6 max-h-[85vh] overflow-y-auto">
-                    <PatientHistoryForm 
-                      patientId={patientId} 
+                  <div className="p-6">
+                    <PatientHistoryForm
+                      patientId={patientId}
                       patientClinicRefNo={patientClinicRefNo}
-                      onRecordSaved={onRecordSaved} // Pass the prop here
+                      onRecordSaved={onRecordSaved}
                     />
                   </div>
                 </div>
