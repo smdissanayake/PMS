@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
+use App\Models\PatientNote; // Added this line
 use App\Models\PatientHistoryExamination; // Added this line
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -198,5 +199,56 @@ class PatientController extends Controller
                                             ->get();
 
         return response()->json($records);
+    }
+
+    /**
+     * Store a newly created patient note in storage.
+     */
+    public function storeNote(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clinicRefNo' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+            'comments' => 'required|string',
+            'modifications' => 'required|string',
+            'date' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $patientNote = PatientNote::create($request->all());
+            return response()->json([
+                'message' => 'Patient note created successfully!',
+                'patientNote' => $patientNote
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create patient note',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get patient notes by clinic reference number.
+     */
+    public function getPatientNotes(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clinicRefNo' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $notes = PatientNote::where('clinicRefNo', $request->clinicRefNo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($notes);
     }
 }
