@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -7,8 +8,6 @@ use App\Http\Controllers\Api\DrugController;
 use App\Http\Controllers\Api\PrescriptionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\MedicalOrderController;
 
 Route::get('/', function () {
     return inertia('Home');
@@ -29,7 +28,6 @@ Route::get('/test-data', function () {
     ]);
 });
 
-
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'store']);
 
@@ -37,19 +35,19 @@ Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByClinicRefNo']);
 Route::post('/patient-history-examination', [PatientController::class, 'storeHistoryExamination']);
 Route::get('/patient-history-examination/{patient_id}', [PatientController::class, 'getHistoryExaminationRecords']);
+
+Route::get('/drugs', [DrugController::class, 'index']);
+Route::post('/drugs', [DrugController::class, 'store']);
+
+// Routes for Prescriptions and Special Items
+Route::post('/prescriptions', [PrescriptionController::class, 'store']);
+
 Route::post('/patient-notes', [PatientController::class, 'storeNote']);
 Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
 Route::get('/order-summary', function () {
     return inertia('OrderSummary');
+
 });
-
-// Medical Orders Routes
-Route::post('/medical-orders', [MedicalOrderController::class, 'store']);
-Route::get('/medical-orders/patient/{patientId}', [MedicalOrderController::class, 'getPatientOrders']);
-Route::get('/medical-orders/clinic-ref', [OrderController::class, 'getOrdersByClinicRefNo']);
-Route::get('/medical-orders/{id}', [OrderController::class, 'show']);
-Route::delete('/medical-orders/{id}', [MedicalOrderController::class, 'destroy']);
-
 Route::get('/patients/search-suggestions', function (Request $request) {
     $query = $request->get('query');
     
