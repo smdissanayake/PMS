@@ -33,7 +33,8 @@ const TabContent = ({
     patientClinicRefNo,
     onRecordSaved,
 }: TabContentProps) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+
+   const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] =
         useState(false);
     const [refreshNotes, setRefreshNotes] = useState(0);
