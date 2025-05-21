@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -24,6 +23,9 @@ Route::get('/test-data', function () {
 
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\MedicalOrderController;
+
 
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'store']);
@@ -37,3 +39,10 @@ Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
 Route::get('/order-summary', function () {
     return inertia('OrderSummary');
 });
+
+// Medical Orders Routes
+Route::post('/medical-orders', [MedicalOrderController::class, 'store']);
+Route::get('/medical-orders/patient/{patientId}', [MedicalOrderController::class, 'getPatientOrders']);
+Route::get('/medical-orders/clinic-ref', [OrderController::class, 'getOrdersByClinicRefNo']);
+Route::get('/medical-orders/{id}', [OrderController::class, 'show']);
+Route::delete('/medical-orders/{id}', [MedicalOrderController::class, 'destroy']);
