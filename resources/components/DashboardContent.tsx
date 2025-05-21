@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import StatisticsCards from "./StatisticsCards";
+import AddDrugModal from "./AddDrugModal";
+
 const DashboardContent = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false); // Revert to false
+
+    const handleAddDrugClick = () => {
+        console.log('Add Drug button clicked');
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleAddDrug = (drugDetails: any) => {
+        // Here you would typically send the drugDetails to your backend API
+        console.log("Adding drug:", drugDetails);
+        // Close modal is handled in the modal component after successful add
+    };
+
     return (
         <div className="space-y-4 flex-1">
             <StatisticsCards />
@@ -11,10 +30,14 @@ const DashboardContent = () => {
                     <h2 className="text-xl font-semibold text-gray-900">
                         Drug list
                     </h2>
-                    <button className="inline-flex items-center px-4 py-2 bg-[#4287f5] text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">
+                    {/* Wrap button in a div and move onClick */}
+                    <div
+                        className="inline-flex items-center px-4 py-2 bg-[#4287f5] text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors cursor-pointer" // Added cursor-pointer for visual feedback
+                        onClick={handleAddDrugClick}
+                    >
                         <PlusIcon size={18} className="mr-1.5" />
                         Add Drug
-                    </button>
+                    </div>
                 </div>
                 <div className="grid grid-cols-3 gap-6">
                     <div className="space-y-2">
@@ -69,6 +92,13 @@ const DashboardContent = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Add Drug Modal */}
+            <AddDrugModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onAddDrug={handleAddDrug}
+            />
         </div>
     );
 };
