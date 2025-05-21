@@ -162,25 +162,25 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
     const payload = {
       patient_id: patientId,
       patient_clinic_ref_no: patientClinicRefNo,
-      // History fields (ensure all select values are captured directly from state)
+      // History fields
       headacheDuration, headacheEpisode, headacheSite, headacheAura, headacheEnt, headacheEye, headacheSen, headacheFocalSymptoms,
       backacheDuration, backacheSite, backacheRadiation, backacheTrauma, backacheJointsInflamed,
       neckacheFocalSymptoms, neckacheSen, neckacheMotor, neckacheNClaud, neckacheJointsInflamed,
       otherTremors, otherNumbness, otherWeakness, otherGiddiness, otherOther,
       // Examination fields
       neuroHigherFunctions, neuroGcs, neuroTremors, neuroCranialNerves, neuroFundi,
-      cerebellumSigns: cerebellumSignsList, // Use consolidated string
+      cerebellumSigns: cerebellumSignsList,
       examMotor, examSensory, examReflex,
       examGait, examSpDeformity, examSlr, examLs,
       examHipsKnees,
-      tenderPoints: tenderPointsList, // Use consolidated string
+      tenderPoints: tenderPointsList,
       examWasting, examEhl, examFootWeakness,
       examSens, examMotor2, examReflexes, examOther,
-      pastIllness: pastIllnessList, // Use consolidated string
-      allergies: allergiesList, // Use consolidated string
+      pastIllness: pastIllnessList,
+      allergies: allergiesList,
       allergensInput,
       drugsInput,
-      drugsTaken: drugsTakenList, // Use consolidated string
+      drugsTaken: drugsTakenList,
     };
 
     try {
@@ -201,24 +201,30 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
           setValidationErrors(responseData.errors);
           setSaveError('Please correct the validation errors.');
         } else {
-          setSaveError(responseData.message || 'An unexpected error occurred.');
+          setSaveError(responseData.message || 'Failed to save record.');
         }
-        throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        return;
       }
 
-      setSaveSuccess(responseData.message || 'Record saved successfully!');
+      // Clear form after successful save
       clearFormFields();
-      // Optionally, trigger a refresh of records in PatientProfile or close modal
-      // For now, local 'records' state is removed, so no local update here.
-      if (onRecordSaved) {
-        onRecordSaved();
+      setSaveSuccess('Record saved successfully!');
+
+      // Notify parent component about the new record
+      if (onRecordSaved && typeof onRecordSaved === 'function') {
+        onRecordSaved(patientId);
       }
-      
-    } catch (err) {
-      console.error('Failed to save record:', err);
-      if (!saveError && Object.keys(validationErrors).length === 0) {
-        setSaveError('Failed to save the record. Please check your connection and try again.');
-      }
+
+      // Close the modal after a short delay
+      setTimeout(() => {
+        if (onRecordSaved && typeof onRecordSaved === 'function') {
+          onRecordSaved(patientId);
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error saving record:', error);
+      setSaveError('An error occurred while saving the record.');
     } finally {
       setIsSaving(false);
     }

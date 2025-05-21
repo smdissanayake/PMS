@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -43,4 +44,6 @@ Route::post('/patient-notes', [PatientController::class, 'storeNote']);
 Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
 Route::get('/order-summary', function () {
     return inertia('OrderSummary');
+
 });
+

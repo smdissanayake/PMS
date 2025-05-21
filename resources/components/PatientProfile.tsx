@@ -90,11 +90,9 @@ const PatientProfile = () => {
     const [records, setRecords] = useState([] as HistoryExaminationRecord[]);
     const [isLoadingRecords, setIsLoadingRecords] = useState(false);
 
-
     const fetchHistoryExaminationRecords = async (patientId: number) => {
-        if (!patientId) return; // Guard clause if patientId is not available
+        if (!patientId) return;
         setIsLoadingRecords(true);
-        setRecords([]); // Clear previous records
         try {
             const response = await fetch(`/patient-history-examination/${patientId}`, {
                 method: 'GET',
@@ -117,6 +115,11 @@ const PatientProfile = () => {
         }
     };
 
+    const handleRecordSaved = async (patientId: number) => {
+        // Refresh the records immediately after a new record is saved
+        await fetchHistoryExaminationRecords(patientId);
+    };
+
     const handleSearch = async () => {
         if (!searchQuery.trim()) {
             setSearchError("Please enter a Clinic Reference Number.");
@@ -130,7 +133,6 @@ const PatientProfile = () => {
         setRecords([]);
 
         try {
-            // Fetch patient details
             const patientResponse = await fetch(`/patients/search-by-clinic-ref?clinicRefNo=${encodeURIComponent(searchQuery)}`, {
                 method: 'GET',
                 headers: {
@@ -151,7 +153,6 @@ const PatientProfile = () => {
                 };
                 setPatientData(formattedPatientData);
                 
-                // If patient found, fetch their history/examination records
                 if (formattedPatientData.id) {
                     fetchHistoryExaminationRecords(formattedPatientData.id);
                 }
@@ -208,18 +209,48 @@ const PatientProfile = () => {
             </div>
 
             {searchError && (
-                <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-300 text-red-700">
-                    {searchError}
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600">{searchError}</p>
+                </div>
+            )}
+
+            {!patientData && !searchError && (
+                <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 mb-4">
+                            <SearchIcon className="w-8 h-8 text-blue-500" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                            Search for a Patient
+                        </h2>
+                        <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                            Enter a Clinic Reference Number to view patient details, medical history, and examination records. 
+                            You can also add new notes, update patient information, and manage their care plan.
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-4">
+                            <div className="flex items-center text-sm text-gray-600">
+                                <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                                View Patient History
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                                <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                Add Medical Notes
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                                <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
+                                Track Examinations
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {patientData && (
                 <>
                     <PatientInfoCard patient={patientData} records={records} />
-
+                    
                     <section className="mt-8">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Patient Records</h3>
-                        {/* Removed max-h-96 and overflow-y-auto for full display */}
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                             {isLoadingRecords && <p className="text-gray-500 text-sm">Loading records...</p>}
                             {!isLoadingRecords && records.length === 0 && (
@@ -382,23 +413,23 @@ const PatientProfile = () => {
                             ))}
                         </div>
                     </section>
-                    
-                    <div className="mt-8 bg-white rounded-lg shadow-sm">
-                        <TabNavigation
-                            activeTab={activeTab}
-                            onTabChange={setActiveTab}
-                        />
+
+                    <div className="mt-6">
+                        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
                         <TabContent 
                             activeTab={activeTab} 
+                            patientData={patientData}
                             patientId={patientData.id}
                             patientClinicRefNo={patientData.clinicRefNo}
-                            onRecordSaved={() => fetchHistoryExaminationRecords(patientData.id)} // Pass the handler
+                            onRecordSaved={handleRecordSaved}
                         />
                     </div>
-                    <FloatingActionButton />
                 </>
             )}
+
+            <FloatingActionButton />
         </div>
     );
 };
+
 export default PatientProfile;
