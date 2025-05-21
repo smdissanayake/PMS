@@ -46,4 +46,3 @@ Route::get('/order-summary', function () {
     return inertia('OrderSummary');
 
 });
-

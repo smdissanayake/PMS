@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SearchIcon } from "lucide-react"; // Import SearchIcon
+import { SearchIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"; // Add ChevronDownIcon and ChevronUpIcon
 
 import PatientInfoCard from "./PatientInfoCard";
 import TabNavigation from "./TabNavigation";
@@ -84,11 +84,51 @@ type PatientData = {
 const PatientProfile = () => {
     const [activeTab, setActiveTab] = useState("history");
     const [searchQuery, setSearchQuery] = useState("");
+    const [suggestions, setSuggestions] = useState<Array<{ id: number; clinicRefNo: string; name: string }>>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const [patientData, setPatientData] = useState(null as PatientData | null);
     const [searchError, setSearchError] = useState(null as string | null);
     const [isLoadingSearch, setIsLoadingSearch] = useState(false);
     const [records, setRecords] = useState([] as HistoryExaminationRecord[]);
     const [isLoadingRecords, setIsLoadingRecords] = useState(false);
+    const [isRecordsExpanded, setIsRecordsExpanded] = useState(false);
+
+    // Add debounce function
+    const debounce = (func: Function, wait: number) => {
+        let timeout: number;
+        return (...args: any[]) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(...args), wait);
+        };
+    };
+
+    // Add fetchSuggestions function
+    const fetchSuggestions = async (query: string) => {
+        if (!query.trim()) {
+            setSuggestions([]);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/patients/search-suggestions?query=${encodeURIComponent(query)}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                },
+            });
+
+            const data = await response.json();
+            setSuggestions(data);
+            setShowSuggestions(true);
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+            setSuggestions([]);
+        }
+    };
+
+    // Create debounced version of fetchSuggestions
+    const debouncedFetchSuggestions = debounce(fetchSuggestions, 300);
 
     const fetchHistoryExaminationRecords = async (patientId: number) => {
         if (!patientId) return;
@@ -120,20 +160,25 @@ const PatientProfile = () => {
         await fetchHistoryExaminationRecords(patientId);
     };
 
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) {
+    // Update handleSearch to use the selected suggestion
+    const handleSearch = async (selectedClinicRefNo?: string) => {
+        const searchValue = selectedClinicRefNo || searchQuery;
+        
+        if (!searchValue.trim()) {
             setSearchError("Please enter a Clinic Reference Number.");
             setPatientData(null);
             setRecords([]);
             return;
         }
+
         setIsLoadingSearch(true);
         setSearchError(null);
         setPatientData(null);
         setRecords([]);
+        setShowSuggestions(false);
 
         try {
-            const patientResponse = await fetch(`/patients/search-by-clinic-ref?clinicRefNo=${encodeURIComponent(searchQuery)}`, {
+            const patientResponse = await fetch(`/patients/search-by-clinic-ref?clinicRefNo=${encodeURIComponent(searchValue)}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -152,6 +197,7 @@ const PatientProfile = () => {
                     name: `${patientResult.firstName} ${patientResult.lastName}`
                 };
                 setPatientData(formattedPatientData);
+                setSearchQuery(selectedClinicRefNo || searchQuery);
                 
                 if (formattedPatientData.id) {
                     fetchHistoryExaminationRecords(formattedPatientData.id);
@@ -164,6 +210,12 @@ const PatientProfile = () => {
         } finally {
             setIsLoadingSearch(false);
         }
+    };
+
+    // Add handleSuggestionClick function
+    const handleSuggestionClick = (suggestion: { id: number; clinicRefNo: string; name: string }) => {
+        setSearchQuery(suggestion.clinicRefNo);
+        handleSearch(suggestion.clinicRefNo);
     };
 
     const handleClearSearch = () => {
@@ -184,16 +236,38 @@ const PatientProfile = () => {
                         <input
                             type="text"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                debouncedFetchSuggestions(e.target.value);
+                            }}
+                            onFocus={() => setShowSuggestions(true)}
                             placeholder="Search by Clinic Ref No..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <SearchIcon className="h-5 w-5 text-gray-400" />
                         </div>
+                        
+                        {/* Suggestions dropdown */}
+                        {showSuggestions && suggestions.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                                {suggestions.map((suggestion) => (
+                                    <div
+                                        key={suggestion.id}
+                                        onClick={() => handleSuggestionClick(suggestion)}
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                    >
+                                        <div className="font-medium text-gray-900">
+                                            {suggestion.clinicRefNo}
+                                        </div>
+                                        <div className="text-gray-500">{suggestion.name}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <button
-                        onClick={handleSearch}
+                        onClick={() => handleSearch()}
                         disabled={isLoadingSearch}
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50"
                     >
@@ -250,8 +324,27 @@ const PatientProfile = () => {
                     <PatientInfoCard patient={patientData} records={records} />
                     
                     <section className="mt-8">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Patient Records</h3>
-                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-medium text-gray-900">Patient Records</h3>
+                            <button
+                                onClick={() => setIsRecordsExpanded(!isRecordsExpanded)}
+                                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                {isRecordsExpanded ? (
+                                    <>
+                                        <span>Collapse Records</span>
+                                        <ChevronUpIcon className="ml-2 h-4 w-4" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Expand Records</span>
+                                        <ChevronDownIcon className="ml-2 h-4 w-4" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                        
+                        <div className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ease-in-out ${isRecordsExpanded ? 'block' : 'hidden'}`}>
                             {isLoadingRecords && <p className="text-gray-500 text-sm">Loading records...</p>}
                             {!isLoadingRecords && records.length === 0 && (
                                 <p className="text-gray-500 text-sm">No history/examination records found for this patient.</p>
