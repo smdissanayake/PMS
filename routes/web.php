@@ -1,6 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\DrugController;
+use App\Http\Controllers\Api\PrescriptionController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\MedicalOrderController;
 
 Route::get('/', function () {
     return inertia('Home');
@@ -20,11 +28,6 @@ Route::get('/test-data', function () {
         ['id' => 3, 'name' => 'Cherry'],
     ]);
 });
-
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\PatientController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\MedicalOrderController;
 
 
 Route::get('/users', [UserController::class, 'index']);
@@ -47,7 +50,6 @@ Route::get('/medical-orders/clinic-ref', [OrderController::class, 'getOrdersByCl
 Route::get('/medical-orders/{id}', [OrderController::class, 'show']);
 Route::delete('/medical-orders/{id}', [MedicalOrderController::class, 'destroy']);
 
-});
 Route::get('/patients/search-suggestions', function (Request $request) {
     $query = $request->get('query');
     
