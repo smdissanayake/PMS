@@ -75,3 +75,5 @@ Route::get('/patients/search-suggestions', function (Request $request) {
 
     return response()->json($patients);
 });
+
+
