@@ -92,6 +92,8 @@ const TabContent = ({
                                         seasonal allergies. Regular follow-up
                                         maintained. Last acute episode: March
                                         2023.
+                                        ${patientClinicRefNo}
+                                     
                                     </p>
                                 </div>
                             </div>
@@ -144,6 +146,7 @@ const TabContent = ({
             case "orders":
                 return (
                     <OrderForm
+                        patientName={patientData}
                         patientId={patientId}
                         patientClinicRefNo={patientClinicRefNo}
                     />
