@@ -152,7 +152,7 @@ const TabContent = ({
                     />
                 );
             case "drugs":
-                return <PrescriptionGenerator />;
+                return <PrescriptionGenerator patientClinicRefNo={patientClinicRefNo} />;
             case "ward":
                 return <WardAdmission />;
             case "surgery":
