@@ -281,12 +281,12 @@ const OrderForm: React.FC<OrderFormProps> = ({
     const fetchSavedOrders = async () => {
         try {
             setIsLoading(true);
-            const response = await fetch(`/medical-orders/patient/${patientId}`);
+            const response = await fetch(`/medical-orders/patient/${patientClinicRefNo}`);
             const data = await response.json();
             
             if (response.ok) {
-                // Filter only pending orders
-                const pendingOrders = data.data.filter((order: SavedOrder) => order.status === 'pending');
+                // The response is already an array of orders, no need to access data.data
+                const pendingOrders = data.filter((order: SavedOrder) => order.status === 'pending');
                 setSavedOrders(pendingOrders);
             } else {
                 console.error('Failed to fetch orders:', data.message);
@@ -345,10 +345,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
         try {
             // Process each order individually
             for (const order of orders) {
-                // Prepare data for API request
-                const orderData = {
-                    patient_id: patientId,
-                    patient_clinic_ref_no: patientClinicRefNo,
+            // Prepare data for API request
+            const orderData = {
+                patient_id: patientId,
+                patient_clinic_ref_no: patientClinicRefNo,
                     type: order.type,
                     sub_type: order.subType,
                     additional_type: order.additionalType,
@@ -360,20 +360,20 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 };
                 
                 console.log('Sending order data:', orderData);
-                
+            
                 // Send POST request to the API endpoint for each order
-                const response = await fetch('/medical-orders', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                
-                const data = await response.json();
-                
+            const response = await fetch('/medical-orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify(orderData)
+            });
+            
+            const data = await response.json();
+            
                 if (!response.ok) {
                     throw new Error(data.message || 'Failed to save order');
                 }
@@ -565,7 +565,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
     // Fetch saved orders when component mounts
     useEffect(() => {
         fetchSavedOrders();
-    }, [patientId]);
+    }, [patientClinicRefNo]);
 
     const getFilteredAndSortedOrders = () => {
         const today = new Date();
