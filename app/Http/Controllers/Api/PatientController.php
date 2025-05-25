@@ -28,7 +28,7 @@ class PatientController extends Controller
         $validator = Validator::make($request->all(), [
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'age' => 'required|integer|min:0',
+            'birthday' => 'required|date|date_format:Y/m/d',
             'gender' => 'required|string|in:male,female,other',
             'address' => 'required|string',
             'clinicRefNo' => 'required|string|max:255|unique:patients,clinicRefNo',
@@ -93,7 +93,7 @@ class PatientController extends Controller
         $validator = Validator::make($request->all(), [
             'firstName' => 'sometimes|required|string|max:255',
             'lastName' => 'sometimes|required|string|max:255',
-            'age' => 'sometimes|required|integer|min:0',
+            'birthday' => 'sometimes|required|date|date_format:Y/m/d',
             'gender' => 'sometimes|required|string|in:male,female,other',
             'address' => 'sometimes|required|string',
             'clinicRefNo' => 'sometimes|required|string|max:255|unique:patients,clinicRefNo,' . $patient->id,

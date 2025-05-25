@@ -19,7 +19,7 @@ class MedicalOrder extends Model
         'consultant_name',
         'status',
         'notes',
-        'age'
+        'birthday'
     ];
 
     protected $casts = [
