@@ -73,7 +73,7 @@ type PatientData = {
     firstName: string;
     lastName: string;
     name: string; // Combined name
-    age: string;
+    birthday: string;
     gender: string;
     address: string;
     category: string;

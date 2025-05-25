@@ -8,6 +8,7 @@ use App\Models\PatientNote; // Added this line
 use App\Models\PatientHistoryExamination; // Added this line
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
 {
@@ -27,12 +28,12 @@ class PatientController extends Controller
         $validator = Validator::make($request->all(), [
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'age' => 'required|integer|min:0',
+            'birthday' => 'required|date|date_format:Y/m/d',
             'gender' => 'required|string|in:male,female,other',
             'address' => 'required|string',
             'clinicRefNo' => 'required|string|max:255|unique:patients,clinicRefNo',
-            'nic' => 'required|string|max:255|unique:patients,nic',
-            'uhid' => 'required|string|max:255|unique:patients,uhid',
+            'nic' => 'required|string|max:255',
+            'uhid' => 'required|string|max:255',
             'category' => 'required|string|max:255',
         ]);
 
@@ -92,12 +93,12 @@ class PatientController extends Controller
         $validator = Validator::make($request->all(), [
             'firstName' => 'sometimes|required|string|max:255',
             'lastName' => 'sometimes|required|string|max:255',
-            'age' => 'sometimes|required|integer|min:0',
+            'birthday' => 'sometimes|required|date|date_format:Y/m/d',
             'gender' => 'sometimes|required|string|in:male,female,other',
             'address' => 'sometimes|required|string',
             'clinicRefNo' => 'sometimes|required|string|max:255|unique:patients,clinicRefNo,' . $patient->id,
-            'nic' => 'sometimes|required|string|max:255|unique:patients,nic,' . $patient->id,
-            'uhid' => 'sometimes|required|string|max:255|unique:patients,uhid,' . $patient->id,
+            'nic' => 'sometimes|required|string|max:255',
+            'uhid' => 'sometimes|required|string|max:255',
             'category' => 'sometimes|required|string|max:255',
         ]);
 
@@ -237,18 +238,49 @@ class PatientController extends Controller
      */
     public function getPatientNotes(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'clinicRefNo' => 'required|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        $clinicRefNo = $request->query('clinicRefNo');
+        
+        if (!$clinicRefNo) {
+            return response()->json(['message' => 'Clinic Reference Number is required'], 400);
         }
 
-        $notes = PatientNote::where('clinicRefNo', $request->clinicRefNo)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        try {
+            $notes = DB::table('patient_notes')
+                ->leftJoin('prescriptions', function($join) {
+                    $join->on('patient_notes.clinicRefNo', '=', 'prescriptions.clinicRefNo')
+                        ->whereRaw('DATE(patient_notes.created_at) = DATE(prescriptions.created_at)');
+                })
+                ->leftJoin('special_items', function($join) {
+                    $join->on('patient_notes.clinicRefNo', '=', 'special_items.clinicRefNo')
+                        ->whereRaw('DATE(patient_notes.created_at) = DATE(special_items.created_at)');
+                })
+                ->where('patient_notes.clinicRefNo', $clinicRefNo)
+                ->select(
+                    'patient_notes.*',
+                    'prescriptions.medications',
+                    'prescriptions.next_appointment_date',
+                    'special_items.item_name'
+                )
+                ->orderBy('patient_notes.created_at', 'desc')
+                ->get();
 
-        return response()->json($notes);
+            // Process the medications JSON for each note
+            $notes->transform(function ($note) {
+                if ($note->medications) {
+                    try {
+                        $note->medications = json_decode($note->medications, true);
+                    } catch (\Exception $e) {
+                        $note->medications = [];
+                    }
+                } else {
+                    $note->medications = [];
+                }
+                return $note;
+            });
+
+            return response()->json($notes);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error fetching patient notes: ' . $e->getMessage()], 500);
+        }
     }
 }

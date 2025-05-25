@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('consultant_name')->nullable();
             $table->string('status')->default('pending');
             $table->text('notes')->nullable();
-            $table->integer('age')->nullable();
+            $table->date('birthday')->nullable();
             $table->timestamps();
             
             // Foreign key relationship with the clinic_ref_no column
