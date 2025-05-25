@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     CheckIcon,
     PlusIcon,
@@ -6,7 +6,12 @@ import {
     XIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    CalendarIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
 } from "lucide-react";
+import Swal from 'sweetalert2';
+
 interface Investigation {
     id: string;
     type: string;
@@ -17,10 +22,40 @@ interface Investigation {
 }
 interface OrderEntry extends Investigation {
     orderDate: string;
+    age?: number;
 }
-const OrderForm = () => {
+
+interface OrderFormProps {
+    patientId: string;
+    patientClinicRefNo: string;
+    patientName?: any | null; // Assuming patientData structure
+}
+
+interface SavedOrder {
+    id: number;
+    type: string;
+    sub_type: string | null;
+    additional_type: string | null;
+    consultant_name: string | null;
+    notes: string | null;
+    order_date: string;
+    age: number | null;
+    created_at: string;
+    status: string;
+}
+
+const OrderForm: React.FC<OrderFormProps> = ({
+    patientId,
+    patientClinicRefNo,
+    patientName,
+}) => {
     const [expandedSection, setExpandedSection] = useState(null);
     const [orders, setOrders] = useState<OrderEntry[]>([]);
+    const [savedOrders, setSavedOrders] = useState<SavedOrder[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSavedOrdersExpanded, setIsSavedOrdersExpanded] = useState(false);
+    const [dateFilter, setDateFilter] = useState<'today' | 'all' | 'custom'>('today');
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     // Form state for each investigation type
     const [mriSpineForm, setMriSpineForm] = useState({
         subType: "",
@@ -126,10 +161,10 @@ const OrderForm = () => {
             specialNotes: "",
         });
     };
-    const handleGenerateOrderSummary = () => {
+    const handleGenerateOrderSummary = async () => {
         // Store orders in localStorage
         localStorage.setItem("orderData", JSON.stringify(orders));
-
+        
         // Open a new window
         const newWindow = window.open("", "_blank", "width=800,height=600");
 
@@ -142,50 +177,44 @@ const OrderForm = () => {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Medical Forder Form</title>
-  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
-  <div class="max-w-4xl mx-auto bg-white p-8 mt-10">
+<body style="background-color: #f3f4f6; font-family: sans-serif;">
+  <div style="max-width: 64rem; margin-left: auto; margin-right: auto; background-color: white; padding: 2rem; margin-top: 2.5rem;">
     
     <!-- Header -->
-    <div class="text-center mb-8">
-      <div class="mb-2">
-        <img src="https://via.placeholder.com/50x50" alt="Logo" class="mx-auto">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="margin-bottom: 0.5rem;">
+        <img src="https://via.placeholder.com/50x50" alt="Logo" style="display: block; margin-left: auto; margin-right: auto;">
       </div>
-      <h1 class="text-2xl font-bold text-blue-700">Medical Forder Form</h1>
-      <p class="text-sm text-gray-500">Order Form Number: <strong>#12365</strong></p>
-      <p class="text-sm text-gray-500">Order Date: <strong>${new Date().toLocaleDateString()}</strong></p>
+      <h1 style="font-size: 1.5rem; font-weight: bold; color: #1d4ed8;">Medical Forder Form</h1>
+      <p style="font-size: 0.875rem; color: #6b7280;">Order Form Number: <strong>#12365</strong></p>
+      <p style="font-size: 0.875rem; color: #6b7280;">Order Date: <strong>${new Date().toLocaleDateString()}</strong></p>
     </div>
 
     <!-- Patient / Consultant Info -->
-    <div class="grid grid-cols-2 gap-8 mb-6 text-sm">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; margin-bottom: 1.5rem; font-size: 0.875rem;">
       <div>
-        <h2 class="font-semibold text-blue-600 border-b pb-1 mb-2">Patient Info</h2>
-        <p><strong>Name:</strong> John Doe</p>
-        <p><strong>DOB:</strong> 01/01/1980</p>
-        <p><strong>Address:</strong> 123 Health St, Cityville</p>
-        <p><strong>Phone:</strong> (123) 456-7890</p>
-      </div>
-      <div>
-        <h2 class="font-semibold text-blue-600 border-b pb-1 mb-2">Consultant Info</h2>
-        <p><strong>Name:</strong> Dr. Jane Smith</p>
-        <p><strong>Department:</strong> Internal Medicine</p>
-        <p><strong>Clinic:</strong> MedicaCare Center</p>
-        <p><strong>Phone:</strong> (321) 654-0987</p>
+        <h2 style="font-weight: 600; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">Patient Info</h2>
+        <p><strong>Patient Name:</strong> ${patientName?.name || "N/A"}</p>
+        <p><strong>Age:</strong> ${patientName?.age || "N/A"}</p>
+        <p><strong>Gender:</strong> ${patientName?.gender || "N/A"}</p>
+         <p><strong>Gender:</strong> ${patientClinicRefNo}</p>
       </div>
     </div>
 
     <!-- Order Blocks -->
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       ${orders
           .map(
               (order) => `
-        <div class="bg-gray-50 border border-gray-300 rounded-md p-4">
-          <p class="text-blue-700 font-semibold mb-2">${order.type}</p>
-          <p class="text-sm text-gray-700"><strong>Description:</strong> ${
-              order.subType || "—"
+        <div style="background-color: #f9fafb; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 1rem;">
+          <p style="color: #1d4ed8; font-weight: 600; margin-bottom: 0.5rem;">${
+              order.type
+          } ${order.subType || ""} ${order.additionalType || ""}</p>
+          <p style="font-size: 0.875rem; color: #374151;"><strong>Consultant Name:</strong> ${
+              order.consultantName || "—"
           }</p>
-          <p class="text-sm text-gray-700 mt-1"><strong>Special Notes:</strong> ${
+          <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;"><strong>Special Notes:</strong> ${
               order.specialNotes || "—"
           }</p>
         </div>
@@ -195,31 +224,178 @@ const OrderForm = () => {
     </div>
 
     <!-- Signature -->
-    <div class="mt-10 border-t pt-6 text-sm">
-      <p class="mb-2 text-gray-700">Doctor's Signature:</p>
-      <div class="w-64 h-12 border-b border-gray-400"></div>
+    <div style="margin-top: 2.5rem; border-top: 1px solid #e5e7eb; padding-top: 1.5rem; font-size: 0.875rem;">
+      <p style="margin-bottom: 0.5rem; color: #374151;">Doctor's Signature:</p>
+      <div style="width: 16rem; height: 3rem; border-bottom: 1px solid #9ca3af;"></div>
     </div>
 
     <!-- Footer -->
-    <div class="mt-10 text-center text-xs text-gray-500">
+    <div style="margin-top: 2.5rem; text-align: center; font-size: 0.75rem; color: #6b7280;">
       <p>If you have any questions about this form, please contact:</p>
       <p>Tel: (000) 000-0000 | Email: clinic@example.com</p>
-      <p class="text-blue-600 font-semibold mt-2">THANK YOU FOR YOUR VISIT!</p>
+      <p style="color: #2563eb; font-weight: 600; margin-top: 0.5rem;">THANK YOU FOR YOUR VISIT!</p>
     </div>
   </div>
 </body>
 </html>
+
             `;
 
             // Write HTML content to the new window
             newWindow.document.write(htmlContent);
             newWindow.document.close();
+
+            // Immediately open print window
+            newWindow.print();
+
+            // Close window after printing
+            newWindow.onafterprint = () => {
+                newWindow.close();
+                // After printing, save to database
+                saveOrderToDatabase();
+            };
+
+            // Fallback close after delay
+            setTimeout(() => {
+                newWindow.close();
+                // After printing, save to database
+                saveOrderToDatabase();
+            }, 100);
         } else {
             alert("Please allow pop-ups for this site.");
         }
     };
+    
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
+    });
 
-    // print template
+    const fetchSavedOrders = async () => {
+        try {
+            setIsLoading(true);
+            const response = await fetch(`/medical-orders/patient/${patientId}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Filter only pending orders
+                const pendingOrders = data.data.filter((order: SavedOrder) => order.status === 'pending');
+                setSavedOrders(pendingOrders);
+            } else {
+                console.error('Failed to fetch orders:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteOrder = async (orderId: number) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`/medical-orders/${orderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    setSavedOrders(savedOrders.filter(order => order.id !== orderId));
+                    Toast.fire({
+                        icon: "success",
+                        title: "Order deleted successfully"
+                    });
+                } else {
+                    throw new Error(data.message || 'Failed to delete order');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                Toast.fire({
+                    icon: "error",
+                    title: "Failed to delete order"
+                });
+            }
+        }
+    };
+
+    const saveOrderToDatabase = async () => {
+        try {
+            // Process each order individually
+            for (const order of orders) {
+                // Prepare data for API request
+                const orderData = {
+                    patient_id: patientId,
+                    patient_clinic_ref_no: patientClinicRefNo,
+                    type: order.type,
+                    sub_type: order.subType,
+                    additional_type: order.additionalType,
+                    consultant_name: order.consultantName,
+                    notes: order.specialNotes,
+                    order_date: order.orderDate,
+                    age: order.age,
+                    status: 'pending' // Set initial status as pending
+                };
+                
+                console.log('Sending order data:', orderData);
+                
+                // Send POST request to the API endpoint for each order
+                const response = await fetch('/medical-orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to save order');
+                }
+            }
+            
+            console.log('All orders saved successfully');
+            Toast.fire({
+                icon: "success",
+                title: "Orders saved successfully"
+            });
+            
+            // Refresh the orders list
+            fetchSavedOrders();
+            
+        } catch (error) {
+            console.error('Error saving orders:', error);
+            Toast.fire({
+                icon: "error",
+                title: "Failed to save orders"
+            });
+        }
+    };
 
     const handleAddOrder = (investigationId: string) => {
         const investigation = investigations.find(
@@ -238,6 +414,7 @@ const OrderForm = () => {
             additionalType: selectedInvestigation.additionalType,
             consultantName: selectedInvestigation.consultantName,
             specialNotes: selectedInvestigation.specialNotes,
+            age: patientName?.age || null
         };
         setOrders([...orders, newOrder]);
         setSelectedInvestigation({
@@ -384,8 +561,43 @@ const OrderForm = () => {
             </div>
         );
     };
+
+    // Fetch saved orders when component mounts
+    useEffect(() => {
+        fetchSavedOrders();
+    }, [patientId]);
+
+    const getFilteredAndSortedOrders = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return savedOrders
+            .filter(order => {
+                const orderDate = new Date(order.created_at);
+                orderDate.setHours(0, 0, 0, 0);
+
+                if (dateFilter === 'today') {
+                    return orderDate.getTime() === today.getTime();
+                } else if (dateFilter === 'custom') {
+                    const compareDate = new Date(selectedDate);
+                    compareDate.setHours(0, 0, 0, 0);
+                    return orderDate.getTime() === compareDate.getTime();
+                }
+                return true;
+            })
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    };
+
+    const navigateDate = (direction: 'prev' | 'next') => {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(selectedDate.getDate() + (direction === 'next' ? 1 : -1));
+        setSelectedDate(newDate);
+        setDateFilter('custom');
+    };
+
     return (
         <div className="space-y-8 max-w-4xl mx-auto">
+            {/* report name */}
             <div className="space-y-4">
                 {investigations.map((investigation) => (
                     <div
@@ -479,6 +691,146 @@ const OrderForm = () => {
                     </div>
                 </div>
             )}
+
+            {/* Saved Orders Section */}
+            <div className="bg-emerald-200 rounded-xl border border-gray-200 overflow-hidden">
+                <button
+                    onClick={() => setIsSavedOrdersExpanded(!isSavedOrdersExpanded)}
+                    className="w-full px-6 py-4 flex items-center justify-between text-left bg-emerald-300 border-b border-gray-200"
+                >
+                    <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-5 w-5 text-white" />
+                        <span className="font-medium text-white">
+                            Saved Orders
+                        </span>
+                    </div>
+                    {isSavedOrdersExpanded ? (
+                        <ChevronUpIcon className="h-5 w-5 text-white" />
+                    ) : (
+                        <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                    )}
+                </button>
+
+                {isSavedOrdersExpanded && (
+                    <div className="p-6 space-y-4">
+                        {/* Date Filter */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium text-gray-700">Show:</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setDateFilter('today')}
+                                        className={`px-3 py-1 text-sm rounded-full ${
+                                            dateFilter === 'today'
+                                                ? 'bg-blue-100 text-blue-700'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        Today
+                                    </button>
+                                    <button
+                                        onClick={() => setDateFilter('all')}
+                                        className={`px-3 py-1 text-sm rounded-full ${
+                                            dateFilter === 'all'
+                                                ? 'bg-blue-100 text-blue-700'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        All Orders
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Date Picker */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => navigateDate('prev')}
+                                    className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                                >
+                                    <ChevronLeftIcon size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setDateFilter('custom')}
+                                    className={`px-3 py-1 text-sm rounded-full ${
+                                        dateFilter === 'custom'
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    {selectedDate.toLocaleDateString()}
+                                </button>
+                                <button
+                                    onClick={() => navigateDate('next')}
+                                    className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                                >
+                                    <ChevronRightIcon size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {isLoading ? (
+                            <div className="text-center py-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                                <p className="mt-2 text-gray-600">Loading orders...</p>
+                            </div>
+                        ) : getFilteredAndSortedOrders().length > 0 ? (
+                            <div className="space-y-4">
+                                {getFilteredAndSortedOrders().map((order) => (
+                                    <div
+                                        key={order.id}
+                                        className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
+                                    >
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-medium text-gray-900">
+                                                    {order.type}
+                                                </h4>
+                                                {order.sub_type && (
+                                                    <span className="text-gray-600">
+                                                        {order.sub_type}
+                                                    </span>
+                                                )}
+                                                {order.additional_type && (
+                                                    <span className="text-gray-600">
+                                                        {order.additional_type}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {order.consultant_name && (
+                                                <p className="text-sm text-gray-600">
+                                                    Consultant: {order.consultant_name}
+                                                </p>
+                                            )}
+                                            {order.notes && (
+                                                <p className="text-sm text-gray-500">
+                                                    {order.notes}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-gray-400">
+                                                Created: {new Date(order.created_at).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleDeleteOrder(order.id)}
+                                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                        >
+                                            <XIcon size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 text-center py-4">
+                                {dateFilter === 'today' 
+                                    ? 'No orders found for today'
+                                    : dateFilter === 'custom'
+                                    ? `No orders found for ${selectedDate.toLocaleDateString()}`
+                                    : 'No saved orders found'}
+                            </p>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

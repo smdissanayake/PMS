@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\DrugController;
 use App\Http\Controllers\Api\PrescriptionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\MedicalOrderController;
 
 Route::get('/', function () {
     return inertia('Home');
@@ -75,3 +77,10 @@ Route::get('/patients/search-suggestions', function (Request $request) {
 
     return response()->json($patients);
 });
+
+// Medical Orders Routes
+Route::post('/medical-orders', [MedicalOrderController::class, 'store']);
+Route::get('/medical-orders/patient/{patientId}', [MedicalOrderController::class, 'getPatientOrders']);
+Route::get('/medical-orders/clinic-ref', [OrderController::class, 'getOrdersByClinicRefNo']);
+Route::get('/medical-orders/{id}', [OrderController::class, 'show']);
+Route::delete('/medical-orders/{id}', [MedicalOrderController::class, 'destroy']);
