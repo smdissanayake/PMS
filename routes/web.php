@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\MedicalOrderController;
 use App\Http\Controllers\Api\InvestigationReportController;
+use App\Http\Controllers\Api\SurgeryController;
 
 Route::get('/', function () {
     return inertia('Home');
@@ -92,4 +93,10 @@ Route::prefix('investigation-reports')->group(function () {
     Route::post('/', [InvestigationReportController::class, 'store']);
     Route::get('/{id}/download', [InvestigationReportController::class, 'download']);
     Route::delete('/{id}', [InvestigationReportController::class, 'destroy']);
+});
+
+// Surgery Routes
+Route::prefix('surgeries')->group(function () {
+    Route::get('/', [SurgeryController::class, 'index']);
+    Route::post('/', [SurgeryController::class, 'store']);
 });

@@ -48,15 +48,16 @@ class InvestigationReportController extends Controller
             $file = $request->file('file');
             $extension = $file->getClientOriginalExtension();
             
-            // Create filename: type+sub_type+additional_type.extension
+            // Create filename: type_sub_type_additional_type_timestamp.extension
             $fileName = $medicalOrder->type;
             if ($medicalOrder->sub_type) {
-                $fileName .= '+' . $medicalOrder->sub_type;
+                $fileName .= '_' . $medicalOrder->sub_type;
             }
             if ($medicalOrder->additional_type) {
-                $fileName .= '+' . $medicalOrder->additional_type;
+                $fileName .= '_' . $medicalOrder->additional_type;
             }
-            $fileName .= '.' . $extension;
+            // Add timestamp to ensure uniqueness
+            $fileName .= '_' . time() . '.' . $extension;
             
             // Store in Laravel storage
             $filePath = $file->storeAs('investigation_reports/' . $request->patient_clinic_ref_no, $fileName, 'public');
