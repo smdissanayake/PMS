@@ -32,7 +32,10 @@ const SurgeryCalendarView: React.FC<SurgeryCalendarViewProps> = ({ view, surgeri
   };
 
   const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getSurgeriesForDate = (date: string) => {
@@ -66,17 +69,11 @@ const SurgeryCalendarView: React.FC<SurgeryCalendarViewProps> = ({ view, surgeri
           } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
         >
           <div className="font-medium text-sm mb-1">{day}</div>
-          <div className="space-y-1">
-            {daySurgeries.map(surgery => (
-              <div
-                key={surgery.id}
-                className="text-xs p-1 bg-blue-100 text-blue-800 rounded truncate"
-                title={`${surgery.patientName} - ${surgery.surgeryName}`}
-              >
-                {surgery.patientName} - {surgery.surgeryName}
-              </div>
-            ))}
-          </div>
+          {daySurgeries.length > 0 && (
+            <div className="text-xs p-1 bg-blue-100 text-blue-800 rounded text-center">
+              {daySurgeries.length} {daySurgeries.length === 1 ? 'Surgery' : 'Surgeries'}
+            </div>
+          )}
         </div>
       );
     }
@@ -117,18 +114,11 @@ const SurgeryCalendarView: React.FC<SurgeryCalendarViewProps> = ({ view, surgeri
           <div className="font-medium mb-2">
             {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
           </div>
-          <div className="space-y-2">
-            {daySurgeries.map(surgery => (
-              <div
-                key={surgery.id}
-                className="p-2 bg-blue-100 text-blue-800 rounded"
-              >
-                <div className="font-medium">{surgery.patientName}</div>
-                <div className="text-sm">{surgery.surgeryName}</div>
-                <div className="text-xs text-blue-600">{surgery.time}</div>
-              </div>
-            ))}
-          </div>
+          {daySurgeries.length > 0 && (
+            <div className="p-2 bg-blue-100 text-blue-800 rounded text-center">
+              {daySurgeries.length} {daySurgeries.length === 1 ? 'Surgery' : 'Surgeries'}
+            </div>
+          )}
         </div>
       );
     }

@@ -94,4 +94,28 @@ class SurgeryController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            $surgery = DB::table('surgeries')->where('id', $id)->first();
+            
+            if (!$surgery) {
+                return response()->json([
+                    'message' => 'Surgery not found'
+                ], 404);
+            }
+
+            DB::table('surgeries')->where('id', $id)->delete();
+
+            return response()->json([
+                'message' => 'Surgery deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete surgery',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 } 
