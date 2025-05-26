@@ -99,4 +99,5 @@ Route::prefix('investigation-reports')->group(function () {
 Route::prefix('surgeries')->group(function () {
     Route::get('/', [SurgeryController::class, 'index']);
     Route::post('/', [SurgeryController::class, 'store']);
+    Route::delete('/{id}', [SurgeryController::class, 'destroy']);
 });

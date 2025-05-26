@@ -123,23 +123,35 @@ const SurgeryCalendar = () => {
     }
 
     try {
+      const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+      if (!csrfToken) {
+        throw new Error('CSRF token not found');
+      }
+
       const response = await fetch(`/surgeries/${id}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json',
-          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
         },
+        credentials: 'same-origin'
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete surgery');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to delete surgery');
       }
 
-      // Refresh the surgeries list
-      await fetchSurgeries();
+      // Update local state immediately for better UX
+      setSurgeries(prevSurgeries => prevSurgeries.filter(surgery => surgery.id !== id));
+      setFilteredSurgeries(prevFiltered => prevFiltered.filter(surgery => surgery.id !== id));
+      
+      // Show success message
+      alert('Surgery deleted successfully');
     } catch (error) {
       console.error('Error deleting surgery:', error);
-      alert('Failed to delete surgery. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to delete surgery. Please try again.');
     }
   };
 
