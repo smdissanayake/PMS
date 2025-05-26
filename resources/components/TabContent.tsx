@@ -142,7 +142,11 @@ const TabContent = ({
                     </div>
                 );
             case "investigations":
-                return <InvestigationsTab />;
+                return <InvestigationsTab 
+                         patientName={patientData}
+                        patientId={patientId}
+                        patientClinicRefNo={patientClinicRefNo} 
+                />;
             case "orders":
                 return (
                     <OrderForm

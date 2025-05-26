@@ -67,7 +67,7 @@ class MedicalOrderController extends Controller
     public function getPatientOrders($patientId)
     {
         try {
-            $orders = MedicalOrder::where('patient_id', $patientId)
+            $orders = MedicalOrder::where('patient_clinic_ref_no', $patientId)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -78,7 +78,7 @@ class MedicalOrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Error fetching patient orders:', [
                 'message' => $e->getMessage(),
-                'patient_id' => $patientId
+                'patient_clinic_ref_no' => $patientId
             ]);
 
             return response()->json([
