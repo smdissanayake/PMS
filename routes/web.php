@@ -9,8 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\MedicalOrderController;
-use App\Http\Controllers\Api\InvestigationReportController;
 use App\Http\Controllers\Api\SurgeryController;
+use App\Http\Controllers\Api\InvestigationReportController;       
+
 
 Route::get('/', function () {
     return inertia('Home');
@@ -34,6 +35,9 @@ Route::get('/test-data', function () {
 Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'store']);
 
+// API route to get all patients (for searchable dropdown)
+Route::get('/api/patients', [PatientController::class, 'index']); // Added this line to match frontend API call
+Route::get('/patients', [PatientController::class, 'index']); // Keep existing route for potential Inertia usage
 Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByClinicRefNo']);
 Route::post('/patient-history-examination', [PatientController::class, 'storeHistoryExamination']);
@@ -50,31 +54,32 @@ Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
 Route::get('/order-summary', function () {
     return inertia('OrderSummary');
 });
+
 Route::get('/patients/search-suggestions', function (Request $request) {
     $query = $request->get('query');
     
     if (empty($query)) {
         return response()->json([]);
     }
-
+    
     $patients = DB::table('patients')
-        ->where('clinicRefNo', 'like', '%' . $query . '%')
-        ->select('id', 'clinicRefNo', 'firstName', 'lastName')
-        ->orderByRaw('CASE 
+    ->where('clinicRefNo', 'like', '%' . $query . '%')
+    ->select('id', 'clinicRefNo', 'firstName', 'lastName')
+    ->orderByRaw('CASE 
             WHEN clinicRefNo = ? THEN 1
             WHEN clinicRefNo LIKE ? THEN 2
             ELSE 3
         END', [$query, $query . '%'])
-        ->limit(5)
-        ->get()
-        ->map(function ($patient) {
-            return [
-                'id' => $patient->id,
-                'clinicRefNo' => $patient->clinicRefNo,
-                'name' => $patient->firstName . ' ' . $patient->lastName
-            ];
-        });
-
+    ->limit(5)
+    ->get()
+    ->map(function ($patient) {
+        return [
+            'id' => $patient->id,
+            'clinicRefNo' => $patient->clinicRefNo,
+            'name' => $patient->firstName . ' ' . $patient->lastName
+        ];
+    });
+    
     return response()->json($patients);
 });
 
@@ -99,5 +104,5 @@ Route::prefix('investigation-reports')->group(function () {
 Route::prefix('surgeries')->group(function () {
     Route::get('/', [SurgeryController::class, 'index']);
     Route::post('/', [SurgeryController::class, 'store']);
-    Route::delete('/{id}', [SurgeryController::class, 'destroy']);
-});
+    Route::delete('/{id}', [SurgeryController::class, 'destroy']);    
+});    
