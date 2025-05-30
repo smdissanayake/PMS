@@ -90,11 +90,7 @@ const TabContent = ({
                                         Patient has a history of asthma and
                                         seasonal allergies. Regular follow-up
                                         maintained. Last acute episode: March
-<<<<<<< Updated upstream
-                                        2023.
-=======
                                         2023. ${patientClinicRefNo}
->>>>>>> Stashed changes
                                     </p>
                                 </div>
                             </div>
@@ -152,15 +148,11 @@ const TabContent = ({
                     />
                 );
             case "drugs":
-<<<<<<< Updated upstream
-                 return <PrescriptionGenerator patientClinicRefNo={patientClinicRefNo} />;
-=======
                 return (
                     <PrescriptionGenerator
                         patientClinicRefNo={patientClinicRefNo}
                     />
                 );
->>>>>>> Stashed changes
             case "ward":
                 return (
                     <WardAdmissionForm
