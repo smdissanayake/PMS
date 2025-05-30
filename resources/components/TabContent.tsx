@@ -15,7 +15,7 @@ import ReportCard from "./ReportCard";
 import ViewerModal from "./ViewerModal";
 import OrderForm from "./OrderForm";
 import PrescriptionGenerator from "./PrescriptionGenerator";
-import WardAdmission from "./WardAdmission";
+import WardAdmissionForm from "./WardAdmissionForm";
 import SurgeryNotesForm from "./SurgeryNotesForm";
 import PatientHistoryForm from "./PatientHistoryForm";
 import { InvestigationsTab } from "./InvestigationsTab";
@@ -33,8 +33,7 @@ const TabContent = ({
     patientClinicRefNo,
     onRecordSaved,
 }: TabContentProps) => {
-
-   const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] =
         useState(false);
     const [refreshNotes, setRefreshNotes] = useState(0);
@@ -91,7 +90,11 @@ const TabContent = ({
                                         Patient has a history of asthma and
                                         seasonal allergies. Regular follow-up
                                         maintained. Last acute episode: March
+<<<<<<< Updated upstream
                                         2023.
+=======
+                                        2023. ${patientClinicRefNo}
+>>>>>>> Stashed changes
                                     </p>
                                 </div>
                             </div>
@@ -149,11 +152,29 @@ const TabContent = ({
                     />
                 );
             case "drugs":
+<<<<<<< Updated upstream
                  return <PrescriptionGenerator patientClinicRefNo={patientClinicRefNo} />;
+=======
+                return (
+                    <PrescriptionGenerator
+                        patientClinicRefNo={patientClinicRefNo}
+                    />
+                );
+>>>>>>> Stashed changes
             case "ward":
-                return <WardAdmission />;
+                return (
+                    <WardAdmissionForm
+                        patientId={patientId ?? null} // Ensure it's number | null
+                        clinicRefNo={patientClinicRefNo || ""}
+                    />
+                );
             case "surgery":
-                return <SurgeryNotesForm />;
+                return (
+                    <SurgeryNotesForm
+                        patientId={patientId ?? null}
+                        clinicRefNo={patientClinicRefNo || ""}
+                    />
+                );
             default:
                 return <div className="p-4">Select a tab to view content</div>;
         }
