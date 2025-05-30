@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\MedicalOrderController;
+se App\Http\Controllers\Api\InvestigationReportController;
+use App\Http\Controllers\Api\SurgeryController;
+
+
 
 Route::get('/', function () {
     return inertia('Home');
@@ -50,39 +54,55 @@ Route::post('/patient-notes', [PatientController::class, 'storeNote']);
 Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
 Route::get('/order-summary', function () {
     return inertia('OrderSummary');
-    
 });
+
 Route::get('/patients/search-suggestions', function (Request $request) {
     $query = $request->get('query');
     
     if (empty($query)) {
         return response()->json([]);
     }
-    
+
     $patients = DB::table('patients')
-    ->where('clinicRefNo', 'like', '%' . $query . '%')
-    ->select('id', 'clinicRefNo', 'firstName', 'lastName')
-    ->orderByRaw('CASE 
+        ->where('clinicRefNo', 'like', '%' . $query . '%')
+        ->select('id', 'clinicRefNo', 'firstName', 'lastName')
+        ->orderByRaw('CASE 
             WHEN clinicRefNo = ? THEN 1
             WHEN clinicRefNo LIKE ? THEN 2
             ELSE 3
         END', [$query, $query . '%'])
-    ->limit(5)
-    ->get()
-    ->map(function ($patient) {
-        return [
-            'id' => $patient->id,
-            'clinicRefNo' => $patient->clinicRefNo,
-            'name' => $patient->firstName . ' ' . $patient->lastName
-        ];
-    });
-    
+        ->limit(5)
+        ->get()
+        ->map(function ($patient) {
+            return [
+                'id' => $patient->id,
+                'clinicRefNo' => $patient->clinicRefNo,
+                'name' => $patient->firstName . ' ' . $patient->lastName
+            ];
+        });
+
     return response()->json($patients);
 });
 
 // Medical Orders Routes
-Route::post('/medical-orders', [MedicalOrderController::class, 'store']);
-Route::get('/medical-orders/patient/{patientId}', [MedicalOrderController::class, 'getPatientOrders']);
-Route::get('/medical-orders/clinic-ref', [OrderController::class, 'getOrdersByClinicRefNo']);
-Route::get('/medical-orders/{id}', [OrderController::class, 'show']);
-Route::delete('/medical-orders/{id}', [MedicalOrderController::class, 'destroy']);
+Route::prefix('medical-orders')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\MedicalOrderController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\MedicalOrderController::class, 'store']);
+    Route::get('/patient/{patientClinicRefNo}', [App\Http\Controllers\Api\MedicalOrderController::class, 'getPatientOrders']);
+    Route::get('/{id}', [MedicalOrderController::class, 'show']);
+    Route::delete('/{id}', [MedicalOrderController::class, 'destroy']);
+});
+
+// Investigation Reports Routes
+Route::prefix('investigation-reports')->group(function () {
+    Route::get('/', [InvestigationReportController::class, 'index']);
+    Route::post('/', [InvestigationReportController::class, 'store']);
+    Route::get('/{id}/download', [InvestigationReportController::class, 'download']);
+    Route::delete('/{id}', [InvestigationReportController::class, 'destroy']);
+});
+
+// Surgery Routes
+Route::prefix('surgeries')->group(function () {
+    Route::get('/', [SurgeryController::class, 'index']);
+    Route::post('/', [SurgeryController::class, 'store']);
+    Route::delete('/{id}', [SurgeryController::class, 'destroy']);
