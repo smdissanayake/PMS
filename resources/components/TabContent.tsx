@@ -81,23 +81,7 @@ const TabContent = ({
                             </div>
                         </div>
                         {/* PatientHistoryForm is now in a modal */}
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-blue-800">
-                                        Medical Summary
-                                    </h3>
-                                    <p className="text-sm text-blue-700 mt-1">
-                                        Patient has a history of asthma and
-                                        seasonal allergies. Regular follow-up
-                                        maintained. Last acute episode: March
-                                        2023.
-                                        ${patientClinicRefNo}
-                                     
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                    
                         <HistoryTimeline
                             clinicRefNo={patientClinicRefNo || undefined}
                             key={refreshNotes}
