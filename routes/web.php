@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\DrugController;
 use App\Http\Controllers\Api\PrescriptionController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\MedicalOrderController;
 
 Route::get('/', function () {
     return inertia('Home');
@@ -46,8 +50,8 @@ Route::post('/patient-notes', [PatientController::class, 'storeNote']);
 Route::get('/patient-notes', [PatientController::class, 'getPatientNotes']);
 Route::get('/order-summary', function () {
     return inertia('OrderSummary');
-    
 });
+
 Route::get('/patients/search-suggestions', function (Request $request) {
     $query = $request->get('query');
     
@@ -77,8 +81,25 @@ Route::get('/patients/search-suggestions', function (Request $request) {
 });
 
 // Medical Orders Routes
-Route::post('/medical-orders', [MedicalOrderController::class, 'store']);
-Route::get('/medical-orders/patient/{patientId}', [MedicalOrderController::class, 'getPatientOrders']);
-Route::get('/medical-orders/clinic-ref', [OrderController::class, 'getOrdersByClinicRefNo']);
-Route::get('/medical-orders/{id}', [OrderController::class, 'show']);
-Route::delete('/medical-orders/{id}', [MedicalOrderController::class, 'destroy']);
+Route::prefix('medical-orders')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\MedicalOrderController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\MedicalOrderController::class, 'store']);
+    Route::get('/patient/{patientClinicRefNo}', [App\Http\Controllers\Api\MedicalOrderController::class, 'getPatientOrders']);
+    Route::get('/{id}', [MedicalOrderController::class, 'show']);
+    Route::delete('/{id}', [MedicalOrderController::class, 'destroy']);
+});
+
+// Investigation Reports Routes
+Route::prefix('investigation-reports')->group(function () {
+    Route::get('/', [InvestigationReportController::class, 'index']);
+    Route::post('/', [InvestigationReportController::class, 'store']);
+    Route::get('/{id}/download', [InvestigationReportController::class, 'download']);
+    Route::delete('/{id}', [InvestigationReportController::class, 'destroy']);
+});
+
+// Surgery Routes
+Route::prefix('surgeries')->group(function () {
+    Route::get('/', [SurgeryController::class, 'index']);
+    Route::post('/', [SurgeryController::class, 'store']);
+    Route::delete('/{id}', [SurgeryController::class, 'destroy']);
+    
