@@ -15,7 +15,7 @@ import ReportCard from "./ReportCard";
 import ViewerModal from "./ViewerModal";
 import OrderForm from "./OrderForm";
 import PrescriptionGenerator from "./PrescriptionGenerator";
-import WardAdmission from "./WardAdmission";
+import WardAdmissionForm from "./WardAdmissionForm";
 import SurgeryNotesForm from "./SurgeryNotesForm";
 import PatientHistoryForm from "./PatientHistoryForm";
 import { InvestigationsTab } from "./InvestigationsTab";
@@ -33,8 +33,7 @@ const TabContent = ({
     patientClinicRefNo,
     onRecordSaved,
 }: TabContentProps) => {
-
-   const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] =
         useState(false);
     const [refreshNotes, setRefreshNotes] = useState(0);
@@ -81,7 +80,21 @@ const TabContent = ({
                             </div>
                         </div>
                         {/* PatientHistoryForm is now in a modal */}
-                    
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                            <div className="flex">
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-blue-800">
+                                        Medical Summary
+                                    </h3>
+                                    <p className="text-sm text-blue-700 mt-1">
+                                        Patient has a history of asthma and
+                                        seasonal allergies. Regular follow-up
+                                        maintained. Last acute episode: March
+                                        2023.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <HistoryTimeline
                             clinicRefNo={patientClinicRefNo || undefined}
                             key={refreshNotes}
@@ -140,11 +153,21 @@ const TabContent = ({
                     />
                 );
             case "drugs":
-                return <PrescriptionGenerator patientClinicRefNo={patientClinicRefNo} />;
+                return <PrescriptionGenerator />;
             case "ward":
-                return <WardAdmission />;
+                return (
+                    <WardAdmissionForm
+                        patientId={patientId ?? null} // Ensure it's number | null
+                        clinicRefNo={patientClinicRefNo || ""}
+                    />
+                );
             case "surgery":
-                return <SurgeryNotesForm />;
+                return (
+                    <SurgeryNotesForm
+                        patientId={patientId ?? null}
+                        clinicRefNo={patientClinicRefNo || ""}
+                    />
+                );
             default:
                 return <div className="p-4">Select a tab to view content</div>;
         }
