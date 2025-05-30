@@ -9,8 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\MedicalOrderController;
+use App\Http\Controllers\Api\WardAdmissionController;
 use App\Http\Controllers\Api\SurgeryController;
-use App\Http\Controllers\Api\InvestigationReportController;       
+use App\Http\Controllers\Api\InvestigationReportController;
+use App\Http\Controllers\Api\PatientReportController;
+use App\Http\Controllers\Api\SurgeryNoteController;
 
 
 Route::get('/', function () {
@@ -36,7 +39,7 @@ Route::get('/users', [UserController::class, 'index']);
 Route::post('/users', [UserController::class, 'store']);
 
 // API route to get all patients (for searchable dropdown)
-Route::get('/api/patients', [PatientController::class, 'index']); // Added this line to match frontend API call
+Route::get('/api/patients', [PatientController::class, 'index']);
 Route::get('/patients', [PatientController::class, 'index']); // Keep existing route for potential Inertia usage
 Route::post('/patients', [PatientController::class, 'store']);
 Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByClinicRefNo']);
@@ -105,4 +108,11 @@ Route::prefix('surgeries')->group(function () {
     Route::get('/', [SurgeryController::class, 'index']);
     Route::post('/', [SurgeryController::class, 'store']);
     Route::delete('/{id}', [SurgeryController::class, 'destroy']);    
-});    
+});
+
+// Patient Reports Routes (Moved here for clarity and consistency)
+Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
+
+// Surgery Notes Routes (Moved here for clarity and consistency)
+Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
+Route::get('/api/surgery-notes', [SurgeryNoteController::class, 'index']);
