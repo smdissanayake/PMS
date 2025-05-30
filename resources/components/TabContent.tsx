@@ -15,7 +15,7 @@ import ReportCard from "./ReportCard";
 import ViewerModal from "./ViewerModal";
 import OrderForm from "./OrderForm";
 import PrescriptionGenerator from "./PrescriptionGenerator";
-import WardAdmission from "./WardAdmission";
+import WardAdmissionForm from "./WardAdmissionForm";
 import SurgeryNotesForm from "./SurgeryNotesForm";
 import PatientHistoryForm from "./PatientHistoryForm";
 import { InvestigationsTab } from "./InvestigationsTab";
@@ -33,8 +33,7 @@ const TabContent = ({
     patientClinicRefNo,
     onRecordSaved,
 }: TabContentProps) => {
-
-   const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPatientHistoryFormModalOpen, setIsPatientHistoryFormModalOpen] =
         useState(false);
     const [refreshNotes, setRefreshNotes] = useState(0);
@@ -92,8 +91,6 @@ const TabContent = ({
                                         seasonal allergies. Regular follow-up
                                         maintained. Last acute episode: March
                                         2023.
-                                        ${patientClinicRefNo}
-                                     
                                     </p>
                                 </div>
                             </div>
@@ -156,11 +153,21 @@ const TabContent = ({
                     />
                 );
             case "drugs":
-                return <PrescriptionGenerator patientClinicRefNo={patientClinicRefNo} />;
+                return <PrescriptionGenerator />;
             case "ward":
-                return <WardAdmission />;
+                return (
+                    <WardAdmissionForm
+                        patientId={patientId ?? null} // Ensure it's number | null
+                        clinicRefNo={patientClinicRefNo || ""}
+                    />
+                );
             case "surgery":
-                return <SurgeryNotesForm />;
+                return (
+                    <SurgeryNotesForm
+                        patientId={patientId ?? null}
+                        clinicRefNo={patientClinicRefNo || ""}
+                    />
+                );
             default:
                 return <div className="p-4">Select a tab to view content</div>;
         }

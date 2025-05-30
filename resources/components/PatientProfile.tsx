@@ -80,11 +80,12 @@ type PatientData = {
     // ... any other fields from the patients table
 };
 
-
 const PatientProfile = () => {
     const [activeTab, setActiveTab] = useState("history");
     const [searchQuery, setSearchQuery] = useState("");
-    const [suggestions, setSuggestions] = useState<Array<{ id: number; clinicRefNo: string; name: string }>>([]);
+    const [suggestions, setSuggestions] = useState<
+        Array<{ id: number; clinicRefNo: string; name: string }>
+    >([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [patientData, setPatientData] = useState(null as PatientData | null);
     const [searchError, setSearchError] = useState(null as string | null);
@@ -110,19 +111,29 @@ const PatientProfile = () => {
         }
 
         try {
-            const response = await fetch(`/patients/search-suggestions?query=${encodeURIComponent(query)}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-            });
+            const response = await fetch(
+                `/patients/search-suggestions?query=${encodeURIComponent(
+                    query
+                )}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN":
+                            (
+                                document.querySelector(
+                                    'meta[name="csrf-token"]'
+                                ) as HTMLMetaElement
+                            )?.content || "",
+                    },
+                }
+            );
 
             const data = await response.json();
             setSuggestions(data);
             setShowSuggestions(true);
         } catch (error) {
-            console.error('Error fetching suggestions:', error);
+            console.error("Error fetching suggestions:", error);
             setSuggestions([]);
         }
     };
@@ -134,21 +145,34 @@ const PatientProfile = () => {
         if (!patientId) return;
         setIsLoadingRecords(true);
         try {
-            const response = await fetch(`/patient-history-examination/${patientId}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-            });
+            const response = await fetch(
+                `/patient-history-examination/${patientId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN":
+                            (
+                                document.querySelector(
+                                    'meta[name="csrf-token"]'
+                                ) as HTMLMetaElement
+                            )?.content || "",
+                    },
+                }
+            );
             const data = await response.json();
             if (!response.ok) {
-                setSearchError(data.message || `Error fetching records: ${response.status}`);
+                setSearchError(
+                    data.message || `Error fetching records: ${response.status}`
+                );
             } else {
                 setRecords(data);
             }
         } catch (error) {
-            console.error("Failed to fetch history/examination records:", error);
+            console.error(
+                "Failed to fetch history/examination records:",
+                error
+            );
             setSearchError("An error occurred while fetching patient records.");
         } finally {
             setIsLoadingRecords(false);
@@ -163,7 +187,7 @@ const PatientProfile = () => {
     // Update handleSearch to use the selected suggestion
     const handleSearch = async (selectedClinicRefNo?: string) => {
         const searchValue = selectedClinicRefNo || searchQuery;
-        
+
         if (!searchValue.trim()) {
             setSearchError("Please enter a Clinic Reference Number.");
             setPatientData(null);
@@ -178,34 +202,48 @@ const PatientProfile = () => {
         setShowSuggestions(false);
 
         try {
-            const patientResponse = await fetch(`/patients/search-by-clinic-ref?clinicRefNo=${encodeURIComponent(searchValue)}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-            });
+            const patientResponse = await fetch(
+                `/patients/search-by-clinic-ref?clinicRefNo=${encodeURIComponent(
+                    searchValue
+                )}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN":
+                            (
+                                document.querySelector(
+                                    'meta[name="csrf-token"]'
+                                ) as HTMLMetaElement
+                            )?.content || "",
+                    },
+                }
+            );
 
             const patientResult = await patientResponse.json();
 
             if (!patientResponse.ok) {
-                setSearchError(patientResult.message || `Error: ${patientResponse.status}`);
+                setSearchError(
+                    patientResult.message || `Error: ${patientResponse.status}`
+                );
                 setPatientData(null);
             } else {
                 const formattedPatientData: PatientData = {
                     ...patientResult,
-                    name: `${patientResult.firstName} ${patientResult.lastName}`
+                    name: `${patientResult.firstName} ${patientResult.lastName}`,
                 };
                 setPatientData(formattedPatientData);
                 setSearchQuery(selectedClinicRefNo || searchQuery);
-                
+
                 if (formattedPatientData.id) {
                     fetchHistoryExaminationRecords(formattedPatientData.id);
                 }
             }
         } catch (error) {
             console.error("Search failed:", error);
-            setSearchError("An error occurred while searching. Please try again.");
+            setSearchError(
+                "An error occurred while searching. Please try again."
+            );
             setPatientData(null);
         } finally {
             setIsLoadingSearch(false);
@@ -213,7 +251,11 @@ const PatientProfile = () => {
     };
 
     // Add handleSuggestionClick function
-    const handleSuggestionClick = (suggestion: { id: number; clinicRefNo: string; name: string }) => {
+    const handleSuggestionClick = (suggestion: {
+        id: number;
+        clinicRefNo: string;
+        name: string;
+    }) => {
         setSearchQuery(suggestion.clinicRefNo);
         handleSearch(suggestion.clinicRefNo);
     };
@@ -247,20 +289,24 @@ const PatientProfile = () => {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <SearchIcon className="h-5 w-5 text-gray-400" />
                         </div>
-                        
+
                         {/* Suggestions dropdown */}
                         {showSuggestions && suggestions.length > 0 && (
                             <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
                                 {suggestions.map((suggestion) => (
                                     <div
                                         key={suggestion.id}
-                                        onClick={() => handleSuggestionClick(suggestion)}
+                                        onClick={() =>
+                                            handleSuggestionClick(suggestion)
+                                        }
                                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                                     >
                                         <div className="font-medium text-gray-900">
                                             {suggestion.clinicRefNo}
                                         </div>
-                                        <div className="text-gray-500">{suggestion.name}</div>
+                                        <div className="text-gray-500">
+                                            {suggestion.name}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -298,8 +344,10 @@ const PatientProfile = () => {
                             Search for a Patient
                         </h2>
                         <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                            Enter a Clinic Reference Number to view patient details, medical history, and examination records. 
-                            You can also add new notes, update patient information, and manage their care plan.
+                            Enter a Clinic Reference Number to view patient
+                            details, medical history, and examination records.
+                            You can also add new notes, update patient
+                            information, and manage their care plan.
                         </p>
                         <div className="flex flex-wrap justify-center gap-4">
                             <div className="flex items-center text-sm text-gray-600">
@@ -322,12 +370,16 @@ const PatientProfile = () => {
             {patientData && (
                 <>
                     <PatientInfoCard patient={patientData} records={records} />
-                    
+
                     <section className="mt-8">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-medium text-gray-900">Patient Records</h3>
+                            <h3 className="text-lg font-medium text-gray-900">
+                                Patient Records
+                            </h3>
                             <button
-                                onClick={() => setIsRecordsExpanded(!isRecordsExpanded)}
+                                onClick={() =>
+                                    setIsRecordsExpanded(!isRecordsExpanded)
+                                }
                                 className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
                                 {isRecordsExpanded ? (
@@ -343,174 +395,658 @@ const PatientProfile = () => {
                                 )}
                             </button>
                         </div>
-                        
-                        <div className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ease-in-out ${isRecordsExpanded ? 'block' : 'hidden'}`}>
-                            {isLoadingRecords && <p className="text-gray-500 text-sm">Loading records...</p>}
-                            {!isLoadingRecords && records.length === 0 && (
-                                <p className="text-gray-500 text-sm">No history/examination records found for this patient.</p>
+
+                        <div
+                            className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ease-in-out ${
+                                isRecordsExpanded ? "block" : "hidden"
+                            }`}
+                        >
+                            {isLoadingRecords && (
+                                <p className="text-gray-500 text-sm">
+                                    Loading records...
+                                </p>
                             )}
-                            {!isLoadingRecords && records.map((record) => (
-                                <div key={record.id} className="mb-6 pb-4 border-b last:border-b-0 last:mb-0">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-3">
-                                        <p>
-                                            <span className="font-semibold">Record Date:</span> {new Date(record.created_at).toLocaleString()}
-                                        </p>
-                                        <p>
-                                            <span className="font-semibold">Last Updated:</span> {new Date(record.updated_at).toLocaleString()}
-                                        </p>
+                            {!isLoadingRecords && records.length === 0 && (
+                                <p className="text-gray-500 text-sm">
+                                    No history/examination records found for
+                                    this patient.
+                                </p>
+                            )}
+                            {!isLoadingRecords &&
+                                records.map((record) => (
+                                    <div
+                                        key={record.id}
+                                        className="mb-6 pb-4 border-b last:border-b-0 last:mb-0"
+                                    >
+                                        <div className="flex justify-between text-sm text-gray-600 mb-3">
+                                            <p>
+                                                <span className="font-semibold">
+                                                    Record Date:
+                                                </span>{" "}
+                                                {new Date(
+                                                    record.created_at
+                                                ).toLocaleString()}
+                                            </p>
+                                            <p>
+                                                <span className="font-semibold">
+                                                    Last Updated:
+                                                </span>{" "}
+                                                {new Date(
+                                                    record.updated_at
+                                                ).toLocaleString()}
+                                            </p>
+                                        </div>
+
+                                        {/* History Section Display */}
+                                        <div className="mb-4 p-4 border border-gray-100 rounded-md bg-gray-50/50 space-y-4">
+                                            <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
+                                                History
+                                            </h4>
+
+                                            {/* Headache Details */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Headache Details
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.headacheDuration && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Duration:
+                                                            </span>{" "}
+                                                            {
+                                                                record.headacheDuration
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.headacheEpisode && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Episode:
+                                                            </span>{" "}
+                                                            {
+                                                                record.headacheEpisode
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.headacheSite && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Site:
+                                                            </span>{" "}
+                                                            {
+                                                                record.headacheSite
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.headacheAura && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Aura:
+                                                            </span>{" "}
+                                                            {
+                                                                record.headacheAura
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.headacheEnt && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                ENT:
+                                                            </span>{" "}
+                                                            {record.headacheEnt}
+                                                        </p>
+                                                    )}
+                                                    {record.headacheEye && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Eye:
+                                                            </span>{" "}
+                                                            {record.headacheEye}
+                                                        </p>
+                                                    )}
+                                                    {record.headacheSen && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Sen:
+                                                            </span>{" "}
+                                                            {record.headacheSen}
+                                                        </p>
+                                                    )}
+                                                    {record.headacheFocalSymptoms && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Focal Symptoms:
+                                                            </span>{" "}
+                                                            {
+                                                                record.headacheFocalSymptoms
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Backache Details */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Backache
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.backacheDuration && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Duration:
+                                                            </span>{" "}
+                                                            {
+                                                                record.backacheDuration
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.backacheSite && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Site:
+                                                            </span>{" "}
+                                                            {
+                                                                record.backacheSite
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.backacheRadiation && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Radiation:
+                                                            </span>{" "}
+                                                            {
+                                                                record.backacheRadiation
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.backacheTrauma && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Trauma:
+                                                            </span>{" "}
+                                                            {
+                                                                record.backacheTrauma
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.backacheJointsInflamed && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Joints Inflamed:
+                                                            </span>{" "}
+                                                            {
+                                                                record.backacheJointsInflamed
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Neckache Details */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Neckache
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.neckacheFocalSymptoms && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Focal Symptoms:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neckacheFocalSymptoms
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.neckacheSen && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Sen:
+                                                            </span>{" "}
+                                                            {record.neckacheSen}
+                                                        </p>
+                                                    )}
+                                                    {record.neckacheMotor && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Motor:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neckacheMotor
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.neckacheNClaud && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                N.Claud:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neckacheNClaud
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.neckacheJointsInflamed && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Joints Inflamed:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neckacheJointsInflamed
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Other History Details */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Other (History)
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.otherTremors && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Tremors:
+                                                            </span>{" "}
+                                                            {
+                                                                record.otherTremors
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.otherNumbness && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Numbness:
+                                                            </span>{" "}
+                                                            {
+                                                                record.otherNumbness
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.otherWeakness && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Weakness:
+                                                            </span>{" "}
+                                                            {
+                                                                record.otherWeakness
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.otherGiddiness && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Giddiness:
+                                                            </span>{" "}
+                                                            {
+                                                                record.otherGiddiness
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.otherOther && (
+                                                        <p className="md:col-span-2 lg:col-span-3">
+                                                            <span className="font-medium">
+                                                                Other Details:
+                                                            </span>{" "}
+                                                            {record.otherOther}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Examination Section Display */}
+                                        <div className="p-4 border border-gray-100 rounded-md bg-gray-50/50 space-y-4">
+                                            <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">
+                                                Examination
+                                            </h4>
+
+                                            {/* Neurological Examination */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Neurological Examination
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.neuroHigherFunctions && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Higher
+                                                                Functions:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neuroHigherFunctions
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.neuroGcs && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                GCS:
+                                                            </span>{" "}
+                                                            {record.neuroGcs}
+                                                        </p>
+                                                    )}
+                                                    {record.neuroTremors && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Tremors:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neuroTremors
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.neuroCranialNerves && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Cranial Nerves:
+                                                            </span>{" "}
+                                                            {
+                                                                record.neuroCranialNerves
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.neuroFundi && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Fundi:
+                                                            </span>{" "}
+                                                            {record.neuroFundi}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Cerebellum */}
+                                            {record.cerebellumSigns && (
+                                                <div>
+                                                    <h5 className="text-md font-semibold text-gray-700 mb-1">
+                                                        Cerebellum
+                                                    </h5>
+                                                    <p className="text-sm">
+                                                        {record.cerebellumSigns}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {record.cerebellumSigns && (
+                                                <hr className="my-3 border-gray-200" />
+                                            )}
+
+                                            {/* Motor, Sensory, Reflex (Main) */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Motor, Sensory, Reflex
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.examMotor && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Motor:
+                                                            </span>{" "}
+                                                            {record.examMotor}
+                                                        </p>
+                                                    )}
+                                                    {record.examSensory && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Sensory:
+                                                            </span>{" "}
+                                                            {record.examSensory}
+                                                        </p>
+                                                    )}
+                                                    {record.examReflex && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Reflex:
+                                                            </span>{" "}
+                                                            {record.examReflex}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Gait, Sp.Deformity, SLR, L/S */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Gait & Spine
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.examGait && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Gait:
+                                                            </span>{" "}
+                                                            {record.examGait}
+                                                        </p>
+                                                    )}
+                                                    {record.examSpDeformity && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Sp. Deformity:
+                                                            </span>{" "}
+                                                            {
+                                                                record.examSpDeformity
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.examSlr && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                SLR:
+                                                            </span>{" "}
+                                                            {record.examSlr}
+                                                        </p>
+                                                    )}
+                                                    {record.examLs && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                L/S:
+                                                            </span>{" "}
+                                                            {record.examLs}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {record.examHipsKnees && (
+                                                <div>
+                                                    <h5 className="text-md font-semibold text-gray-700 mt-2 mb-1">
+                                                        Hips/Knees
+                                                    </h5>
+                                                    <p className="text-sm">
+                                                        {record.examHipsKnees}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Tender Points */}
+                                            {record.tenderPoints && (
+                                                <div>
+                                                    <h5 className="text-md font-semibold text-gray-700 mb-1">
+                                                        Tender Points
+                                                    </h5>
+                                                    <p className="text-sm">
+                                                        {record.tenderPoints}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {record.tenderPoints && (
+                                                <hr className="my-3 border-gray-200" />
+                                            )}
+
+                                            {/* Wasting, EHL, Foot Weakness & Lower Limb Sens, Motor, Reflexes */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-2">
+                                                    Lower Limb Examination
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+                                                    {record.examWasting && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Wasting:
+                                                            </span>{" "}
+                                                            {record.examWasting}
+                                                        </p>
+                                                    )}
+                                                    {record.examEhl && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                EHL:
+                                                            </span>{" "}
+                                                            {record.examEhl}
+                                                        </p>
+                                                    )}
+                                                    {record.examFootWeakness && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Foot Weakness:
+                                                            </span>{" "}
+                                                            {
+                                                                record.examFootWeakness
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    {record.examSens && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Sens (Lower):
+                                                            </span>{" "}
+                                                            {record.examSens}
+                                                        </p>
+                                                    )}
+                                                    {record.examMotor2 && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Motor (Lower):
+                                                            </span>{" "}
+                                                            {record.examMotor2}
+                                                        </p>
+                                                    )}
+                                                    {record.examReflexes && (
+                                                        <p>
+                                                            <span className="font-medium">
+                                                                Reflexes
+                                                                (Lower):
+                                                            </span>{" "}
+                                                            {
+                                                                record.examReflexes
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {record.examOther && (
+                                                <div>
+                                                    <h5 className="text-md font-semibold text-gray-700 mt-2 mb-1">
+                                                        Other Exam Details
+                                                    </h5>
+                                                    <p className="text-sm">
+                                                        {record.examOther}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Past Illness */}
+                                            {record.pastIllness && (
+                                                <div>
+                                                    <h5 className="text-md font-semibold text-gray-700 mb-1">
+                                                        Past Illness
+                                                    </h5>
+                                                    <p className="text-sm">
+                                                        {record.pastIllness}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {record.pastIllness && (
+                                                <hr className="my-3 border-gray-200" />
+                                            )}
+
+                                            {/* Allergies */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-1">
+                                                    Allergies
+                                                </h5>
+                                                {record.allergies && (
+                                                    <p
+                                                        className={`text-sm ${
+                                                            record.allergies
+                                                                ? "text-yellow-700 bg-yellow-50 p-1 rounded-md"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        {record.allergies}
+                                                    </p>
+                                                )}
+                                                {record.allergensInput && (
+                                                    <p
+                                                        className={`text-sm ${
+                                                            record.allergensInput
+                                                                ? "text-yellow-700 bg-yellow-50 p-1 rounded-md"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        <span className="font-medium">
+                                                            Details:
+                                                        </span>{" "}
+                                                        {record.allergensInput}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <hr className="my-3 border-gray-200" />
+
+                                            {/* Drugs */}
+                                            <div>
+                                                <h5 className="text-md font-semibold text-gray-700 mb-1">
+                                                    Drugs
+                                                </h5>
+                                                {record.drugsInput && (
+                                                    <p className="text-sm">
+                                                        <span className="font-medium">
+                                                            Details:
+                                                        </span>{" "}
+                                                        {record.drugsInput}
+                                                    </p>
+                                                )}
+                                                {record.drugsTaken && (
+                                                    <p
+                                                        className={`text-sm ${
+                                                            record.drugsTaken
+                                                                ? "text-red-700 bg-red-50 p-1 rounded-md"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        <span className="font-medium">
+                                                            Specific Drugs
+                                                            Taken:
+                                                        </span>{" "}
+                                                        {record.drugsTaken}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    
-                                    {/* History Section Display */}
-                                    <div className="mb-4 p-4 border border-gray-100 rounded-md bg-gray-50/50 space-y-4">
-                                        <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">History</h4>
-                                        
-                                        {/* Headache Details */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Headache Details</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.headacheDuration && <p><span className="font-medium">Duration:</span> {record.headacheDuration}</p>}
-                                                {record.headacheEpisode && <p><span className="font-medium">Episode:</span> {record.headacheEpisode}</p>}
-                                                {record.headacheSite && <p><span className="font-medium">Site:</span> {record.headacheSite}</p>}
-                                                {record.headacheAura && <p><span className="font-medium">Aura:</span> {record.headacheAura}</p>}
-                                                {record.headacheEnt && <p><span className="font-medium">ENT:</span> {record.headacheEnt}</p>}
-                                                {record.headacheEye && <p><span className="font-medium">Eye:</span> {record.headacheEye}</p>}
-                                                {record.headacheSen && <p><span className="font-medium">Sen:</span> {record.headacheSen}</p>}
-                                                {record.headacheFocalSymptoms && <p><span className="font-medium">Focal Symptoms:</span> {record.headacheFocalSymptoms}</p>}
-                                            </div>
-                                        </div>
-                                        <hr className="my-3 border-gray-200" />
-                                        
-                                        {/* Backache Details */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Backache</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.backacheDuration && <p><span className="font-medium">Duration:</span> {record.backacheDuration}</p>}
-                                                {record.backacheSite && <p><span className="font-medium">Site:</span> {record.backacheSite}</p>}
-                                                {record.backacheRadiation && <p><span className="font-medium">Radiation:</span> {record.backacheRadiation}</p>}
-                                                {record.backacheTrauma && <p><span className="font-medium">Trauma:</span> {record.backacheTrauma}</p>}
-                                                {record.backacheJointsInflamed && <p><span className="font-medium">Joints Inflamed:</span> {record.backacheJointsInflamed}</p>}
-                                            </div>
-                                        </div>
-                                        <hr className="my-3 border-gray-200" />
-
-                                        {/* Neckache Details */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Neckache</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.neckacheFocalSymptoms && <p><span className="font-medium">Focal Symptoms:</span> {record.neckacheFocalSymptoms}</p>}
-                                                {record.neckacheSen && <p><span className="font-medium">Sen:</span> {record.neckacheSen}</p>}
-                                                {record.neckacheMotor && <p><span className="font-medium">Motor:</span> {record.neckacheMotor}</p>}
-                                                {record.neckacheNClaud && <p><span className="font-medium">N.Claud:</span> {record.neckacheNClaud}</p>}
-                                                {record.neckacheJointsInflamed && <p><span className="font-medium">Joints Inflamed:</span> {record.neckacheJointsInflamed}</p>}
-                                            </div>
-                                        </div>
-                                        <hr className="my-3 border-gray-200" />
-
-                                        {/* Other History Details */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Other (History)</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.otherTremors && <p><span className="font-medium">Tremors:</span> {record.otherTremors}</p>}
-                                                {record.otherNumbness && <p><span className="font-medium">Numbness:</span> {record.otherNumbness}</p>}
-                                                {record.otherWeakness && <p><span className="font-medium">Weakness:</span> {record.otherWeakness}</p>}
-                                                {record.otherGiddiness && <p><span className="font-medium">Giddiness:</span> {record.otherGiddiness}</p>}
-                                                {record.otherOther && <p className="md:col-span-2 lg:col-span-3"><span className="font-medium">Other Details:</span> {record.otherOther}</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Examination Section Display */}
-                                    <div className="p-4 border border-gray-100 rounded-md bg-gray-50/50 space-y-4">
-                                        <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Examination</h4>
-
-                                        {/* Neurological Examination */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Neurological Examination</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.neuroHigherFunctions && <p><span className="font-medium">Higher Functions:</span> {record.neuroHigherFunctions}</p>}
-                                                {record.neuroGcs && <p><span className="font-medium">GCS:</span> {record.neuroGcs}</p>}
-                                                {record.neuroTremors && <p><span className="font-medium">Tremors:</span> {record.neuroTremors}</p>}
-                                                {record.neuroCranialNerves && <p><span className="font-medium">Cranial Nerves:</span> {record.neuroCranialNerves}</p>}
-                                                {record.neuroFundi && <p><span className="font-medium">Fundi:</span> {record.neuroFundi}</p>}
-                                            </div>
-                                        </div>
-                                        <hr className="my-3 border-gray-200" />
-
-                                        {/* Cerebellum */}
-                                        {record.cerebellumSigns && <div><h5 className="text-md font-semibold text-gray-700 mb-1">Cerebellum</h5><p className="text-sm">{record.cerebellumSigns}</p></div>}
-                                        {(record.cerebellumSigns) && <hr className="my-3 border-gray-200" />}
-                                        
-                                        {/* Motor, Sensory, Reflex (Main) */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Motor, Sensory, Reflex</h5>
-                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.examMotor && <p><span className="font-medium">Motor:</span> {record.examMotor}</p>}
-                                                {record.examSensory && <p><span className="font-medium">Sensory:</span> {record.examSensory}</p>}
-                                                {record.examReflex && <p><span className="font-medium">Reflex:</span> {record.examReflex}</p>}
-                                            </div>
-                                        </div>
-                                        <hr className="my-3 border-gray-200" />
-
-                                        {/* Gait, Sp.Deformity, SLR, L/S */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Gait & Spine</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.examGait && <p><span className="font-medium">Gait:</span> {record.examGait}</p>}
-                                                {record.examSpDeformity && <p><span className="font-medium">Sp. Deformity:</span> {record.examSpDeformity}</p>}
-                                                {record.examSlr && <p><span className="font-medium">SLR:</span> {record.examSlr}</p>}
-                                                {record.examLs && <p><span className="font-medium">L/S:</span> {record.examLs}</p>}
-                                            </div>
-                                        </div>
-                                        {record.examHipsKnees && <div><h5 className="text-md font-semibold text-gray-700 mt-2 mb-1">Hips/Knees</h5><p className="text-sm">{record.examHipsKnees}</p></div>}
-                                        <hr className="my-3 border-gray-200" />
-                                        
-                                        {/* Tender Points */}
-                                        {record.tenderPoints && <div><h5 className="text-md font-semibold text-gray-700 mb-1">Tender Points</h5><p className="text-sm">{record.tenderPoints}</p></div>}
-                                        {(record.tenderPoints) && <hr className="my-3 border-gray-200" />}
-
-                                        {/* Wasting, EHL, Foot Weakness & Lower Limb Sens, Motor, Reflexes */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-2">Lower Limb Examination</h5>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1 text-sm">
-                                                {record.examWasting && <p><span className="font-medium">Wasting:</span> {record.examWasting}</p>}
-                                                {record.examEhl && <p><span className="font-medium">EHL:</span> {record.examEhl}</p>}
-                                                {record.examFootWeakness && <p><span className="font-medium">Foot Weakness:</span> {record.examFootWeakness}</p>}
-                                                {record.examSens && <p><span className="font-medium">Sens (Lower):</span> {record.examSens}</p>}
-                                                {record.examMotor2 && <p><span className="font-medium">Motor (Lower):</span> {record.examMotor2}</p>}
-                                                {record.examReflexes && <p><span className="font-medium">Reflexes (Lower):</span> {record.examReflexes}</p>}
-                                            </div>
-                                        </div>
-                                        {record.examOther && <div><h5 className="text-md font-semibold text-gray-700 mt-2 mb-1">Other Exam Details</h5><p className="text-sm">{record.examOther}</p></div>}
-                                        <hr className="my-3 border-gray-200" />
-
-                                        {/* Past Illness */}
-                                        {record.pastIllness && <div><h5 className="text-md font-semibold text-gray-700 mb-1">Past Illness</h5><p className="text-sm">{record.pastIllness}</p></div>}
-                                        {(record.pastIllness) && <hr className="my-3 border-gray-200" />}
-
-                                        {/* Allergies */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-1">Allergies</h5>
-                                            {record.allergies && <p className={`text-sm ${record.allergies ? 'text-yellow-700 bg-yellow-50 p-1 rounded-md' : ''}`}>{record.allergies}</p>}
-                                            {record.allergensInput && <p className={`text-sm ${record.allergensInput ? 'text-yellow-700 bg-yellow-50 p-1 rounded-md' : ''}`}><span className="font-medium">Details:</span> {record.allergensInput}</p>}
-                                        </div>
-                                        <hr className="my-3 border-gray-200" />
-                                        
-                                        {/* Drugs */}
-                                        <div>
-                                            <h5 className="text-md font-semibold text-gray-700 mb-1">Drugs</h5>
-                                            {record.drugsInput && <p className="text-sm"><span className="font-medium">Details:</span> {record.drugsInput}</p>}
-                                            {record.drugsTaken && <p className={`text-sm ${record.drugsTaken ? 'text-red-700 bg-red-50 p-1 rounded-md' : ''}`}><span className="font-medium">Specific Drugs Taken:</span> {record.drugsTaken}</p>}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     </section>
 
                     <div className="mt-6">
-                        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-                        <TabContent 
-                            activeTab={activeTab} 
+                        <TabNavigation
+                            activeTab={activeTab}
+                            onTabChange={setActiveTab}
+                        />
+                        <TabContent
+                            activeTab={activeTab}
                             patientData={patientData}
                             patientId={patientData.id}
                             patientClinicRefNo={patientData.clinicRefNo}
