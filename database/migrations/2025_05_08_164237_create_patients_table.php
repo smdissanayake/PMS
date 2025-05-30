@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('firstName');
             $table->string('lastName');
-            $table->integer('age');
+            $table->date('birthday');
             $table->string('gender');
             $table->text('address');
             $table->string('clinicRefNo')->unique();
-            $table->string('nic')->unique();
-            $table->string('uhid')->unique();
+            $table->string('nic');
+            $table->string('uhid');
             $table->string('category');
             $table->timestamps();
         });

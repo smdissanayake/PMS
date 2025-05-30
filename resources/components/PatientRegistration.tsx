@@ -4,7 +4,7 @@ import { ArrowLeftIcon, SaveIcon, AlertCircleIcon, CheckCircle2Icon } from 'luci
 interface FormData {
   firstName: string;
   lastName: string;
-  age: string;
+  birthday: string;
   gender: string;
   address: string;
   clinicRefNo: string;
@@ -25,7 +25,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const initialFormData: FormData = {
     firstName: '',
     lastName: '',
-    age: '',
+    birthday: '',
     gender: '',
     address: '',
     clinicRefNo: '',
@@ -139,10 +139,19 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Age
+                  Birthday (YYYY/MM/DD)
                 </label>
-                <input type="number" name="age" value={formData.age} onChange={handleInputChange} className={`w-full px-4 py-2.5 border ${validationErrors.age ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`} required />
-                {validationErrors.age && <p className="text-xs text-red-500 mt-1">{validationErrors.age.join(', ')}</p>}
+                <input 
+                  type="text" 
+                  name="birthday" 
+                  value={formData.birthday} 
+                  onChange={handleInputChange} 
+                  placeholder="YYYY/MM/DD"
+                  pattern="\d{4}/\d{2}/\d{2}"
+                  className={`w-full px-4 py-2.5 border ${validationErrors.birthday ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`} 
+                  required 
+                />
+                {validationErrors.birthday && <p className="text-xs text-red-500 mt-1">{validationErrors.birthday.join(', ')}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

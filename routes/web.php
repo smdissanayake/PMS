@@ -5,10 +5,6 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\DrugController;
 use App\Http\Controllers\Api\PrescriptionController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\MedicalOrderController;
 
 Route::get('/', function () {
     return inertia('Home');

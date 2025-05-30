@@ -9,16 +9,19 @@ import {
   LayoutDashboard,
   Search,
 } from "lucide-react";
+import asiriLogo from '../images/asiri.png';
+
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isCollapsed: boolean;
 }
-export const Sidebar: React.FC<SidebarProps> = ({
+
+export const Sidebar = ({
   activeTab,
   setActiveTab,
   isCollapsed,
-}) => {
+}: SidebarProps) => {
   const menuItems = [
     {
       id: "dashboard",
@@ -46,20 +49,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: <ClipboardMinus size={20} />,
     },
   ];
+
   return (
     <div
       className={`bg-white border-r border-gray-200 min-h-screen flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
-      <div className="p-5 border-b border-gray-200">
-        <h1
-          className={`text-xl font-semibold text-blue-600 truncate ${
-            isCollapsed ? "text-center" : ""
-          }`}
-        >
-          {isCollapsed ? "MD" : "MediDash"}
-        </h1>
+      <div className="p-5 border-gray-200">
+        <div className={`text-xl font-semibold text-blue-600 h-fit truncate ${
+          isCollapsed ? "text-center" : ""
+        }`}>
+          {isCollapsed ? (
+            <div className="flex items-center text-center justify-center">
+              <img
+                src={asiriLogo}
+                alt="Logo"
+                className="w-full h-auto object-contain p-0"
+                style={{ visibility: 'hidden' }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center text-center justify-center">
+              <img
+                src={asiriLogo}
+                alt="Logo"
+                className="w-full h-auto object-contain p-0"
+                style={{ maxWidth: '150px', maxHeight: '200px' }}
+              />
+            </div>
+          )}
+        </div>
       </div>
       <nav className="flex-1 pt-5">
         <ul>

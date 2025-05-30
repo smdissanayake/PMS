@@ -90,7 +90,7 @@ const TabContent = ({
                                         Patient has a history of asthma and
                                         seasonal allergies. Regular follow-up
                                         maintained. Last acute episode: March
-                                        2023. ${patientClinicRefNo}
+                                        2023.
                                     </p>
                                 </div>
                             </div>
@@ -139,20 +139,21 @@ const TabContent = ({
                     </div>
                 );
             case "investigations":
-                return <InvestigationsTab />;
+                return <InvestigationsTab 
+                         patientName={patientData}
+                        patientId={patientId}
+                        patientClinicRefNo={patientClinicRefNo} 
+                />;
             case "orders":
                 return (
                     <OrderForm
+                        patientName={patientData}
                         patientId={patientId}
                         patientClinicRefNo={patientClinicRefNo}
                     />
                 );
             case "drugs":
-                return (
-                    <PrescriptionGenerator
-                        patientClinicRefNo={patientClinicRefNo}
-                    />
-                );
+                return <PrescriptionGenerator />;
             case "ward":
                 return (
                     <WardAdmissionForm

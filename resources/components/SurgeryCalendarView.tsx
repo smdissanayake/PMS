@@ -1,125 +1,163 @@
 import React, { useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 interface Surgery {
   id: string;
   patientName: string;
+  refNo: string;
+  uhid: string;
   surgeryName: string;
   date: string;
   time: string;
 }
+
 interface SurgeryCalendarViewProps {
   view: 'month' | 'week';
   surgeries: Surgery[];
+  onDateSelect: (date: string) => void;
+  selectedDate: string;
 }
-const SurgeryCalendarView = ({
-  view,
-  surgeries
-}: SurgeryCalendarViewProps) => {
+
+const SurgeryCalendarView: React.FC<SurgeryCalendarViewProps> = ({ view, surgeries, onDateSelect, selectedDate }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const today = new Date().toISOString().split('T')[0];
+
   const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const formatDate = (date: Date) => {
     const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getSurgeriesForDate = (date: string) => {
+    return surgeries.filter(surgery => surgery.date === date);
+  };
+
+  const renderMonthView = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDayOfMonth = getFirstDayOfMonth(currentDate);
     const days = [];
-    // Add previous month's days
-    for (let i = 0; i < firstDay.getDay(); i++) {
-      const prevDate = new Date(year, month, -i);
-      days.unshift({
-        date: prevDate,
-        isCurrentMonth: false
-      });
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(<div key={`empty-${i}`} className="h-24 border border-gray-100"></div>);
     }
-    // Add current month's days
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push({
-        date: new Date(year, month, i),
-        isCurrentMonth: true
-      });
-    }
-    // Add next month's days to complete the grid
-    const remainingDays = 42 - days.length; // 6 rows * 7 days
-    for (let i = 1; i <= remainingDays; i++) {
-      days.push({
-        date: new Date(year, month + 1, i),
-        isCurrentMonth: false
-      });
-    }
-    return days;
-  };
-  const getSurgeriesForDate = (date: Date) => {
-    return surgeries.filter(surgery => {
-      const surgeryDate = new Date(surgery.date);
-      return surgeryDate.getDate() === date.getDate() && surgeryDate.getMonth() === date.getMonth() && surgeryDate.getFullYear() === date.getFullYear();
-    });
-  };
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + (direction === 'next' ? 1 : -1), 1));
-  };
-  const renderMonthView = () => <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
-      {daysOfWeek.map(day => <div key={day} className="bg-gray-50 p-2 text-center text-sm font-medium text-gray-700">
-          {day}
-        </div>)}
-      {getDaysInMonth(currentDate).map(({
-      date,
-      isCurrentMonth
-    }, i) => {
-      const daySurgeries = getSurgeriesForDate(date);
-      return <div key={i} className={`bg-white min-h-[120px] p-2 transition-colors hover:bg-gray-50 ${!isCurrentMonth ? 'bg-gray-50' : ''}`}>
-            <span className={`text-sm ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
-              {date.getDate()}
-            </span>
-            <div className="mt-1 space-y-1">
-              {daySurgeries.map(surgery => <div key={surgery.id} className="p-1.5 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700">
-                  {surgery.surgeryName} - {surgery.patientName}
-                </div>)}
+
+    // Add cells for each day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dateString = formatDate(date);
+      const daySurgeries = getSurgeriesForDate(dateString);
+      const isToday = dateString === today;
+      const isSelected = dateString === selectedDate;
+
+      days.push(
+        <div
+          key={day}
+          onClick={() => onDateSelect(dateString)}
+          className={`h-24 border border-gray-100 p-2 cursor-pointer transition-colors ${
+            isToday ? 'bg-blue-50' : ''
+          } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+        >
+          <div className="font-medium text-sm mb-1">{day}</div>
+          {daySurgeries.length > 0 && (
+            <div className="text-xs p-1 bg-blue-100 text-blue-800 rounded text-center">
+              {daySurgeries.length} {daySurgeries.length === 1 ? 'Surgery' : 'Surgeries'}
             </div>
-          </div>;
-    })}
-    </div>;
-  const renderWeekView = () => {
-    const weekStart = new Date(currentDate);
-    weekStart.setDate(currentDate.getDate() - currentDate.getDay());
-    return <div className="space-y-2">
-        {Array.from({
-        length: 7
-      }).map((_, i) => {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + i);
-        const daySurgeries = getSurgeriesForDate(date);
-        return <div key={i} className="flex items-center p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-32 text-sm font-medium text-gray-700">
-                {daysOfWeek[i]} {date.getDate()}
-              </div>
-              <div className="flex-1 space-y-1">
-                {daySurgeries.map(surgery => <div key={surgery.id} className="inline-flex items-center px-2.5 py-1 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700">
-                    {surgery.surgeryName} - {surgery.patientName} (
-                    {surgery.time})
-                  </div>)}
-              </div>
-            </div>;
-      })}
-      </div>;
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-7 gap-px bg-gray-100">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="bg-white p-2 text-center font-medium text-sm text-gray-500">
+            {day}
+          </div>
+        ))}
+        {days}
+      </div>
+    );
   };
-  return <div className="space-y-4">
+
+  const renderWeekView = () => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      const dateString = formatDate(date);
+      const daySurgeries = getSurgeriesForDate(dateString);
+      const isToday = dateString === today;
+      const isSelected = dateString === selectedDate;
+
+      days.push(
+        <div
+          key={i}
+          onClick={() => onDateSelect(dateString)}
+          className={`border border-gray-100 p-4 cursor-pointer transition-colors ${
+            isToday ? 'bg-blue-50' : ''
+          } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+        >
+          <div className="font-medium mb-2">
+            {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </div>
+          {daySurgeries.length > 0 && (
+            <div className="p-2 bg-blue-100 text-blue-800 rounded text-center">
+              {daySurgeries.length} {daySurgeries.length === 1 ? 'Surgery' : 'Surgeries'}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return <div className="grid grid-cols-7 gap-px bg-gray-100">{days}</div>;
+  };
+
+  return (
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium text-gray-900">
-          {currentDate.toLocaleString('default', {
-          month: 'long',
-          year: 'numeric'
-        })}
-        </h2>
         <div className="flex items-center gap-2">
-          <button onClick={() => navigateMonth('prev')} className="p-1 rounded hover:bg-gray-100 text-gray-500">
-            <ChevronLeftIcon size={20} />
+          <button
+            onClick={() => {
+              const newDate = new Date(currentDate);
+              newDate.setMonth(currentDate.getMonth() - 1);
+              setCurrentDate(newDate);
+            }}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft size={20} />
           </button>
-          <button onClick={() => navigateMonth('next')} className="p-1 rounded hover:bg-gray-100 text-gray-500">
-            <ChevronRightIcon size={20} />
+          <h2 className="text-lg font-semibold">
+            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </h2>
+          <button
+            onClick={() => {
+              const newDate = new Date(currentDate);
+              newDate.setMonth(currentDate.getMonth() + 1);
+              setCurrentDate(newDate);
+            }}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
       {view === 'month' ? renderMonthView() : renderWeekView()}
-    </div>;
+    </div>
+  );
 };
+
 export default SurgeryCalendarView;

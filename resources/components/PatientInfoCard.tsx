@@ -13,7 +13,7 @@ interface PatientProps {
   patient: {
     name: string;
     nic: string;
-    age: string;
+    birthday: string;
     gender: string;
     address: string;
     category: string;
@@ -69,7 +69,7 @@ const PatientInfoCard = ({ patient, records }: PatientProps) => {
           <div>
             <div className="flex items-center text-gray-600 mb-2">
               <CalendarIcon size={16} className="mr-2" />
-              <span className="text-sm">Age: {patient.age}</span>
+              <span className="text-sm">Birthday: {patient.birthday}</span>
             </div>
             <div className="flex items-center text-gray-600">
               <UserIcon size={16} className="mr-2" />
