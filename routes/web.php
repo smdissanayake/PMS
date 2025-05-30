@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\MedicalOrderController;
+use App\Http\Controllers\Api\SurgeryController;
+use App\Http\Controllers\Api\InvestigationReportController;       
+
 
 Route::get('/', function () {
     return inertia('Home');
@@ -101,5 +104,5 @@ Route::prefix('investigation-reports')->group(function () {
 Route::prefix('surgeries')->group(function () {
     Route::get('/', [SurgeryController::class, 'index']);
     Route::post('/', [SurgeryController::class, 'store']);
-    Route::delete('/{id}', [SurgeryController::class, 'destroy']);
-    
+    Route::delete('/{id}', [SurgeryController::class, 'destroy']);    
+});    
