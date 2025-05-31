@@ -70,39 +70,6 @@ class InvestigationReportController extends Controller
                 throw new \Exception('Failed to store file in Laravel storage');
             }
 
-            // Try to store in PSM folder, but don't fail if it doesn't work
-            $psmPath = 'C:/Users/PSM/investigation_reports/' . $request->patient_clinic_ref_no;
-            $psmFilePath = $psmPath . '/' . $fileName;
-            $psmStorageSuccess = false;
-
-            try {
-                if (!file_exists($psmPath)) {
-                    if (!@mkdir($psmPath, 0777, true)) {
-                        Log::warning('Failed to create PSM directory, continuing with Laravel storage only', [
-                            'path' => $psmPath,
-                            'error' => error_get_last()
-                        ]);
-                    }
-                }
-
-                if (file_exists($psmPath) && @$file->move($psmPath, $fileName)) {
-                    $psmStorageSuccess = true;
-                    Log::info('File successfully stored in PSM folder', [
-                        'path' => $psmFilePath
-                    ]);
-                } else {
-                    Log::warning('Failed to move file to PSM folder, continuing with Laravel storage only', [
-                        'source' => $file->getPathname(),
-                        'destination' => $psmFilePath,
-                        'error' => error_get_last()
-                    ]);
-                }
-            } catch (\Exception $e) {
-                Log::warning('Error during PSM storage attempt, continuing with Laravel storage only', [
-                    'error' => $e->getMessage()
-                ]);
-            }
-
             // Create the investigation report record
             $report = InvestigationReport::create([
                 'medical_order_id' => $request->medical_order_id,
@@ -131,13 +98,12 @@ class InvestigationReportController extends Controller
 
             Log::info('File upload completed successfully', [
                 'report_id' => $report->id,
-                'file_path' => $filePath,
-                'psm_storage_success' => $psmStorageSuccess
+                'file_path' => $filePath
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Report uploaded successfully' . (!$psmStorageSuccess ? ' (PSM storage not available)' : ''),
+                'message' => 'Report uploaded successfully',
                 'data' => $report
             ], 201);
 
@@ -152,9 +118,6 @@ class InvestigationReportController extends Controller
             // Clean up any partially uploaded files
             if (isset($filePath) && Storage::disk('public')->exists($filePath)) {
                 Storage::disk('public')->delete($filePath);
-            }
-            if (isset($psmFilePath) && file_exists($psmFilePath)) {
-                @unlink($psmFilePath);
             }
 
             return response()->json([
@@ -171,13 +134,8 @@ class InvestigationReportController extends Controller
             $filePath = storage_path('app/public/' . $report->file_path);
 
             if (!file_exists($filePath)) {
-                // Try PSM location if Laravel storage fails
-                $psmPath = 'C:/Users/PSM/investigation_reports/' . $report->patient_clinic_ref_no . '/' . $report->file_name;
-                if (file_exists($psmPath)) {
-                    return response()->download($psmPath, $report->file_name);
-                }
                 return response()->json([
-                    'message' => 'File not found in any storage location'
+                    'message' => 'File not found'
                 ], 404);
             }
 
@@ -201,12 +159,6 @@ class InvestigationReportController extends Controller
             
             // Delete the file from Laravel storage
             Storage::disk('public')->delete($report->file_path);
-            
-            // Delete the file from PSM folder
-            $psmPath = 'C:/Users/PSM/investigation_reports/' . $report->patient_clinic_ref_no . '/' . $report->file_name;
-            if (file_exists($psmPath)) {
-                @unlink($psmPath);
-            }
             
             // Delete the record
             $report->delete();
