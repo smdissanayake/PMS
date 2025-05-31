@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PatientController;
@@ -116,3 +115,8 @@ Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
 // Surgery Notes Routes (Moved here for clarity and consistency)
 Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
 Route::get('/api/surgery-notes', [SurgeryNoteController::class, 'index']);
+
+// Ward Admission Routes
+Route::get('/api/patients/{patientId}/ward-admissions', [WardAdmissionController::class, 'getPatientAdmissions']);
+Route::post('/api/ward-admissions', [WardAdmissionController::class, 'store']);
+Route::delete('/api/ward-admissions/{id}', [WardAdmissionController::class, 'destroy']);
