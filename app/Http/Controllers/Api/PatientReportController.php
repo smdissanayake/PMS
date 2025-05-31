@@ -5,15 +5,39 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PatientReport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PatientReportController extends Controller
 {
     /**
     * Display a listing of the resource.
     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        try {
+            $validator = Validator::make($request->all(), [
+                'clinic_ref_no' => 'required|string|exists:patients,clinicRefNo'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $reports = PatientReport::where('clinic_ref_no', $request->clinic_ref_no)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json($reports);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch patient reports: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     /**
@@ -21,19 +45,44 @@ class PatientReportController extends Controller
     */
     public function store(Request $request)
     {
-        $request->validate([
-            'clinic_ref_no' => 'required|string|max:255',
-            'file' => 'required|file|mimes:pdf,jpg,png|max:2048', // Max 2MB
-        ]);
-        
-        $filePath = $request->file('file')->store('patient_reports', 'public');
-        
-        $patientReport = PatientReport::create([
-            'clinic_ref_no' => $request->clinic_ref_no,
-            'file_path' => $filePath,
-        ]);
-        
-        return response()->json($patientReport, 201);
+        try {
+            $request->validate([
+                'clinic_ref_no' => 'required|string|max:255',
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // Added jpeg and proper PNG mime type
+            ]);
+            
+            $file = $request->file('file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            
+            // Create filename with just the clinic reference number
+            $fileName = $request->clinic_ref_no . '.' . $extension;
+            
+            // Store the file with the new name
+            $filePath = $file->storeAs('patient_reports', $fileName, 'public');
+            
+            if (!$filePath) {
+                return response()->json([
+                    'message' => 'Failed to store file'
+                ], 500);
+            }
+            
+            $patientReport = PatientReport::create([
+                'clinic_ref_no' => $request->clinic_ref_no,
+                'file_path' => $filePath,
+            ]);
+            
+            return response()->json($patientReport, 201);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to upload report: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     /**

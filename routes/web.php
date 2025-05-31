@@ -112,6 +112,7 @@ Route::prefix('surgeries')->group(function () {
 
 // Patient Reports Routes (Moved here for clarity and consistency)
 Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
+Route::get('/api/patient-reports', [PatientReportController::class, 'index']);
 
 // Surgery Notes Routes (Moved here for clarity and consistency)
 Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
