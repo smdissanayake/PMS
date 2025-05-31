@@ -14,11 +14,13 @@ use App\Http\Controllers\Api\SurgeryController;
 use App\Http\Controllers\Api\InvestigationReportController;
 use App\Http\Controllers\Api\PatientReportController;
 use App\Http\Controllers\Api\SurgeryNoteController;
+use Inertia\Inertia;
 
 
 Route::get('/', function () {
     return inertia('Home');
 });
+
 Route::get('/add-user', function () {
     return inertia('AddUser');
 });
@@ -116,3 +118,15 @@ Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
 // Surgery Notes Routes (Moved here for clarity and consistency)
 Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
 Route::get('/api/surgery-notes', [SurgeryNoteController::class, 'index']);
+
+Route::get('/patient-details', function () {
+    return inertia('PatientDetails');
+});
+
+Route::get('/api/patient-notes/today', [PatientController::class, 'getTodaysVisits']);
+
+Route::get('/todays-visits', function () {
+    return Inertia::render('TodaysVisits');
+})->name('todays-visits');
+
+Route::get('/api/patient-categories', [PatientController::class, 'getPatientCategoryDistribution']);
