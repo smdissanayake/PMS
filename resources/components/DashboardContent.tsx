@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { PlusIcon } from "lucide-react";
 import StatisticsCards from "./StatisticsCards";
 import AddDrugModal from "./AddDrugModal";
+import PatientVisitsChart from "./PatientVisitsChart";
+import PatientCategoryChart from "./PatientCategoryChart";
 import axios from "axios"; // Import axios
 import Swal from "sweetalert2"; // Import SweetAlert2
 
@@ -202,6 +204,13 @@ const DashboardContent = () => {
     return (
         <div className="space-y-4 flex-1">
             <StatisticsCards />
+            
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PatientVisitsChart />
+                <PatientCategoryChart />
+            </div>
+
             {/* Drug List Section */}
             <div className="bg-white rounded-xl p-6 space-y-6">
                 <div className="flex items-center justify-between">

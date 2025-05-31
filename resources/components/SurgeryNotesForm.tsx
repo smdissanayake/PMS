@@ -6,7 +6,6 @@ import {
     DollarSignIcon,
 } from "lucide-react";
 import PathologyUploader from "./PathologyUploader";
-import { jsPDF } from "jspdf";
 import axios from "axios"; // Import axios
 
 interface FormErrors {
