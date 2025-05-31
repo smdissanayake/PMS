@@ -283,4 +283,84 @@ class PatientController extends Controller
             return response()->json(['message' => 'Error fetching patient notes: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get today's patient visits.
+     */
+    public function getTodaysVisits()
+    {
+        try {
+            $today = now()->format('Y-m-d');
+            
+            // Get total patient count
+            $totalPatients = DB::table('patients')->count();
+            
+            // Get today's unique visits
+            $visits = DB::table('patient_notes')
+                ->join('patients', 'patient_notes.clinicRefNo', '=', 'patients.clinicRefNo')
+                ->whereDate('patient_notes.created_at', $today)
+                ->select(
+                    'patient_notes.*',
+                    'patients.firstName',
+                    'patients.lastName'
+                )
+                ->orderBy('patient_notes.created_at', 'desc')
+                ->get()
+                ->unique('clinicRefNo')
+                ->values()
+                ->map(function ($visit) {
+                    return [
+                        'id' => $visit->id,
+                        'clinicRefNo' => $visit->clinicRefNo,
+                        'type' => $visit->type,
+                        'comments' => $visit->comments,
+                        'date' => $visit->date,
+                        'created_at' => $visit->created_at,
+                        'patient' => [
+                            'firstName' => $visit->firstName,
+                            'lastName' => $visit->lastName
+                        ]
+                    ];
+                });
+
+            return response()->json([
+                'visits' => $visits,
+                'totalPatients' => $totalPatients
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch today\'s visits',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPatientCategoryDistribution()
+    {
+        try {
+            $categories = DB::table('patients')
+                ->select('category', DB::raw('count(*) as count'))
+                ->whereNotNull('category')  // Only include patients with a category
+                ->where('category', '!=', '')  // Exclude empty categories
+                ->groupBy('category')
+                ->get();
+
+            // If no categories found, return some default data
+            if ($categories->isEmpty()) {
+                return response()->json([
+                    ['category' => 'General', 'count' => 0],
+                    ['category' => 'Specialist', 'count' => 0],
+                    ['category' => 'Emergency', 'count' => 0]
+                ]);
+            }
+
+            return response()->json($categories);
+        } catch (\Exception $e) {
+            \Log::error('Error in getPatientCategoryDistribution: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to fetch patient categories',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
