@@ -14,8 +14,6 @@ use App\Http\Controllers\Api\InvestigationReportController;
 use App\Http\Controllers\Api\PatientReportController;
 use App\Http\Controllers\Api\SurgeryNoteController;
 use Inertia\Inertia;
-use App\Http\Controllers\Api\SurgeryEstimateController; // Add this line
-
 
 Route::get('/', function () {
     return inertia('Home');
@@ -129,13 +127,3 @@ Route::get('/todays-visits', function () {
 })->name('todays-visits');
 
 Route::get('/api/patient-categories', [PatientController::class, 'getPatientCategoryDistribution']);
-// Ward Admission Routes
-Route::get('/api/patients/{patientId}/ward-admissions', [WardAdmissionController::class, 'getPatientAdmissions']);
-Route::post('/api/ward-admissions', [WardAdmissionController::class, 'store']);
-Route::delete('/api/ward-admissions/{id}', [WardAdmissionController::class, 'destroy']);
-
-// Surgery Estimate Routes
-Route::post('/api/surgery-estimates', [SurgeryEstimateController::class, 'store']);
-Route::get('/api/surgery-estimates/{clinicRefNo}', [SurgeryEstimateController::class, 'indexByClinicRefNo']);
-Route::put('/api/surgery-estimates/{id}', [SurgeryEstimateController::class, 'update']);
-Route::delete('/api/surgery-estimates/{id}', [SurgeryEstimateController::class, 'destroy']);
