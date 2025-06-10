@@ -200,7 +200,7 @@ const SurgeryEstimateCard: React.FC<SurgeryEstimateCardProps> = ({
                             </p>
                             {estimate.implant_request_data.implants &&
                                 estimate.implant_request_data.implants.length >
-                                0 && (
+                                    0 && (
                                     <div className="mt-2">
                                         <p className="font-medium">Implants:</p>
                                         <ul className="list-disc list-inside ml-4">
@@ -216,7 +216,10 @@ const SurgeryEstimateCard: React.FC<SurgeryEstimateCardProps> = ({
                                         </ul>
                                     </div>
                                 )}
-                            <p><strong>Remarks:</strong> {estimate.implant_request_data.remarks || 'N/A'}</p>
+                            <p>
+                                <strong>Remarks:</strong>{" "}
+                                {estimate.implant_request_data.remarks || "N/A"}
+                            </p>
                         </div>
                     )}
                 </div>
@@ -224,7 +227,11 @@ const SurgeryEstimateCard: React.FC<SurgeryEstimateCardProps> = ({
                     <button
                         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
                         onClick={() => {
-                            if (window.confirm("Are you sure you want to delete this estimate?")) {
+                            if (
+                                window.confirm(
+                                    "Are you sure you want to delete this estimate?"
+                                )
+                            ) {
                                 onDelete(estimate.id);
                             }
                         }}
