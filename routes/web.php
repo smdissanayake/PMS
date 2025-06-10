@@ -131,5 +131,3 @@ Route::get('/todays-visits', function () {
 })->name('todays-visits');
 
 Route::get('/api/patient-categories', [PatientController::class, 'getPatientCategoryDistribution']);
-
-//route for ward
