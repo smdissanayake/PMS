@@ -1,7 +1,7 @@
 import React from "react";
 
 interface SurgeryEstimateCardProps {
-    estimate: any; // Define a more specific type if possible
+    estimate: any;
     onClose: () => void;
     onEdit: (estimate: any) => void; // New prop for edit action
     onDelete: (id: number) => void; // New prop for delete action
