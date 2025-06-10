@@ -11,7 +11,7 @@ import {
     InfoIcon,
     HistoryIcon, // Added for View History button
 } from "lucide-react";
-
+import PathologyUploader from "./PathologyUploader";
 import axios from "axios"; // Import axios
 import SurgeryEstimateCard from "./SurgeryEstimateCard"; // Import the new component
 import jsPDF from "jspdf";
