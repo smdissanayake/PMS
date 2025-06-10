@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PatientController;
@@ -15,9 +16,11 @@ use App\Http\Controllers\Api\PatientReportController;
 use App\Http\Controllers\Api\SurgeryNoteController;
 use Inertia\Inertia;
 
+
 Route::get('/', function () {
     return inertia('Home');
 });
+
 Route::get('/add-user', function () {
     return inertia('AddUser');
 });
@@ -111,6 +114,7 @@ Route::prefix('surgeries')->group(function () {
 
 // Patient Reports Routes (Moved here for clarity and consistency)
 Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
+Route::get('/api/patient-reports', [PatientReportController::class, 'index']);
 
 // Surgery Notes Routes (Moved here for clarity and consistency)
 Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
