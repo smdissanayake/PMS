@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\InvestigationReportController;
 use App\Http\Controllers\Api\PatientReportController;
 use App\Http\Controllers\Api\SurgeryNoteController;
 use App\Http\Controllers\Api\SurgeryEstimateController; // Add this line
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return inertia('Home');
