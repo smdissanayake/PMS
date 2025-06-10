@@ -139,11 +139,13 @@ const TabContent = ({
                     </div>
                 );
             case "investigations":
-                return <InvestigationsTab 
-                         patientName={patientData}
+                return (
+                    <InvestigationsTab
+                        patientName={patientData}
                         patientId={patientId}
-                        patientClinicRefNo={patientClinicRefNo} 
-                />;
+                        patientClinicRefNo={patientClinicRefNo}
+                    />
+                );
             case "orders":
                 return (
                     <OrderForm
@@ -153,7 +155,11 @@ const TabContent = ({
                     />
                 );
             case "drugs":
-                return <PrescriptionGenerator />;
+                return (
+                    <PrescriptionGenerator
+                        patientClinicRefNo={patientClinicRefNo}
+                    />
+                );
             case "ward":
                 return (
                     <WardAdmissionForm
@@ -166,6 +172,7 @@ const TabContent = ({
                     <SurgeryNotesForm
                         patientId={patientId ?? null}
                         clinicRefNo={patientClinicRefNo || ""}
+                        patientData={patientData}
                     />
                 );
             default:

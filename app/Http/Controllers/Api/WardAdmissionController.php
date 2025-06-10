@@ -30,7 +30,7 @@ class WardAdmissionController extends Controller
         $imagePaths = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store('public/ward_admissions');
+                $path = $image->store('ward_admissions', 'public');
                 $imagePaths[] = Storage::url($path);
             }
         }

@@ -36,14 +36,27 @@ class SurgeryNoteController extends Controller
             'surgery_date' => 'required|date',
             'surgery_type' => 'required|string|max:255',
             'surgery_notes' => 'required|string',
-            'pathology_report_path' => 'nullable|string|max:255', // Assuming path is stored as string
+            'pathology_reports.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Validate each file in the array
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         
-        $surgeryNote = SurgeryNote::create($request->all());
+        $data = $request->except('pathology_reports'); // Get all data except files
+        
+        if ($request->hasFile('pathology_reports')) {
+            $uploadedPaths = [];
+            foreach ($request->file('pathology_reports') as $file) {
+                $path = $file->store('pathology_reports', 'public'); // Store the file on the 'public' disk
+                $uploadedPaths[] = 'storage/' . $path; // Get public URL path
+            }
+            $data['pathology_report_path'] = json_encode($uploadedPaths); // Store paths as JSON string
+        } else {
+            $data['pathology_report_path'] = null;
+        }
+        
+        $surgeryNote = SurgeryNote::create($data);
         
         return response()->json($surgeryNote, 201);
     }

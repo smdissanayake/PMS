@@ -13,4 +13,8 @@ class SurgeryNote extends Model
         'surgery_notes',
         'pathology_report_path',
     ];
+    
+    protected $casts = [
+        'pathology_report_path' => 'array',
+    ];
 }
