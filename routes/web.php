@@ -116,6 +116,18 @@ Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
 Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
 Route::get('/api/surgery-notes', [SurgeryNoteController::class, 'index']);
 
+Route::get('/patient-details', function () {
+    return inertia('PatientDetails');
+});
+
+Route::get('/api/patient-notes/today', [PatientController::class, 'getTodaysVisits']);
+
+Route::get('/todays-visits', function () {
+    return Inertia::render('TodaysVisits');
+})->name('todays-visits');
+
+Route::get('/api/patient-categories', [PatientController::class, 'getPatientCategoryDistribution']);
+
 // Ward Admission Routes
 Route::get('/api/patients/{patientId}/ward-admissions', [WardAdmissionController::class, 'getPatientAdmissions']);
 Route::post('/api/ward-admissions', [WardAdmissionController::class, 'store']);

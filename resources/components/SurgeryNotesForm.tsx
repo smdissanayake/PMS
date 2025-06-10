@@ -11,10 +11,10 @@ import {
     InfoIcon,
     HistoryIcon, // Added for View History button
 } from "lucide-react";
-import jsPDF from "jspdf";
-import axios from "axios";
-import SurgeryEstimateCard from "./SurgeryEstimateCard"; // Import the new component
 
+import axios from "axios"; // Import axios
+import SurgeryEstimateCard from "./SurgeryEstimateCard"; // Import the new component
+import jsPDF from "jspdf";
 interface FormErrors {
     date?: string;
     type?: string;
