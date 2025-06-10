@@ -1,12 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
+import axios, { AxiosError } from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import {
     XIcon,
     EyeIcon,
     Trash2Icon,
     DownloadIcon,
     PlusIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
 } from "lucide-react";
-import axios from "axios";
+
+const MySwal = withReactContent(Swal);
 
 interface WardAdmission {
     id: number;
@@ -16,7 +22,7 @@ interface WardAdmission {
     discharge_date: string;
     icu: string;
     ward: string;
-    image_paths: string[]; // Ensure backend returns this
+    image_paths: string[];
     created_at: string;
     updated_at: string;
 }
@@ -40,13 +46,16 @@ const WardAdmissionForm = ({
         }>
     >([]);
     const [modalImages, setModalImages] = useState<string[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [searchDate, setSearchDate] = useState<string>("");
     const [admissionDate, setAdmissionDate] = useState("");
     const [dischargeDate, setDischargeDate] = useState("");
     const [icu, setIcu] = useState("");
     const [ward, setWard] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [formError, setFormError] = useState<string | null>(null);
+    const [isCardSectionCollapsed, setIsCardSectionCollapsed] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchAdmissions = async () => {
         if (!patientId) {
@@ -59,8 +68,11 @@ const WardAdmissionForm = ({
             const response = await axios.get(
                 `/api/patients/${patientId}/ward-admissions`
             );
-            setAdmissions(response.data); // Ensure response.data contains image_paths
-        } catch (err) {
+            const data = Array.isArray(response.data)
+                ? response.data
+                : response.data.data || [];
+            setAdmissions(data);
+        } catch (err: unknown) {
             console.error("Failed to fetch ward admissions:", err);
             setError("Failed to load ward admissions.");
         } finally {
@@ -72,11 +84,24 @@ const WardAdmissionForm = ({
         fetchAdmissions();
     }, [patientId]);
 
+    useEffect(() => {
+        return () => {
+            tempFiles.forEach((fileObj) => {
+                if (fileObj.preview) URL.revokeObjectURL(fileObj.preview);
+            });
+        };
+    }, [tempFiles]);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
         if (files.length > 0) {
             if (files.length < 2) {
-                alert("Please select at least 2 images to upload.");
+                MySwal.fire({
+                    icon: "warning",
+                    title: "Validation Error",
+                    text: "Please select at least 2 images to upload.",
+                    confirmButtonColor: "#2563eb",
+                });
                 return;
             }
 
@@ -85,7 +110,12 @@ const WardAdmissionForm = ({
                     const typedFile = file as File;
                     const maxSize = 10 * 1024 * 1024;
                     if (typedFile.size > maxSize) {
-                        alert(`File "${typedFile.name}" exceeds 10MB limit.`);
+                        MySwal.fire({
+                            icon: "error",
+                            title: "File Size Error",
+                            text: `File "${typedFile.name}" exceeds 10MB limit.`,
+                            confirmButtonColor: "#2563eb",
+                        });
                         return null;
                     }
                     const acceptedTypes = [
@@ -94,9 +124,12 @@ const WardAdmissionForm = ({
                         "image/gif",
                     ];
                     if (!acceptedTypes.includes(typedFile.type)) {
-                        alert(
-                            `File "${typedFile.name}" is not a supported type. Only JPG, PNG, and GIF are allowed.`
-                        );
+                        MySwal.fire({
+                            icon: "error",
+                            title: "File Type Error",
+                            text: `File "${typedFile.name}" is not a supported type. Only JPG, PNG, and GIF are allowed.`,
+                            confirmButtonColor: "#2563eb",
+                        });
                         return null;
                     }
                     const uploadTime = new Date().toLocaleString("en-US", {
@@ -112,20 +145,24 @@ const WardAdmissionForm = ({
                     };
                 })
                 .filter((item) => item !== null) as Array<{
-                    file: File;
-                    preview: string;
-                    uploadTime: string;
-                    type: string;
-                }>;
+                file: File;
+                preview: string;
+                uploadTime: string;
+                type: string;
+            }>;
 
             if (newFiles.length < 2) {
-                alert(
-                    "One or more files failed validation. Please select at least 2 valid images."
-                );
+                MySwal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "One or more files failed validation. Please select at least 2 valid images.",
+                    confirmButtonColor: "#2563eb",
+                });
                 return;
             }
 
             setTempFiles(newFiles);
+            setFormError(null);
         }
     };
 
@@ -144,17 +181,24 @@ const WardAdmissionForm = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!admissionDate || !dischargeDate || !icu || !ward || !clinicRefNo) {
-            alert(
-                "Please fill all fields (Admission Date, Discharge Date, ICU, Ward, and ensure patient is selected)."
-            );
+            MySwal.fire({
+                icon: "warning",
+                title: "Form Incomplete",
+                text: "Please fill all fields (Admission Date, Discharge Date, ICU, Ward, and ensure patient is selected).",
+                confirmButtonColor: "#2563eb",
+            });
             return;
         }
-
         if (tempFiles.length < 2) {
-            alert("Please upload at least 2 images.");
+            MySwal.fire({
+                icon: "warning",
+                title: "Image Requirement",
+                text: "Please upload at least 2 images.",
+                confirmButtonColor: "#2563eb",
+            });
             return;
         }
-
+        setFormError(null);
         setLoading(true);
         setError(null);
 
@@ -165,7 +209,7 @@ const WardAdmissionForm = ({
         formData.append("icu", icu);
         formData.append("ward", ward);
         tempFiles.forEach((fileObj, index) => {
-            formData.append(`images[${index}]`, fileObj.file); // Send images to backend
+            formData.append(`images[${index}]`, fileObj.file);
         });
 
         try {
@@ -173,43 +217,54 @@ const WardAdmissionForm = ({
                 "/api/ward-admissions",
                 formData,
                 {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                    headers: { "Content-Type": "multipart/form-data" },
                 }
             );
-            alert("Ward admission added successfully!");
+            MySwal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Ward admission added successfully!",
+                confirmButtonColor: "#2563eb",
+            });
+            setFormError(null);
             setAdmissionDate("");
             setDischargeDate("");
             setIcu("");
             setWard("");
             setTempFiles([]);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            fetchAdmissions(); // Refresh to display new admission with images
-        } catch (err: any) {
+            fetchAdmissions();
+        } catch (err: unknown) {
             console.error("Failed to add ward admission:", err);
-            if (
-                err.response &&
-                err.response.data &&
-                err.response.data.message
-            ) {
+            if (axios.isAxiosError(err) && err.response?.data?.message) {
                 setError(err.response.data.message);
-                alert(`Error: ${err.response.data.message}`);
-            } else if (
-                err.response &&
-                err.response.data &&
-                err.response.data.errors
-            ) {
+                MySwal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: err.response.data.message,
+                    confirmButtonColor: "#2563eb",
+                });
+            } else if (axios.isAxiosError(err) && err.response?.data?.errors) {
                 const errors = err.response.data.errors;
                 let errorMessages = "";
                 for (const key in errors) {
                     errorMessages += `${errors[key].join(", ")}\n`;
                 }
                 setError(errorMessages);
-                alert(`Validation Error:\n${errorMessages}`);
+                MySwal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: errorMessages,
+                    confirmButtonColor: "#2563eb",
+                });
             } else {
                 setError("An unexpected error occurred.");
-                alert("An unexpected error occurred.");
+                MySwal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "An unexpected error occurred.",
+                    confirmButtonColor: "#2563eb",
+                });
             }
         } finally {
             setLoading(false);
@@ -217,23 +272,40 @@ const WardAdmissionForm = ({
     };
 
     const handleDeleteCard = async (id: number) => {
-        if (
-            !window.confirm(
-                "Are you sure you want to delete this ward admission record?"
-            )
-        ) {
+        const result = await MySwal.fire({
+            icon: "warning",
+            title: "Confirm Deletion",
+            text: "Are you sure you want to delete this ward admission record?",
+            showCancelButton: true,
+            confirmButtonColor: "#2563eb",
+            cancelButtonColor: "#dc2626",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (!result.isConfirmed) {
             return;
         }
+
         setLoading(true);
         setError(null);
         try {
             await axios.delete(`/api/ward-admissions/${id}`);
-            alert("Ward admission record deleted successfully!");
-            fetchAdmissions(); // Refresh the list
-        } catch (err) {
+            MySwal.fire({
+                icon: "success",
+                title: "Deleted",
+                text: "Ward admission record deleted successfully!",
+                confirmButtonColor: "#2563eb",
+            });
+            fetchAdmissions();
+        } catch (err: unknown) {
             console.error("Failed to delete ward admission:", err);
             setError("Failed to delete ward admission.");
-            alert("Failed to delete ward admission.");
+            MySwal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Failed to delete ward admission.",
+                confirmButtonColor: "#2563eb",
+            });
         } finally {
             setLoading(false);
         }
@@ -247,7 +319,7 @@ const WardAdmissionForm = ({
         imagePaths.forEach((path) => {
             const a = document.createElement("a");
             a.href = path;
-            a.download = path.substring(path.lastIndexOf("/") + 1); // Extract filename
+            a.download = path.substring(path.lastIndexOf("/") + 1);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -255,6 +327,17 @@ const WardAdmissionForm = ({
     };
 
     const closeModal = () => setModalImages([]);
+
+    const toggleCardSection = () => {
+        setIsCardSectionCollapsed((prev) => !prev);
+    };
+
+    const filteredAdmissions = searchDate
+        ? admissions.filter(
+              (admission) =>
+                  admission.admission_date.split("T")[0] === searchDate
+          )
+        : admissions;
 
     return (
         <div className="w-full p-6 bg-white rounded-xl shadow-lg border border-gray-100">
@@ -279,6 +362,9 @@ const WardAdmissionForm = ({
                 </button>
             </div>
             <form className="p-4 space-y-6">
+                {formError && (
+                    <p className="text-red-500 text-sm">{formError}</p>
+                )}
                 <div className="space-y-4">
                     <div className="flex gap-4">
                         <div className="flex-1">
@@ -337,7 +423,6 @@ const WardAdmissionForm = ({
                         />
                     </div>
                 </div>
-
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Upload Images (Min 2, Optional)
@@ -380,7 +465,6 @@ const WardAdmissionForm = ({
                             </p>
                         </div>
                     </div>
-
                     {tempFiles.length > 0 && (
                         <div className="mt-4 grid grid-cols-3 gap-2">
                             {tempFiles.map((file, fileIndex) => (
@@ -405,128 +489,208 @@ const WardAdmissionForm = ({
                         </div>
                     )}
                 </div>
-
-                {loading && (
-                    <p className="text-center text-blue-500">
-                        Loading admissions...
-                    </p>
-                )}
-                {error && <p className="text-center text-red-500">{error}</p>}
-
-                {admissions.length > 0 && (
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {admissions.map((admission) => (
-                            <div
-                                key={admission.id}
-                                className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
+                <div className="border-t border-gray-200 pt-4">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                        Search Admissions
+                    </h4>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Search by Admission Date
+                        </label>
+                        <div className="flex gap-4">
+                            <input
+                                type="date"
+                                value={searchDate}
+                                onChange={(e) => setSearchDate(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setSearchDate("")}
+                                className="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 transition-all duration-200"
                             >
-                                <div className="flex items-center justify-between mb-3">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            Admission ID: {admission.id}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {new Date(
-                                                admission.created_at
-                                            ).toLocaleString("en-US", {
-                                                year: "numeric",
-                                                month: "short",
-                                                day: "numeric",
-                                            })}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleDeleteCard(admission.id)
-                                        }
-                                        className="p-1 text-gray-400 hover:text-red-500 transform hover:scale-110 transition-all duration-200"
-                                    >
-                                        <Trash2Icon className="h-5 w-5" />
-                                    </button>
-                                </div>
-                                {admission.image_paths &&
-                                    admission.image_paths.length > 0 && (
-                                        <div className="grid grid-cols-3 gap-2 mb-3">
-                                            {admission.image_paths.map(
-                                                (path, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="relative"
-                                                    >
-                                                        <img
-                                                            src={path}
-                                                            alt={`Admission Image ${index}`}
-                                                            className="w-full h-auto rounded-lg object-cover"
-                                                            style={{
-                                                                maxHeight:
-                                                                    "100px",
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
-                                <div className="text-sm text-gray-700 mb-3">
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">
-                                            Admission:
-                                        </span>
-                                        <span>{admission.admission_date}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">
-                                            Discharge:
-                                        </span>
-                                        <span>{admission.discharge_date}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">
-                                            ICU:
-                                        </span>
-                                        <span>{admission.icu}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">
-                                            Ward:
-                                        </span>
-                                        <span>{admission.ward}</span>
-                                    </div>
-                                </div>
-                                {admission.image_paths &&
-                                    admission.image_paths.length > 0 && (
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={() =>
-                                                    handleView(
-                                                        admission.image_paths
-                                                    )
-                                                }
-                                                className="flex-1 px-3 py-1 text-sm font-medium text-white bg-blue-300 rounded flex items-center justify-center"
-                                            >
-                                                <EyeIcon className="h-4 w-4 mr-1" />
-                                                view
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    handleDownloadCard(
-                                                        admission.image_paths
-                                                    )
-                                                }
-                                                className="flex-1 px-3 py-1 text-sm font-medium text-white bg-blue-300 rounded flex items-center justify-center"
-                                            >
-                                                <DownloadIcon className="h-4 w-4 mr-1" />
-                                                download
-                                            </button>
-                                        </div>
-                                    )}
-                            </div>
-                        ))}
+                                Clear
+                            </button>
+                        </div>
                     </div>
-                )}
+                </div>
+                <div className="border-t border-gray-200 pt-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-lg font-semibold text-gray-800">
+                            Admission Records
+                        </h4>
+                        <button
+                            type="button"
+                            onClick={toggleCardSection}
+                            className="p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+                            aria-label={
+                                isCardSectionCollapsed
+                                    ? "Expand Admission Records"
+                                    : "Collapse Admission Records"
+                            }
+                        >
+                            {isCardSectionCollapsed ? (
+                                <ChevronDownIcon className="h-5 w-5" />
+                            ) : (
+                                <ChevronUpIcon className="h-5 w-5" />
+                            )}
+                        </button>
+                    </div>
+                    {!isCardSectionCollapsed && (
+                        <>
+                            {loading && (
+                                <p className="text-center text-blue-500">
+                                    Loading admissions...
+                                </p>
+                            )}
+                            {error && (
+                                <p className="text-center text-red-500">
+                                    {error}
+                                </p>
+                            )}
+                            {filteredAdmissions.length > 0 ? (
+                                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {filteredAdmissions.map((admission) => (
+                                        <div
+                                            key={admission.id}
+                                            className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200"
+                                        >
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <p className="text-xs text-gray-500">
+                                                        {new Date(
+                                                            admission.created_at
+                                                        ).toLocaleString(
+                                                            "en-US",
+                                                            {
+                                                                year: "numeric",
+                                                                month: "short",
+                                                                day: "numeric",
+                                                            }
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleDeleteCard(
+                                                            admission.id
+                                                        )
+                                                    }
+                                                    className="p-1 text-gray-400 hover:text-red-500 transform hover:scale-110 transition-all duration-200"
+                                                >
+                                                    <Trash2Icon className="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                            {admission.image_paths &&
+                                                admission.image_paths.length >
+                                                    0 && (
+                                                    <div className="grid grid-cols-3 gap-2 mb-3">
+                                                        {admission.image_paths.map(
+                                                            (path, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="relative"
+                                                                >
+                                                                    <img
+                                                                        src={
+                                                                            path
+                                                                        }
+                                                                        alt={`Admission Image ${index}`}
+                                                                        className="w-full h-auto rounded-lg object-contain"
+                                                                        style={{
+                                                                            maxHeight:
+                                                                                "100px",
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                )}
+                                            <div className="text-sm text-gray-700 mb-3">
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">
+                                                        Admission date
+                                                    </span>
+                                                    <span>
+                                                        {
+                                                            admission.admission_date.split(
+                                                                "T"
+                                                            )[0]
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">
+                                                        Discharge date
+                                                    </span>
+                                                    <span>
+                                                        {
+                                                            admission.discharge_date.split(
+                                                                "T"
+                                                            )[0]
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">
+                                                        ICU:
+                                                    </span>
+                                                    <span>{admission.icu}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">
+                                                        Ward:
+                                                    </span>
+                                                    <span>
+                                                        {admission.ward}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {admission.image_paths &&
+                                                admission.image_paths.length >
+                                                    0 && (
+                                                    <div className="flex space-x-2">
+                                                        <button
+                                                            onClick={() =>
+                                                                handleView(
+                                                                    admission.image_paths
+                                                                )
+                                                            }
+                                                            className="flex-1 px-3 py-1 text-sm font-medium text-white bg-blue-300 rounded flex items-center justify-center"
+                                                        >
+                                                            <EyeIcon className="h-4 w-4 mr-1" />
+                                                            view
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDownloadCard(
+                                                                    admission.image_paths
+                                                                )
+                                                            }
+                                                            className="flex-1 px-3 py-1 text-sm font-medium text-white bg-blue-300 rounded flex items-center justify-center"
+                                                        >
+                                                            <DownloadIcon className="h-4 w-4 mr-1" />
+                                                            download
+                                                        </button>
+                                                    </div>
+                                                )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                searchDate && (
+                                    <p className="text-center text-gray-500">
+                                        No admissions found for the selected
+                                        date.
+                                    </p>
+                                )
+                            )}
+                        </>
+                    )}
+                </div>
             </form>
-
             {modalImages.length > 0 && (
                 <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
                     <div className="relative bg-white rounded-lg p-4 max-w-4xl w-full">
