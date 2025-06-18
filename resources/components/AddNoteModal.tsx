@@ -76,6 +76,7 @@ const AddNoteModal = ({
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
           'Accept': 'application/json'
         },
         body: JSON.stringify({
