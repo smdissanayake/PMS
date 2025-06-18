@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeftIcon, SaveIcon, AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface FormData {
   firstName: string;
@@ -47,7 +48,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     setSuccessMessage(null);
 
     try {
-      const response = await fetch('/patients', { // Changed URL from /api/patients
+      const response = await fetch('/patients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,27 +64,46 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
       if (!response.ok) {
         if (response.status === 422 && responseData.errors) {
           setValidationErrors(responseData.errors);
-          setError('Please correct the validation errors.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please correct the validation errors.',
+            confirmButtonColor: '#3085d6',
+          });
         } else {
-          setError(responseData.message || 'An unexpected error occurred. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: responseData.message || 'An unexpected error occurred. Please try again.',
+            confirmButtonColor: '#3085d6',
+          });
         }
         throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
       }
 
-      setSuccessMessage(responseData.message || 'Patient registered successfully!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: responseData.message || 'Patient registered successfully!',
+        confirmButtonColor: '#3085d6',
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
       setFormData(initialFormData); // Reset form
       if (onSuccess) {
         onSuccess();
       }
-      // Optionally, redirect or close modal after a delay
-      // setTimeout(() => {
-      //   onCancel();
-      // }, 2000);
 
     } catch (err) {
       console.error('Submission failed:', err);
       if (!error && !Object.keys(validationErrors).length) {
-        setError('Failed to submit the form. Please check your network connection and try again.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to submit the form. Please check your network connection and try again.',
+          confirmButtonColor: '#3085d6',
+        });
       }
     } finally {
       setIsLoading(false);
@@ -99,6 +119,13 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     }
   };
 
+  const handleClear = () => {
+    setFormData(initialFormData);
+    setValidationErrors({});
+    setError(null);
+    setSuccessMessage(null);
+  };
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -110,18 +137,6 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
             <p className="text-sm text-gray-500 mt-1">Basic patient details</p>
           </div>
           <div className="p-6">
-            {successMessage && (
-              <div className="mb-4 p-3 rounded-md bg-green-50 border border-green-300 text-green-700 flex items-center">
-                <CheckCircle2Icon size={18} className="mr-2" />
-                {successMessage}
-              </div>
-            )}
-            {error && !Object.keys(validationErrors).length && ( // Show general error if no specific validation errors
-              <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-300 text-red-700 flex items-center">
-                <AlertCircleIcon size={18} className="mr-2" />
-                {error}
-              </div>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -222,8 +237,8 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           </div>
           <div className="p-6 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-end space-x-4">
-              <button type="button" onClick={onCancel} disabled={isLoading} className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors disabled:opacity-50">
-                Cancel
+              <button type="button" onClick={handleClear} disabled={isLoading} className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors disabled:opacity-50">
+                Clear
               </button>
               <button type="submit" disabled={isLoading} className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center disabled:opacity-50">
                 {isLoading ? (
