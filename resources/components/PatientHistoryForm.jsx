@@ -289,7 +289,7 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
               <option value="Occipital">Occipital</option>
               <option value="Temporal">Temporal</option>
               <option value="Parietal">Parietal</option>
-              <option value="Western">Western</option>
+              <option value="Diffuse">Diffuse</option>
             </select>
           </div>
           <div>

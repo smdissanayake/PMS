@@ -18,6 +18,7 @@ class Patient extends Model
         'clinicRefNo',
         'nic',
         'uhid',
+        'chb',
         'category',
     ];
 }
