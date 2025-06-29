@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
   Search,
 } from "lucide-react";
-import asiriLogo from '../images/asiri.png';
+// import asiriLogo from '../images/asiri.png';
 
 interface SidebarProps {
   activeTab: string;
@@ -60,25 +60,7 @@ export const Sidebar = ({
         <div className={`text-xl font-semibold text-blue-600 h-fit truncate ${
           isCollapsed ? "text-center" : ""
         }`}>
-          {isCollapsed ? (
-            <div className="flex items-center text-center justify-center">
-              <img
-                src={asiriLogo}
-                alt="Logo"
-                className="w-full h-auto object-contain p-0"
-                style={{ visibility: 'hidden' }}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center text-center justify-center">
-              <img
-                src={asiriLogo}
-                alt="Logo"
-                className="w-full h-auto object-contain p-0"
-                style={{ maxWidth: '150px', maxHeight: '200px' }}
-              />
-            </div>
-          )}
+          {/* Logo removed due to missing file */}
         </div>
       </div>
       <nav className="flex-1 pt-5">
@@ -138,3 +120,5 @@ export const Sidebar = ({
     </div>
   );
 };
+
+export default Sidebar;

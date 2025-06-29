@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, SearchIcon, MenuIcon } from 'lucide-react';
-import asiriLogo from '../images/asiri.png';
+import { router } from '@inertiajs/react';
 
 interface HeaderProps {
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  user?: {
+    name: string;
+    email: string;
+  };
 }
 
 const DateTimeDisplay = () => {
@@ -39,8 +43,13 @@ const DateTimeDisplay = () => {
 
 export const Header = ({
   isSidebarCollapsed,
-  toggleSidebar
+  toggleSidebar,
+  user
 }: HeaderProps) => {
+  const handleLogout = () => {
+    router.post('/logout');
+  };
+
   return <header className="bg-white border-b border-gray-200 py-4 px-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
@@ -51,6 +60,19 @@ export const Header = ({
         <div className="flex items-center space-x-4">
           <DateTimeDisplay />
         </div>
+        {user && (
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-700">
+              Welcome, <span className="font-medium">{user.name}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </header>;
 };
