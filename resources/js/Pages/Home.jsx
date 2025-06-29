@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link, Head, usePage } from "@inertiajs/react";
 import PatientProfile from "../../components/PatientProfile";
-import { Sidebar } from "../../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import { Header } from "../../components/Header";
 import DashboardContent from "../../components/DashboardContent";
 import SurgeryCalendar from "../../components/SurgeryCalendar";
@@ -9,6 +9,7 @@ import PatientHistoryForm from "../../components/PatientHistoryForm";
 import { PatientRegistration } from "../../components/PatientRegistration";
 
 export default function Home() {
+    const { auth } = usePage().props;
     const [activeTab, setActiveTab] = useState("dashboard");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -27,6 +28,7 @@ export default function Home() {
                         toggleSidebar={() =>
                             setIsSidebarCollapsed(!isSidebarCollapsed)
                         }
+                        user={auth?.user}
                     />
 
                     {/* Scrollable main section */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 import StatisticsCards from "./StatisticsCards";
 import AddDrugModal from "./AddDrugModal";
 import PatientVisitsChart from "./PatientVisitsChart";
@@ -27,6 +27,11 @@ const DashboardContent = () => {
         []
     );
     const [showDropdown, setShowDropdown] = useState(false);
+    const [searchType, setSearchType] = useState("clinicRefNo");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [suggestions, setSuggestions] = useState<Array<{ id: number; clinicRefNo: string; chb: string; name: string }>>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isLoadingSearch, setIsLoadingSearch] = useState(false);
 
     useEffect(() => {
         if (isFormUploadModalOpen) {
@@ -201,6 +206,62 @@ const DashboardContent = () => {
         };
     }, []);
 
+    // Debounce function
+    const debounce = (func: Function, wait: number) => {
+        let timeout: number;
+        return (...args: any[]) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(...args), wait);
+        };
+    };
+
+    // Fetch suggestions function
+    const fetchSuggestions = async (query: string) => {
+        if (!query.trim()) {
+            setSuggestions([]);
+            return;
+        }
+        try {
+            const response = await fetch(
+                `/patients/search-suggestions?query=${encodeURIComponent(query)}&type=${encodeURIComponent(searchType)}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": (document.querySelector('meta[name=\"csrf-token\"]') as HTMLMetaElement)?.content || "",
+                    },
+                }
+            );
+            const data = await response.json();
+            setSuggestions(data);
+            setShowSuggestions(true);
+        } catch (error) {
+            console.error("Error fetching suggestions:", error);
+            setSuggestions([]);
+        }
+    };
+    const debouncedFetchSuggestions = debounce(fetchSuggestions, 300);
+
+    // Handle suggestion click
+    const handleSuggestionClick = (suggestion: { id: number; clinicRefNo: string; chb: string; name: string }) => {
+        let searchValue = '';
+        switch (searchType) {
+            case 'chb':
+                searchValue = suggestion.chb;
+                break;
+            case 'name':
+                searchValue = suggestion.name;
+                break;
+            case 'clinicRefNo':
+            default:
+                searchValue = suggestion.clinicRefNo;
+                break;
+        }
+        setSearchQuery(searchValue);
+        setClinicRefNo(suggestion.clinicRefNo); // Always fill Clinic Ref No for upload
+        setShowSuggestions(false);
+    };
+
     return (
         <div className="space-y-4 flex-1">
             <StatisticsCards />
@@ -307,34 +368,78 @@ const DashboardContent = () => {
                             Upload New Report
                         </h3>
                         <div className="space-y-6">
+                            <div className="relative">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Search Patient
+                                </label>
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <select
+                                        value={searchType}
+                                        onChange={e => {
+                                            setSearchType(e.target.value);
+                                            setSearchQuery("");
+                                            setSuggestions([]);
+                                            setShowSuggestions(false);
+                                        }}
+                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                                    >
+                                        <option value="clinicRefNo">Clinic Ref No</option>
+                                        <option value="chb">CHB</option>
+                                        <option value="name">Name</option>
+                                    </select>
+                                    <div className="relative flex-grow">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={e => {
+                                                setSearchQuery(e.target.value);
+                                                debouncedFetchSuggestions(e.target.value);
+                                            }}
+                                            onFocus={() => setShowSuggestions(true)}
+                                            placeholder={`Search by ${searchType === 'clinicRefNo' ? 'Clinic Ref No' : searchType === 'chb' ? 'CHB' : 'Patient Name'}...`}
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <SearchIcon className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        {/* Suggestions dropdown */}
+                                        {showSuggestions && suggestions.length > 0 && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                                                {suggestions.map((suggestion) => (
+                                                    <div
+                                                        key={suggestion.id}
+                                                        onClick={() => handleSuggestionClick(suggestion)}
+                                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                    >
+                                                        <div className="font-medium text-gray-900">
+                                                            {searchType === 'clinicRefNo' && suggestion.clinicRefNo}
+                                                            {searchType === 'chb' && suggestion.chb}
+                                                            {searchType === 'name' && suggestion.name}
+                                                        </div>
+                                                        <div className="text-gray-500 text-xs">
+                                                            {searchType !== 'clinicRefNo' && `Clinic Ref: ${suggestion.clinicRefNo}`}
+                                                            {searchType !== 'chb' && `CHB: ${suggestion.chb}`}
+                                                            {searchType !== 'name' && `Name: ${suggestion.name}`}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Clinic Ref No field is now filled by search selection, but still shown for confirmation/edit */}
                             <div className="relative clinic-ref-input-container">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Clinic Ref No
                                 </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={clinicRefNo}
-                                        onChange={handleClinicRefNoChange}
-                                        onFocus={() => clinicRefNo.trim() && setShowDropdown(true)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        placeholder="Enter or search Clinic Ref No"
-                                    />
-                                    {showDropdown && filteredClinicRefNos.length > 0 && (
-                                         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                             {filteredClinicRefNos.map((patient) => (
-                                                 <li
-                                                     key={patient.id}
-                                                     className="px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors last:border-b-0"
-                                                     onClick={() => handleSelectClinicRefNo(patient.clinicRefNo)}
-                                                 >
-                                                     <div className="font-medium text-gray-900">{patient.clinicRefNo}</div>
-                                                     <div className="text-sm text-gray-500">{patient.name}</div>
-                                                 </li>
-                                             ))}
-                                         </ul>
-                                    )}
-                                </div>
+                                <input
+                                    type="text"
+                                    value={clinicRefNo}
+                                    onChange={e => setClinicRefNo(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="Clinic Ref No (auto-filled from search)"
+                                />
                             </div>
                             <div className="border-2 border-dashed border-blue-200 rounded-lg p-8 text-center bg-blue-50/50 hover:bg-blue-50 transition-colors">
                                 <div className="space-y-2">

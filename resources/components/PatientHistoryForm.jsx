@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SaveIcon, AlertCircleIcon, CheckCircle2Icon } from 'lucide-react'; // Updated icons
+import Swal from 'sweetalert2';
 
 const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) => { // Added props
   // Form States (existing states remain the same)
@@ -114,7 +115,12 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
 
   const handleSaveRecord = async () => {
     if (!patientId || !patientClinicRefNo) {
-      setSaveError("Patient not selected. Please search for a patient first.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Patient not selected. Please search for a patient first.',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
 
@@ -199,32 +205,49 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
       if (!response.ok) {
         if (response.status === 422 && responseData.errors) {
           setValidationErrors(responseData.errors);
-          setSaveError('Please correct the validation errors.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please correct the validation errors.',
+            confirmButtonColor: '#3085d6',
+          });
         } else {
-          setSaveError(responseData.message || 'Failed to save record.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: responseData.message || 'Failed to save record.',
+            confirmButtonColor: '#3085d6',
+          });
         }
         return;
       }
 
       // Clear form after successful save
       clearFormFields();
-      setSaveSuccess('Record saved successfully!');
+      
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Record saved successfully!',
+        confirmButtonColor: '#3085d6',
+        timer: 2000,
+        timerProgressBar: true,
+      });
 
       // Notify parent component about the new record
       if (onRecordSaved && typeof onRecordSaved === 'function') {
         onRecordSaved(patientId);
       }
 
-      // Close the modal after a short delay
-      setTimeout(() => {
-        if (onRecordSaved && typeof onRecordSaved === 'function') {
-          onRecordSaved(patientId);
-        }
-      }, 1000);
-
     } catch (error) {
       console.error('Error saving record:', error);
-      setSaveError('An error occurred while saving the record.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An error occurred while saving the record.',
+        confirmButtonColor: '#3085d6',
+      });
     } finally {
       setIsSaving(false);
     }
@@ -232,18 +255,6 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
 
   return (
     <div className="space-y-6">
-      {saveSuccess && (
-        <div className="mb-4 p-3 rounded-md bg-green-50 border border-green-300 text-green-700 flex items-center">
-          <CheckCircle2Icon size={18} className="mr-2" />
-          {saveSuccess}
-        </div>
-      )}
-      {saveError && (
-        <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-300 text-red-700 flex items-center">
-          <AlertCircleIcon size={18} className="mr-2" />
-          {saveError}
-        </div>
-      )}
       {/* History Section */}
       <section>
         <h3 className="text-lg font-medium text-gray-900 mb-2">History</h3>
@@ -278,7 +289,7 @@ const PatientHistoryForm = ({ patientId, patientClinicRefNo, onRecordSaved }) =>
               <option value="Occipital">Occipital</option>
               <option value="Temporal">Temporal</option>
               <option value="Parietal">Parietal</option>
-              <option value="Western">Western</option>
+              <option value="Diffuse">Diffuse</option>
             </select>
           </div>
           <div>
