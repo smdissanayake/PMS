@@ -64,6 +64,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/patients', [PatientController::class, 'index']); // Keep existing route for potential Inertia usage
     Route::post('/patients', [PatientController::class, 'store']);
     Route::get('/patients/search-by-clinic-ref', [PatientController::class, 'findByClinicRefNo']);
+    Route::get('/patients/search-by-chb', [PatientController::class, 'findByChb']);
+    Route::get('/patients/search-by-name', [PatientController::class, 'findByName']);
     Route::post('/patient-history-examination', [PatientController::class, 'storeHistoryExamination']);
     Route::get('/patient-history-examination/{patient_id}', [PatientController::class, 'getHistoryExaminationRecords']);
 
@@ -81,14 +83,33 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/patients/search-suggestions', function (Request $request) {
         $query = $request->get('query');
+        $type = $request->get('type', 'clinicRefNo'); // Default to clinicRefNo
         
         if (empty($query)) {
             return response()->json([]);
         }
         
-        $patients = DB::table('patients')
-        ->where('clinicRefNo', 'like', '%' . $query . '%')
-        ->select('id', 'clinicRefNo', 'firstName', 'lastName')
+        $patients = DB::table('patients');
+        
+        // Apply different search logic based on type
+        switch ($type) {
+            case 'chb':
+                $patients = $patients->where('chb', 'like', '%' . $query . '%');
+                break;
+            case 'name':
+                $patients = $patients->where(function($q) use ($query) {
+                    $q->where('firstName', 'like', '%' . $query . '%')
+                      ->orWhere('lastName', 'like', '%' . $query . '%')
+                      ->orWhere(DB::raw("CONCAT(firstName, ' ', lastName)"), 'like', '%' . $query . '%');
+                });
+                break;
+            case 'clinicRefNo':
+            default:
+                $patients = $patients->where('clinicRefNo', 'like', '%' . $query . '%');
+                break;
+        }
+        
+        $patients = $patients->select('id', 'clinicRefNo', 'chb', 'firstName', 'lastName')
         ->orderByRaw('CASE 
                 WHEN clinicRefNo = ? THEN 1
                 WHEN clinicRefNo LIKE ? THEN 2
@@ -100,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
             return [
                 'id' => $patient->id,
                 'clinicRefNo' => $patient->clinicRefNo,
+                'chb' => $patient->chb,
                 'name' => $patient->firstName . ' ' . $patient->lastName
             ];
         });
@@ -161,6 +183,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/surgery-estimates/{clinicRefNo}', [SurgeryEstimateController::class, 'indexByClinicRefNo']);
     Route::put('/api/surgery-estimates/{id}', [SurgeryEstimateController::class, 'update']);
     Route::delete('/api/surgery-estimates/{id}', [SurgeryEstimateController::class, 'destroy']);
+
+    Route::put('/patients/{id}', [PatientController::class, 'update']);
 });
 
 // Forgot Password API routes

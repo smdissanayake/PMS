@@ -76,6 +76,9 @@ type PatientData = {
     birthday: string;
     gender: string;
     address: string;
+    nic: string;
+    uhid: string;
+    chb: string;
     category: string;
     // ... any other fields from the patients table
 };
@@ -83,8 +86,9 @@ type PatientData = {
 const PatientProfile = () => {
     const [activeTab, setActiveTab] = useState("history");
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchType, setSearchType] = useState("clinicRefNo"); // Add search type state
     const [suggestions, setSuggestions] = useState<
-        Array<{ id: number; clinicRefNo: string; name: string }>
+        Array<{ id: number; clinicRefNo: string; chb: string; name: string }>
     >([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [patientData, setPatientData] = useState(null as PatientData | null);
@@ -115,7 +119,7 @@ const PatientProfile = () => {
             const response = await fetch(
                 `/patients/search-suggestions?query=${encodeURIComponent(
                     query
-                )}`,
+                )}&type=${encodeURIComponent(searchType)}`,
                 {
                     method: "GET",
                     headers: {
@@ -212,7 +216,7 @@ const PatientProfile = () => {
         const searchValue = selectedClinicRefNo || searchQuery;
 
         if (!searchValue.trim()) {
-            setSearchError("Please enter a Clinic Reference Number.");
+            setSearchError(`Please enter a ${searchType === 'clinicRefNo' ? 'Clinic Reference Number' : searchType === 'chb' ? 'CHB Number' : 'Patient Name'}.`);
             setPatientData(null);
             setRecords([]);
             setPatientReport(null);
@@ -227,8 +231,28 @@ const PatientProfile = () => {
         setShowSuggestions(false);
 
         try {
+            let endpoint = '';
+            let paramName = '';
+            
+            // Determine endpoint and parameter name based on search type
+            switch (searchType) {
+                case 'chb':
+                    endpoint = '/patients/search-by-chb';
+                    paramName = 'chb';
+                    break;
+                case 'name':
+                    endpoint = '/patients/search-by-name';
+                    paramName = 'name';
+                    break;
+                case 'clinicRefNo':
+                default:
+                    endpoint = '/patients/search-by-clinic-ref';
+                    paramName = 'clinicRefNo';
+                    break;
+            }
+
             const patientResponse = await fetch(
-                `/patients/search-by-clinic-ref?clinicRefNo=${encodeURIComponent(searchValue)}`,
+                `${endpoint}?${paramName}=${encodeURIComponent(searchValue)}`,
                 {
                     method: "GET",
                     headers: {
@@ -269,10 +293,25 @@ const PatientProfile = () => {
     const handleSuggestionClick = (suggestion: {
         id: number;
         clinicRefNo: string;
+        chb: string;
         name: string;
     }) => {
-        setSearchQuery(suggestion.clinicRefNo);
-        handleSearch(suggestion.clinicRefNo);
+        // Use the appropriate field based on search type
+        let searchValue = '';
+        switch (searchType) {
+            case 'chb':
+                searchValue = suggestion.chb;
+                break;
+            case 'name':
+                searchValue = suggestion.name;
+                break;
+            case 'clinicRefNo':
+            default:
+                searchValue = suggestion.clinicRefNo;
+                break;
+        }
+        setSearchQuery(searchValue);
+        handleSearch(searchValue);
     };
 
     const handleClearSearch = () => {
@@ -288,7 +327,23 @@ const PatientProfile = () => {
                 <h1 className="text-2xl font-semibold text-gray-800">
                     Patient Profile
                 </h1>
-                <div className="flex items-center space-x-2 w-full max-w-md">
+                <div className="flex items-center space-x-2 w-full max-w-lg">
+                    {/* Search Type Dropdown */}
+                    <select
+                        value={searchType}
+                        onChange={(e) => {
+                            setSearchType(e.target.value);
+                            setSearchQuery("");
+                            setSuggestions([]);
+                            setShowSuggestions(false);
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                    >
+                        <option value="clinicRefNo">Clinic Ref No</option>
+                        <option value="chb">CHB</option>
+                        <option value="name">Name</option>
+                    </select>
+                    
                     <div className="relative flex-grow">
                         <input
                             type="text"
@@ -298,7 +353,7 @@ const PatientProfile = () => {
                                 debouncedFetchSuggestions(e.target.value);
                             }}
                             onFocus={() => setShowSuggestions(true)}
-                            placeholder="Search by Clinic Ref No..."
+                            placeholder={`Search by ${searchType === 'clinicRefNo' ? 'Clinic Ref No' : searchType === 'chb' ? 'CHB' : 'Patient Name'}...`}
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -317,10 +372,14 @@ const PatientProfile = () => {
                                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
                                     >
                                         <div className="font-medium text-gray-900">
-                                            {suggestion.clinicRefNo}
+                                            {searchType === 'clinicRefNo' && suggestion.clinicRefNo}
+                                            {searchType === 'chb' && suggestion.chb}
+                                            {searchType === 'name' && suggestion.name}
                                         </div>
-                                        <div className="text-gray-500">
-                                            {suggestion.name}
+                                        <div className="text-gray-500 text-xs">
+                                            {searchType !== 'clinicRefNo' && `Clinic Ref: ${suggestion.clinicRefNo}`}
+                                            {searchType !== 'chb' && `CHB: ${suggestion.chb}`}
+                                            {searchType !== 'name' && `Name: ${suggestion.name}`}
                                         </div>
                                     </div>
                                 ))}
@@ -359,7 +418,7 @@ const PatientProfile = () => {
                             Search for a Patient
                         </h2>
                         <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                            Enter a Clinic Reference Number to view patient
+                            Enter a Clinic Reference Number, CHB Number, or Patient Name to view patient
                             details, medical history, and examination records.
                             You can also add new notes, update patient
                             information, and manage their care plan.

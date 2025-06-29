@@ -9,6 +9,7 @@ use App\Models\PatientHistoryExamination; // Added this line
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PatientController extends Controller
 {
@@ -26,15 +27,16 @@ class PatientController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
-            'birthday' => 'required|date|date_format:Y/m/d',
-            'gender' => 'required|string|in:male,female,other',
-            'address' => 'required|string',
             'clinicRefNo' => 'required|string|max:255|unique:patients,clinicRefNo',
-            'nic' => 'required|string|max:255',
-            'uhid' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
+            'firstName' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
+            'birthday' => 'nullable|date|date_format:Y/m/d',
+            'gender' => 'nullable|string|in:male,female,other',
+            'address' => 'nullable|string',
+            'nic' => 'nullable|string|max:255',
+            'uhid' => 'nullable|string|max:255',
+            'chb' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -81,6 +83,55 @@ class PatientController extends Controller
     }
 
     /**
+     * Find a patient by CHB Number.
+     */
+    public function findByChb(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'chb' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $patient = Patient::where('chb', $request->chb)->first();
+
+        if (!$patient) {
+            return response()->json(['message' => 'Patient not found with the provided CHB Number.'], 404);
+        }
+
+        return response()->json($patient);
+    }
+
+    /**
+     * Find a patient by Name (firstName + lastName).
+     */
+    public function findByName(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $name = $request->name;
+        $patient = Patient::where(function($query) use ($name) {
+            $query->where('firstName', 'like', '%' . $name . '%')
+                  ->orWhere('lastName', 'like', '%' . $name . '%')
+                  ->orWhere(DB::raw("CONCAT(firstName, ' ', lastName)"), 'like', '%' . $name . '%');
+        })->first();
+
+        if (!$patient) {
+            return response()->json(['message' => 'Patient not found with the provided name.'], 404);
+        }
+
+        return response()->json($patient);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
@@ -91,15 +142,16 @@ class PatientController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'firstName' => 'sometimes|required|string|max:255',
-            'lastName' => 'sometimes|required|string|max:255',
-            'birthday' => 'sometimes|required|date|date_format:Y/m/d',
-            'gender' => 'sometimes|required|string|in:male,female,other',
-            'address' => 'sometimes|required|string',
             'clinicRefNo' => 'sometimes|required|string|max:255|unique:patients,clinicRefNo,' . $patient->id,
-            'nic' => 'sometimes|required|string|max:255',
-            'uhid' => 'sometimes|required|string|max:255',
-            'category' => 'sometimes|required|string|max:255',
+            'firstName' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
+            'birthday' => 'nullable|date|date_format:Y/m/d',
+            'gender' => 'nullable|string|in:male,female,other',
+            'address' => 'nullable|string',
+            'nic' => 'nullable|string|max:255',
+            'uhid' => 'nullable|string|max:255',
+            'chb' => 'nullable|string|max:255',
+            'category' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -356,7 +408,7 @@ class PatientController extends Controller
 
             return response()->json($categories);
         } catch (\Exception $e) {
-            \Log::error('Error in getPatientCategoryDistribution: ' . $e->getMessage());
+            Log::error('Error in getPatientCategoryDistribution: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to fetch patient categories',
                 'error' => $e->getMessage()
