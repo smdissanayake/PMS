@@ -262,8 +262,8 @@ class PatientController extends Controller
         $validator = Validator::make($request->all(), [
             'clinicRefNo' => 'required|string|max:255',
             'type' => 'required|string|max:255',
-            'comments' => 'required|string',
-            'modifications' => 'required|string',
+            'comments' => 'nullable|string',
+            'modifications' => 'nullable|string',
             'date' => 'required|string|max:255',
         ]);
 
