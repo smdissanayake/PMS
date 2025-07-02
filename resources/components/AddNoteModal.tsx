@@ -40,14 +40,6 @@ const AddNoteModal = ({
       errors.type = 'Please select a note type';
     }
 
-    if (!formData.comments.trim()) {
-      errors.comments = 'Comments cannot be empty';
-    }
-
-    if (!formData.modifications.trim()) {
-      errors.modifications = 'Modifications cannot be empty';
-    }
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -79,6 +71,7 @@ const AddNoteModal = ({
           'X-Requested-With': 'XMLHttpRequest',
           'Accept': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           ...formData,
           clinicRefNo: patientData?.clinicRefNo,
@@ -157,7 +150,7 @@ const AddNoteModal = ({
               disabled={isSubmitting}
             >
               <option value="select">Select</option>
-              <option value="spacial-not">Spacial Note</option>
+              <option value="spacial-not">Special Note</option>
               <option value="visit-note">Visit Note</option>
             </select>
             {validationErrors.type && (
