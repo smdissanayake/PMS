@@ -57,6 +57,16 @@ export const Sidebar = ({
       }`}
     >
       <div className="p-5 border-gray-200">
+        {/* Company Logo */}
+        {!isCollapsed && (
+          <div className="flex justify-center items-center">
+            <img
+              src="/images/logo_asiri.png"
+              alt="Company Logo"
+              style={{ maxWidth: '120px', height: 'auto' }}
+            />
+          </div>
+        )}
         <div className={`text-xl font-semibold text-blue-600 h-fit truncate ${
           isCollapsed ? "text-center" : ""
         }`}>
