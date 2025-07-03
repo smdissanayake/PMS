@@ -276,7 +276,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'Failed to submit the form. Please check your network connection and try again.',
+          text: 'Please correct the validation errors.',
           confirmButtonColor: '#3085d6',
         });
       }
@@ -532,7 +532,19 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   UHID
                 </label>
-                <input type="text" name="uhid" value={formData.uhid} onChange={handleInputChange} className={`w-full px-4 py-2.5 border ${validationErrors.uhid ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`} />
+                <input 
+                  type="text" 
+                  name="uhid" 
+                  value={formData.uhid} 
+                  onChange={handleInputChange} 
+                  className={`w-full px-4 py-2.5 border ${validationErrors.uhid ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`} 
+                  style={{ backgroundColor: 'white' }}
+                />
+                {validationErrors.uhid && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {validationErrors.uhid[0]}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

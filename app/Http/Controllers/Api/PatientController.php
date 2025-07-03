@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class PatientController extends Controller
 {
@@ -34,7 +35,7 @@ class PatientController extends Controller
             'gender' => 'nullable|string|in:male,female,other',
             'address' => 'nullable|string',
             'nic' => 'nullable|string|max:255',
-            'uhid' => 'nullable|string|max:255',
+            'uhid' => 'nullable|string|max:255|unique:patients,uhid',
             'chb' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
         ]);
@@ -149,7 +150,7 @@ class PatientController extends Controller
             'gender' => 'nullable|string|in:male,female,other',
             'address' => 'nullable|string',
             'nic' => 'nullable|string|max:255',
-            'uhid' => 'nullable|string|max:255',
+            'uhid' => 'nullable|string|max:255|unique:patients,uhid,' . $patient->id,
             'chb' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
         ]);
