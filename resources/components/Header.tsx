@@ -47,7 +47,9 @@ export const Header = ({
   user
 }: HeaderProps) => {
   const handleLogout = () => {
-    router.post('/logout');
+    router.post('/logout', {}, {
+      onSuccess: () => window.location.reload(),
+    });
   };
 
   return <header className="bg-white border-b border-gray-200 py-4 px-6">

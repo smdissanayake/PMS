@@ -12,7 +12,9 @@ export default function Login() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/login');
+        post('/login', {
+            onSuccess: () => window.location.reload(),
+        });
     };
 
     return (
