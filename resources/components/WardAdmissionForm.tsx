@@ -711,4 +711,4 @@ const WardAdmissionForm = ({
     );
 };
 
-export default WardAdmissionForm;
+export default WardAdmissionForm; 
