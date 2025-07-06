@@ -712,5 +712,3 @@ const WardAdmissionForm = ({
 };
 
 export default WardAdmissionForm;
-
-// Hri wde
