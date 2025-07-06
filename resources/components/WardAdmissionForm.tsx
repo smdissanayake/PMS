@@ -18,10 +18,10 @@ interface WardAdmission {
     id: number;
     patient_id: number;
     clinic_ref_no: string;
-    admission_date: string | null;
-    discharge_date: string | null;
-    icu: string | null;
-    ward: string | null;
+    admission_date: string;
+    discharge_date: string;
+    icu: string;
+    ward: string;
     image_paths: string[];
     created_at: string;
     updated_at: string;
@@ -95,6 +95,15 @@ const WardAdmissionForm = ({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
         if (files.length > 0) {
+            if (files.length < 2) {
+                MySwal.fire({
+                    icon: "warning",
+                    title: "Validation Error",
+                    text: "Please select at least 2 images to upload.",
+                    confirmButtonColor: "#2563eb",
+                });
+                return;
+            }
 
             const newFiles = files
                 .map((file) => {
@@ -142,7 +151,15 @@ const WardAdmissionForm = ({
                     type: string;
                 }>;
 
-
+            if (newFiles.length < 2) {
+                MySwal.fire({
+                    icon: "error",
+                    title: "Validation Error",
+                    text: "One or more files failed validation. Please select at least 2 valid images.",
+                    confirmButtonColor: "#2563eb",
+                });
+                return;
+            }
 
             setTempFiles(newFiles);
             setFormError(null);
@@ -163,11 +180,20 @@ const WardAdmissionForm = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!clinicRefNo) {
+        if (!admissionDate || !dischargeDate || !icu || !ward || !clinicRefNo) {
             MySwal.fire({
                 icon: "warning",
                 title: "Form Incomplete",
-                text: "Please ensure patient is selected.",
+                text: "Please fill all fields (Admission Date, Discharge Date, ICU, Ward, and ensure patient is selected).",
+                confirmButtonColor: "#2563eb",
+            });
+            return;
+        }
+        if (tempFiles.length < 2) {
+            MySwal.fire({
+                icon: "warning",
+                title: "Image Requirement",
+                text: "Please upload at least 2 images.",
                 confirmButtonColor: "#2563eb",
             });
             return;
@@ -178,10 +204,10 @@ const WardAdmissionForm = ({
 
         const formData = new FormData();
         formData.append("clinicRefNo", clinicRefNo);
-        formData.append("admission_date", admissionDate || "");
-        formData.append("discharge_date", dischargeDate || "");
-        formData.append("icu", icu || "");
-        formData.append("ward", ward || "");
+        formData.append("admission_date", admissionDate);
+        formData.append("discharge_date", dischargeDate);
+        formData.append("icu", icu);
+        formData.append("ward", ward);
         tempFiles.forEach((fileObj, index) => {
             formData.append(`images[${index}]`, fileObj.file);
         });
@@ -309,7 +335,7 @@ const WardAdmissionForm = ({
     const filteredAdmissions = searchDate
         ? admissions.filter(
             (admission) =>
-                admission.admission_date && admission.admission_date.split("T")[0] === searchDate
+                admission.admission_date.split("T")[0] === searchDate
         )
         : admissions;
 
@@ -335,7 +361,7 @@ const WardAdmissionForm = ({
                     )}
                 </button>
             </div>
-            <form className="p-4 space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="p-4 space-y-6">
                 {formError && (
                     <p className="text-red-500 text-sm">{formError}</p>
                 )}
@@ -343,7 +369,7 @@ const WardAdmissionForm = ({
                     <div className="flex gap-4">
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Admission Date (Optional)
+                                Admission Date
                             </label>
                             <input
                                 type="date"
@@ -351,17 +377,13 @@ const WardAdmissionForm = ({
                                 onChange={(e) =>
                                     setAdmissionDate(e.target.value)
                                 }
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
+                                required
                             />
                         </div>
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Discharge Date (Optional)
+                                Discharge Date
                             </label>
                             <input
                                 type="date"
@@ -369,53 +391,41 @@ const WardAdmissionForm = ({
                                 onChange={(e) =>
                                     setDischargeDate(e.target.value)
                                 }
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
+                                required
                             />
                         </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            ICU (Optional)
+                            ICU
                         </label>
                         <input
                             type="text"
                             value={icu}
                             onChange={(e) => setIcu(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                }
-                            }}
                             placeholder="Enter ICU details"
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
+                            required
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Ward (Optional)
+                            Ward
                         </label>
                         <input
                             type="text"
                             value={ward}
                             onChange={(e) => setWard(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                }
-                            }}
                             placeholder="Enter ward details"
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
+                            required
                         />
                     </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Upload Images (Optional)
+                        Upload Images (Min 2, Optional)
                     </label>
                     <div
                         className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 bg-white hover:bg-gray-50 transition-colors duration-200 w-full cursor-pointer"
@@ -492,11 +502,6 @@ const WardAdmissionForm = ({
                                 type="date"
                                 value={searchDate}
                                 onChange={(e) => setSearchDate(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
                             />
                             <button
@@ -609,9 +614,10 @@ const WardAdmissionForm = ({
                                                         Admission date
                                                     </span>
                                                     <span>
-                                                        {admission.admission_date
-                                                            ? admission.admission_date.split("T")[0]
-                                                            : "Not specified"
+                                                        {
+                                                            admission.admission_date.split(
+                                                                "T"
+                                                            )[0]
                                                         }
                                                     </span>
                                                 </div>
@@ -620,9 +626,10 @@ const WardAdmissionForm = ({
                                                         Discharge date
                                                     </span>
                                                     <span>
-                                                        {admission.discharge_date
-                                                            ? admission.discharge_date.split("T")[0]
-                                                            : "Not specified"
+                                                        {
+                                                            admission.discharge_date.split(
+                                                                "T"
+                                                            )[0]
                                                         }
                                                     </span>
                                                 </div>
@@ -630,14 +637,14 @@ const WardAdmissionForm = ({
                                                     <span className="font-medium">
                                                         ICU:
                                                     </span>
-                                                    <span>{admission.icu || "Not specified"}</span>
+                                                    <span>{admission.icu}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="font-medium">
                                                         Ward:
                                                     </span>
                                                     <span>
-                                                        {admission.ward || "Not specified"}
+                                                        {admission.ward}
                                                     </span>
                                                 </div>
                                             </div>
@@ -711,4 +718,4 @@ const WardAdmissionForm = ({
     );
 };
 
-export default WardAdmissionForm; 
+export default WardAdmissionForm;
