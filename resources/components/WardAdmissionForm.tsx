@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import Swal from "sweetalert2";
@@ -718,4 +719,4 @@ const WardAdmissionForm = ({
     );
 };
 
-export default WardAdmissionForm;
+
