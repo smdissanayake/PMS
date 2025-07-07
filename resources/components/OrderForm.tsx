@@ -248,6 +248,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             // Immediately open print window
             newWindow.print();
 
+
             // Close window after printing
             newWindow.onafterprint = () => {
                 newWindow.close();
