@@ -18,10 +18,10 @@ interface WardAdmission {
     id: number;
     patient_id: number;
     clinic_ref_no: string;
-    admission_date: string;
-    discharge_date: string;
-    icu: string;
-    ward: string;
+    admission_date: string | null;
+    discharge_date: string | null;
+    icu: string | null;
+    ward: string | null;
     image_paths: string[];
     created_at: string;
     updated_at: string;
@@ -95,15 +95,6 @@ const WardAdmissionForm = ({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
         if (files.length > 0) {
-            if (files.length < 2) {
-                MySwal.fire({
-                    icon: "warning",
-                    title: "Validation Error",
-                    text: "Please select at least 2 images to upload.",
-                    confirmButtonColor: "#2563eb",
-                });
-                return;
-            }
 
             const newFiles = files
                 .map((file) => {
@@ -145,21 +136,13 @@ const WardAdmissionForm = ({
                     };
                 })
                 .filter((item) => item !== null) as Array<{
-                file: File;
-                preview: string;
-                uploadTime: string;
-                type: string;
-            }>;
+                    file: File;
+                    preview: string;
+                    uploadTime: string;
+                    type: string;
+                }>;
 
-            if (newFiles.length < 2) {
-                MySwal.fire({
-                    icon: "error",
-                    title: "Validation Error",
-                    text: "One or more files failed validation. Please select at least 2 valid images.",
-                    confirmButtonColor: "#2563eb",
-                });
-                return;
-            }
+
 
             setTempFiles(newFiles);
             setFormError(null);
@@ -180,20 +163,11 @@ const WardAdmissionForm = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!admissionDate || !dischargeDate || !icu || !ward || !clinicRefNo) {
+        if (!clinicRefNo) {
             MySwal.fire({
                 icon: "warning",
                 title: "Form Incomplete",
-                text: "Please fill all fields (Admission Date, Discharge Date, ICU, Ward, and ensure patient is selected).",
-                confirmButtonColor: "#2563eb",
-            });
-            return;
-        }
-        if (tempFiles.length < 2) {
-            MySwal.fire({
-                icon: "warning",
-                title: "Image Requirement",
-                text: "Please upload at least 2 images.",
+                text: "Please ensure patient is selected.",
                 confirmButtonColor: "#2563eb",
             });
             return;
@@ -204,10 +178,10 @@ const WardAdmissionForm = ({
 
         const formData = new FormData();
         formData.append("clinicRefNo", clinicRefNo);
-        formData.append("admission_date", admissionDate);
-        formData.append("discharge_date", dischargeDate);
-        formData.append("icu", icu);
-        formData.append("ward", ward);
+        formData.append("admission_date", admissionDate || "");
+        formData.append("discharge_date", dischargeDate || "");
+        formData.append("icu", icu || "");
+        formData.append("ward", ward || "");
         tempFiles.forEach((fileObj, index) => {
             formData.append(`images[${index}]`, fileObj.file);
         });
@@ -334,9 +308,9 @@ const WardAdmissionForm = ({
 
     const filteredAdmissions = searchDate
         ? admissions.filter(
-              (admission) =>
-                  admission.admission_date.split("T")[0] === searchDate
-          )
+            (admission) =>
+                admission.admission_date && admission.admission_date.split("T")[0] === searchDate
+        )
         : admissions;
 
     return (
@@ -361,7 +335,7 @@ const WardAdmissionForm = ({
                     )}
                 </button>
             </div>
-            <form className="p-4 space-y-6">
+            <form className="p-4 space-y-6" onSubmit={(e) => e.preventDefault()}>
                 {formError && (
                     <p className="text-red-500 text-sm">{formError}</p>
                 )}
@@ -369,7 +343,7 @@ const WardAdmissionForm = ({
                     <div className="flex gap-4">
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Admission Date
+                                Admission Date (Optional)
                             </label>
                             <input
                                 type="date"
@@ -377,13 +351,17 @@ const WardAdmissionForm = ({
                                 onChange={(e) =>
                                     setAdmissionDate(e.target.value)
                                 }
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                    }
+                                }}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
-                                required
                             />
                         </div>
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Discharge Date
+                                Discharge Date (Optional)
                             </label>
                             <input
                                 type="date"
@@ -391,41 +369,53 @@ const WardAdmissionForm = ({
                                 onChange={(e) =>
                                     setDischargeDate(e.target.value)
                                 }
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                    }
+                                }}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
-                                required
                             />
                         </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            ICU
+                            ICU (Optional)
                         </label>
                         <input
                             type="text"
                             value={icu}
                             onChange={(e) => setIcu(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                }
+                            }}
                             placeholder="Enter ICU details"
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
-                            required
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Ward
+                            Ward (Optional)
                         </label>
                         <input
                             type="text"
                             value={ward}
                             onChange={(e) => setWard(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                }
+                            }}
                             placeholder="Enter ward details"
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
-                            required
                         />
                     </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Upload Images (Min 2, Optional)
+                        Upload Images (Optional)
                     </label>
                     <div
                         className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 bg-white hover:bg-gray-50 transition-colors duration-200 w-full cursor-pointer"
@@ -502,6 +492,11 @@ const WardAdmissionForm = ({
                                 type="date"
                                 value={searchDate}
                                 onChange={(e) => setSearchDate(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                    }
+                                }}
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200"
                             />
                             <button
@@ -584,7 +579,7 @@ const WardAdmissionForm = ({
                                             </div>
                                             {admission.image_paths &&
                                                 admission.image_paths.length >
-                                                    0 && (
+                                                0 && (
                                                     <div className="grid grid-cols-3 gap-2 mb-3">
                                                         {admission.image_paths.map(
                                                             (path, index) => (
@@ -614,10 +609,9 @@ const WardAdmissionForm = ({
                                                         Admission date
                                                     </span>
                                                     <span>
-                                                        {
-                                                            admission.admission_date.split(
-                                                                "T"
-                                                            )[0]
+                                                        {admission.admission_date
+                                                            ? admission.admission_date.split("T")[0]
+                                                            : "Not specified"
                                                         }
                                                     </span>
                                                 </div>
@@ -626,10 +620,9 @@ const WardAdmissionForm = ({
                                                         Discharge date
                                                     </span>
                                                     <span>
-                                                        {
-                                                            admission.discharge_date.split(
-                                                                "T"
-                                                            )[0]
+                                                        {admission.discharge_date
+                                                            ? admission.discharge_date.split("T")[0]
+                                                            : "Not specified"
                                                         }
                                                     </span>
                                                 </div>
@@ -637,20 +630,20 @@ const WardAdmissionForm = ({
                                                     <span className="font-medium">
                                                         ICU:
                                                     </span>
-                                                    <span>{admission.icu}</span>
+                                                    <span>{admission.icu || "Not specified"}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="font-medium">
                                                         Ward:
                                                     </span>
                                                     <span>
-                                                        {admission.ward}
+                                                        {admission.ward || "Not specified"}
                                                     </span>
                                                 </div>
                                             </div>
                                             {admission.image_paths &&
                                                 admission.image_paths.length >
-                                                    0 && (
+                                                0 && (
                                                     <div className="flex space-x-2">
                                                         <button
                                                             onClick={() =>

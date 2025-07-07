@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserIcon, CreditCardIcon, CalendarIcon, MapPinIcon, TagIcon, HashIcon, FingerprintIcon, FileTextIcon } from 'lucide-react';
+import { UserIcon, CreditCardIcon, CalendarIcon, MapPinIcon, TagIcon } from 'lucide-react';
 
 // Define a minimal structure for history/examination records relevant to this component
 type HistoryExaminationRecord = {
@@ -17,9 +17,6 @@ interface PatientProps {
     gender: string;
     address: string;
     category: string;
-    clinicRefNo: string;
-    uhid: string;
-    chb: string;
   };
   records: HistoryExaminationRecord[]; // Added records prop
 }
@@ -68,23 +65,15 @@ const PatientInfoCard = ({ patient, records }: PatientProps) => {
               <CreditCardIcon size={16} className="mr-2" />
               <span className="text-sm">NIC: {patient.nic}</span>
             </div>
-            <div className="flex items-center mt-1 text-gray-600">
-              <HashIcon size={16} className="mr-2" />
-              <span className="text-sm">Clinic Ref: {patient.clinicRefNo}</span>
-            </div>
           </div>
           <div>
             <div className="flex items-center text-gray-600 mb-2">
               <CalendarIcon size={16} className="mr-2" />
               <span className="text-sm">Birthday: {patient.birthday}</span>
             </div>
-            <div className="flex items-center text-gray-600 mb-2">
+            <div className="flex items-center text-gray-600">
               <UserIcon size={16} className="mr-2" />
               <span className="text-sm">Gender: {patient.gender}</span>
-            </div>
-            <div className="flex items-center text-gray-600">
-              <FingerprintIcon size={16} className="mr-2" />
-              <span className="text-sm">UHID: {patient.uhid}</span>
             </div>
           </div>
           <div>
@@ -92,7 +81,7 @@ const PatientInfoCard = ({ patient, records }: PatientProps) => {
               <MapPinIcon size={16} className="mr-2" />
               <span className="text-sm">Address: {patient.address}</span>
             </div>
-            <div className="flex items-center text-gray-600 mb-2">
+            <div className="flex items-center text-gray-600">
               <TagIcon size={16} className="mr-2" />
               <span className="text-sm">
                 Category:{' '}
@@ -100,10 +89,6 @@ const PatientInfoCard = ({ patient, records }: PatientProps) => {
                   {patient.category}
                 </span>
               </span>
-            </div>
-            <div className="flex items-center text-gray-600">
-              <FileTextIcon size={16} className="mr-2" />
-              <span className="text-sm">CHB: {patient.chb}</span>
             </div>
           </div>
         </div>

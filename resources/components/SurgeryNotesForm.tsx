@@ -29,6 +29,7 @@ interface SurgeryNoteData {
     surgery_type: string;
     surgery_notes: string;
     pathology_report_path?: string | null;
+    other_reports_path?: string | null;
     created_at?: string;
     updated_at?: string;
 }
@@ -132,9 +133,15 @@ const SurgeryNotesForm = ({
         notes: "",
     });
     const [selectedPathologyFiles, setSelectedPathologyFiles] = useState<
-        Array<{ file: File; preview: string | null; name: string }>
+        Array<{ file: File; preview: string | null; name: string; size?: number; type?: string }>
     >([]);
     const pathologyFileInputRef = React.useRef<HTMLInputElement>(null);
+
+    // Other Reports state variables
+    const [selectedOtherFiles, setSelectedOtherFiles] = useState<
+        Array<{ file: File; preview: string | null; name: string; size?: number; type?: string }>
+    >([]);
+    const otherFileInputRef = React.useRef<HTMLInputElement>(null);
 
     const [savedNotes, setSavedNotes] = useState<SurgeryNoteData[]>([]);
     const [filteredNotes, setFilteredNotes] = useState<SurgeryNoteData[]>([]); // New state for filtered notes
@@ -172,7 +179,7 @@ const SurgeryNotesForm = ({
                     patientName: patientData.name || "",
                     age:
                         patientData.age !== undefined &&
-                        patientData.age !== null
+                            patientData.age !== null
                             ? String(patientData.age)
                             : "", // Ensure age is always a string, default to empty string if not available
                     nicPassport: patientData.nic || "",
@@ -205,29 +212,139 @@ const SurgeryNotesForm = ({
         fetchSurgeryNotes();
     }, [clinicRefNo]);
 
+    // Cleanup function to revoke object URLs when component unmounts
+    useEffect(() => {
+        return () => {
+            selectedPathologyFiles.forEach((file) => {
+                if (file.preview) {
+                    URL.revokeObjectURL(file.preview);
+                }
+            });
+            selectedOtherFiles.forEach((file) => {
+                if (file.preview) {
+                    URL.revokeObjectURL(file.preview);
+                }
+            });
+        };
+    }, []);
+
     const handlePathologyFileChange = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
-        const newFiles = files.map((file) => {
+
+        // Validate file types and sizes
+        const validFiles = files.filter((file) => {
+            const isValidType = /\.(pdf|jpg|jpeg|png)$/i.test(file.name);
+            const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+
+            if (!isValidType) {
+                alert(`File "${file.name}" is not a supported format. Please upload PDF, JPG, JPEG, or PNG files only.`);
+                return false;
+            }
+
+            if (!isValidSize) {
+                alert(`File "${file.name}" is too large. Maximum file size is 10MB.`);
+                return false;
+            }
+
+            return true;
+        });
+
+        const newFiles = validFiles.map((file) => {
             const typedFile = file as File;
             return {
                 file: typedFile,
                 preview: URL.createObjectURL(typedFile),
                 name: typedFile.name,
+                size: typedFile.size,
+                type: typedFile.type,
             };
         });
-        setSelectedPathologyFiles(newFiles);
+
+        setSelectedPathologyFiles((prev) => [...prev, ...newFiles]);
     };
 
     const handleRemovePathologyFile = (indexToRemove: number) => {
-        setSelectedPathologyFiles((prevFiles) =>
-            prevFiles.filter((_, index) => index !== indexToRemove)
-        );
+        setSelectedPathologyFiles((prevFiles) => {
+            const fileToRemove = prevFiles[indexToRemove];
+            if (fileToRemove.preview) {
+                URL.revokeObjectURL(fileToRemove.preview);
+            }
+            return prevFiles.filter((_, index) => index !== indexToRemove);
+        });
     };
 
     const handlePathologyUploadClick = () =>
         pathologyFileInputRef.current?.click();
+
+    // Add drag and drop functionality
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+
+        const files = Array.from(e.dataTransfer.files);
+
+        // Validate file types and sizes
+        const validFiles = files.filter((file) => {
+            const isValidType = /\.(pdf|jpg|jpeg|png)$/i.test(file.name);
+            const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+
+            if (!isValidType) {
+                alert(`File "${file.name}" is not a supported format. Please upload PDF, JPG, JPEG, or PNG files only.`);
+                return false;
+            }
+
+            if (!isValidSize) {
+                alert(`File "${file.name}" is too large. Maximum file size is 10MB.`);
+                return false;
+            }
+
+            return true;
+        });
+
+        const newFiles = validFiles.map((file) => {
+            const typedFile = file as File;
+            return {
+                file: typedFile,
+                preview: URL.createObjectURL(typedFile),
+                name: typedFile.name,
+                size: typedFile.size,
+                type: typedFile.type,
+            };
+        });
+
+        setSelectedPathologyFiles((prev) => [...prev, ...newFiles]);
+    };
+
+    // Format file size for display
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    // Get file icon based on type
+    const getFileIcon = (fileName: string) => {
+        if (/\.pdf$/i.test(fileName)) {
+            return <FileTextIcon className="h-5 w-5 text-red-500" />;
+        } else if (/\.(jpg|jpeg|png)$/i.test(fileName)) {
+            return <FileTextIcon className="h-5 w-5 text-blue-500" />;
+        }
+        return <FileTextIcon className="h-5 w-5 text-gray-500" />;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -236,15 +353,7 @@ const SurgeryNotesForm = ({
             newErrors.general =
                 "Patient Clinic Ref No is missing. Cannot save.";
         }
-        if (!formData.date) {
-            newErrors.date = "Surgery Date is required.";
-        }
-        if (!formData.type) {
-            newErrors.type = "Surgery Type is required.";
-        }
-        if (!formData.notes.trim()) {
-            newErrors.notes = "Surgery Notes cannot be empty.";
-        }
+        // Removed required validation for Surgery Date, Surgery Type, and Surgery Notes
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -261,6 +370,10 @@ const SurgeryNotesForm = ({
 
         selectedPathologyFiles.forEach((fileObj, index) => {
             data.append(`pathology_reports[${index}]`, fileObj.file);
+        });
+
+        selectedOtherFiles.forEach((fileObj, index) => {
+            data.append(`other_reports[${index}]`, fileObj.file);
         });
 
         try {
@@ -281,6 +394,10 @@ const SurgeryNotesForm = ({
             setSelectedPathologyFiles([]);
             if (pathologyFileInputRef.current) {
                 pathologyFileInputRef.current.value = "";
+            }
+            setSelectedOtherFiles([]);
+            if (otherFileInputRef.current) {
+                otherFileInputRef.current.value = "";
             }
         } catch (error) {
             console.error("Error saving surgery note:", error);
@@ -385,7 +502,7 @@ const SurgeryNotesForm = ({
                         patientName: patientData.name || "",
                         age:
                             patientData.age !== undefined &&
-                            patientData.age !== null
+                                patientData.age !== null
                                 ? String(patientData.age)
                                 : "",
                         nicPassport: patientData.nic || "",
@@ -431,179 +548,214 @@ const SurgeryNotesForm = ({
 
     const generatePDF = () => {
         const doc = new jsPDF();
-        doc.setFontSize(16);
-        doc.text("CENTRAL HOSPITAL", 20, 20);
-        doc.setFontSize(14);
-        doc.text("SURGERY ESTIMATE FORM", 20, 30);
-        doc.text("Brain & Spine Information Centre", 20, 40);
-        doc.setFontSize(12);
-        doc.text(`Patient Name: ${estimateForm.patientName}`, 20, 50);
-        doc.text(`Surgery: ${estimateForm.surgery}`, 20, 60);
-        doc.text(`Time for Surgery: ${estimateForm.timeForSurgery}`, 20, 70);
-        doc.text(`Stay in ICU / HDU: ${estimateForm.stayInICU}`, 20, 80);
-        doc.text(`Stay in Wards: ${estimateForm.stayInWards}`, 20, 90);
-        doc.text(`Implants: ${estimateForm.implants}`, 20, 100);
-        doc.text(`Date: ${estimateForm.date}`, 20, 110);
-        doc.text(`Dr. Sunil Perera – Consultant Neurosurgeon`, 20, 120);
-        doc.text(`Contact: ${estimateForm.contact}`, 20, 130);
-        doc.text(`Whatsapp: ${estimateForm.whatsapp}`, 20, 140);
-        doc.text(
-            `Surgery Estimate / Range: ${estimateForm.surgeryEstimateRange}`,
-            20,
-            150
-        );
-        doc.text(
-            `Presidential Fund Quotation: ${estimateForm.presidentialFund} ${
-                estimateForm.presidentialFundDate
+        // Add logo at the top, centered
+        const logoImg = new Image();
+        logoImg.src = '/images/logo_asiri.png';
+        logoImg.onload = function () {
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const imgWidth = 50;
+            const imgHeight = 20;
+            const x = (pageWidth - imgWidth) / 2;
+            doc.addImage(logoImg, 'PNG', x, 10, imgWidth, imgHeight);
+
+            let y = 35;
+            doc.setFontSize(16);
+            doc.text("CENTRAL HOSPITAL", 20, y);
+            y += 10;
+            doc.setFontSize(14);
+            doc.text("SURGERY ESTIMATE FORM", 20, y);
+            y += 10;
+            doc.text("Brain & Spine Information Centre", 20, y);
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Patient Name: ${estimateForm.patientName}`, 20, y);
+            y += 10;
+            doc.text(`Surgery: ${estimateForm.surgery}`, 20, y);
+            y += 10;
+            doc.text(`Time for Surgery: ${estimateForm.timeForSurgery}`, 20, y);
+            y += 10;
+            doc.text(`Stay in ICU / HDU: ${estimateForm.stayInICU}`, 20, y);
+            y += 10;
+            doc.text(`Stay in Wards: ${estimateForm.stayInWards}`, 20, y);
+            y += 10;
+            doc.text(`Implants: ${estimateForm.implants}`, 20, y);
+            y += 10;
+            doc.text(`Date: ${estimateForm.date}`, 20, y);
+            y += 10;
+            doc.text(`Dr. Sunil Perera – Consultant Neurosurgeon`, 20, y);
+            y += 10;
+            doc.text(`Contact: ${estimateForm.contact}`, 20, y);
+            y += 10;
+            doc.text(`Whatsapp: ${estimateForm.whatsapp}`, 20, y);
+            y += 10;
+            doc.text(
+                `Surgery Estimate / Range: ${estimateForm.surgeryEstimateRange}`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `Presidential Fund Quotation: ${estimateForm.presidentialFund} ${estimateForm.presidentialFundDate
                     ? `(Date: ${estimateForm.presidentialFundDate})`
                     : ""
-            }`,
-            20,
-            160
-        );
-        doc.text(
-            `Presidential Fund Dr Diagnosis: ${
-                estimateForm.presidentialFundDiagnosis
-            } ${
-                estimateForm.presidentialFundDiagnosisDate
-                    ? `(Date: ${estimateForm.presidentialFundDiagnosisDate})`
-                    : ""
-            }`,
-            20,
-            170
-        );
-        doc.text(
-            `NITF (Agrahara) Quotation: ${estimateForm.nitfAgrahara} ${
-                estimateForm.nitfAgraharaDate
-                    ? `(Date: ${estimateForm.nitfAgraharaDate})`
-                    : ""
-            }`,
-            20,
-            180
-        );
-        doc.text(
-            `NITF (Agrahara) Dr Diagnosis: ${
-                estimateForm.nitfAgraharaDiagnosis
-            } ${
-                estimateForm.nitfAgraharaDiagnosisDate
-                    ? `(Date: ${estimateForm.nitfAgraharaDiagnosisDate})`
-                    : ""
-            }`,
-            20,
-            190
-        );
-        doc.text(
-            `Open Quotations: ${estimateForm.openQuotations} ${
-                estimateForm.openQuotationsDate
-                    ? `(Date: ${estimateForm.openQuotationsDate})`
-                    : ""
-            }`,
-            20,
-            200
-        );
-        doc.text(`Check-On Drugs: ${estimateForm.checkOnDrugs}`, 20, 210);
-        doc.text(
-            `Implant Prescription: ${estimateForm.implantPrescription}`,
-            20,
-            220
-        );
-        doc.text(`Admission Letter: ${estimateForm.admissionLetter}`, 20, 230);
-        doc.text(
-            `Investigation Sheet: ${estimateForm.investigationSheet}`,
-            20,
-            240
-        );
-        doc.text(
-            `Initial Deposit Amount: ${estimateForm.initialDeposit}`,
-            20,
-            250
-        );
-        doc.text(
-            `Temporary Date and Time of Admission: ${estimateForm.tempAdmissionDate}`,
-            20,
-            260
-        );
-        doc.text(
-            `Consultation Date of Anesthetist: ${estimateForm.anesthetistConsultationDate}`,
-            20,
-            270
-        );
-        doc.text("GUARDIAN INFO:", 20, 280);
-        doc.text(`Name of the Guardian: ${estimateForm.guardianName}`, 20, 290);
-        doc.text(`Contact No: ${estimateForm.guardianContact}`, 20, 300);
-        doc.text(
-            "I hereby declare that the above data collection and filling was done in the presence of the patient and visitors.",
-            20,
-            310
-        );
-        doc.text(`Date: ${estimateForm.date}`, 20, 320);
-        doc.text(
-            `Medical Coordinator: ${estimateForm.medicalCoordinator}`,
-            20,
-            330
-        );
-
-        // Implant Request Form
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.text("IMPLANT REQUEST FORM", 20, 20);
-        doc.setFontSize(12);
-        doc.text(
-            `Patient Name: ${estimateForm.implantRequest.patientName}`,
-            20,
-            30
-        );
-        doc.text(`Age: ${estimateForm.implantRequest.age}`, 20, 40);
-        doc.text(
-            `NIC / Passport No: ${estimateForm.implantRequest.nicPassport}`,
-            20,
-            50
-        );
-        doc.text(`Address: ${estimateForm.implantRequest.address}`, 20, 60);
-        doc.text(`Contact No: ${estimateForm.implantRequest.contact}`, 20, 70);
-        doc.text(
-            `Surgery Date: ${estimateForm.implantRequest.surgeryDate}`,
-            20,
-            80
-        );
-
-        // Implant Table
-        doc.text(
-            "NO   ITEM DESCRIPTION                          QUANTITY",
-            20,
-            90
-        );
-        doc.text("--------------------------------------------------", 20, 95);
-        estimateForm.implantRequest.implants.forEach((implant, index) => {
-            const y = 100 + index * 10;
-            doc.text(
-                `${String(index + 1).padStart(
-                    2,
-                    "0"
-                )}   ${implant.description.padEnd(40, " ")} ${
-                    implant.quantity
                 }`,
                 20,
                 y
             );
-        });
-        doc.text(`Remarks: ${estimateForm.implantRequest.remarks}`, 20, 180);
+            y += 10;
+            doc.text(
+                `Presidential Fund Dr Diagnosis: ${estimateForm.presidentialFundDiagnosis
+                } ${estimateForm.presidentialFundDiagnosisDate
+                    ? `(Date: ${estimateForm.presidentialFundDiagnosisDate})`
+                    : ""
+                }`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `NITF (Agrahara) Quotation: ${estimateForm.nitfAgrahara} ${estimateForm.nitfAgraharaDate
+                    ? `(Date: ${estimateForm.nitfAgraharaDate})`
+                    : ""
+                }`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `NITF (Agrahara) Dr Diagnosis: ${estimateForm.nitfAgraharaDiagnosis
+                } ${estimateForm.nitfAgraharaDiagnosisDate
+                    ? `(Date: ${estimateForm.nitfAgraharaDiagnosisDate})`
+                    : ""
+                }`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `Open Quotations: ${estimateForm.openQuotations} ${estimateForm.openQuotationsDate
+                    ? `(Date: ${estimateForm.openQuotationsDate})`
+                    : ""
+                }`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(`Check-On Drugs: ${estimateForm.checkOnDrugs}`, 20, y);
+            y += 10;
+            doc.text(
+                `Implant Prescription: ${estimateForm.implantPrescription}`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(`Admission Letter: ${estimateForm.admissionLetter}`, 20, y);
+            y += 10;
+            doc.text(
+                `Investigation Sheet: ${estimateForm.investigationSheet}`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `Initial Deposit Amount: ${estimateForm.initialDeposit}`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `Temporary Date and Time of Admission: ${estimateForm.tempAdmissionDate}`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text(
+                `Consultation Date of Anesthetist: ${estimateForm.anesthetistConsultationDate}`,
+                20,
+                y
+            );
+            y += 10;
+            doc.text("GUARDIAN INFO:", 20, y);
+            y += 10;
+            doc.text(`Name of the Guardian: ${estimateForm.guardianName}`, 20, y);
+            y += 10;
+            doc.text(`Contact No: ${estimateForm.guardianContact}`, 20, y);
+            y += 10;
+            doc.text(
+                "I hereby declare that the above data collection and filling was done in the presence of the patient and visitors.",
+                20,
+                y
+            );
+            y += 10;
+            doc.text(`Date: ${estimateForm.date}`, 20, y);
+            y += 10;
+            doc.text(
+                `Medical Coordinator: ${estimateForm.medicalCoordinator}`,
+                20,
+                y
+            );
 
-        // Company Information
-        doc.text("MedAcc (Pvt) Ltd", 20, 200);
-        doc.text(
-            "No.07, Manel Peiris, Sirimal Uyana, 10320, Ratmalana, Sri Lanka",
-            20,
-            210
-        );
-        doc.text("Tel: +94 (0) 112 72 6454 / +94 (0) 112 716 668", 20, 220);
-        doc.text("Hotline: +94 (0) 77 068 032", 20, 230);
-        doc.text("Email: info@medacc.co", 20, 240);
+            // Implant Request Form
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text("IMPLANT REQUEST FORM", 20, 20);
+            doc.setFontSize(12);
+            doc.text(
+                `Patient Name: ${estimateForm.implantRequest.patientName}`,
+                20,
+                30
+            );
+            doc.text(`Age: ${estimateForm.implantRequest.age}`, 20, 40);
+            doc.text(
+                `NIC / Passport No: ${estimateForm.implantRequest.nicPassport}`,
+                20,
+                50
+            );
+            doc.text(`Address: ${estimateForm.implantRequest.address}`, 20, 60);
+            doc.text(`Contact No: ${estimateForm.implantRequest.contact}`, 20, 70);
+            doc.text(
+                `Surgery Date: ${estimateForm.implantRequest.surgeryDate}`,
+                20,
+                80
+            );
 
-        const pdfBlob = doc.output("blob");
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        setPdfGenerated(pdfUrl);
-        setShowPdfModal(true);
+            // Implant Table
+            doc.text(
+                "NO   ITEM DESCRIPTION                          QUANTITY",
+                20,
+                90
+            );
+            doc.text("--------------------------------------------------", 20, 95);
+            estimateForm.implantRequest.implants.forEach((implant, index) => {
+                const y = 100 + index * 10;
+                doc.text(
+                    `${String(index + 1).padStart(
+                        2,
+                        "0"
+                    )}   ${implant.description.padEnd(40, " ")} ${implant.quantity
+                    }`,
+                    20,
+                    y
+                );
+            });
+            doc.text(`Remarks: ${estimateForm.implantRequest.remarks}`, 20, 180);
+
+            // Company Information
+            doc.text("MedAcc (Pvt) Ltd", 20, 200);
+            doc.text(
+                "No.07, Manel Peiris, Sirimal Uyana, 10320, Ratmalana, Sri Lanka",
+                20,
+                210
+            );
+            doc.text("Tel: +94 (0) 112 72 6454 / +94 (0) 112 716 668", 20, 220);
+            doc.text("Hotline: +94 (0) 77 068 032", 20, 230);
+            doc.text("Email: info@medacc.co", 20, 240);
+
+            const pdfBlob = doc.output("blob");
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            setPdfGenerated(pdfUrl);
+            setShowPdfModal(true);
+        };
     };
 
     const toggleNotesCollapse = () => {
@@ -749,8 +901,113 @@ const SurgeryNotesForm = ({
     };
 
     const handleCloseEstimateModal = () => {
-        setSelectedEstimate(null);
         setShowSingleEstimateModal(false);
+    };
+
+    // Other Reports file handling functions
+    const handleOtherFileChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const files = e.target.files ? Array.from(e.target.files) : [];
+
+        // Validate file types and sizes
+        const validFiles = files.filter((file) => {
+            const isValidType = /\.(pdf|jpg|jpeg|png)$/i.test(file.name);
+            const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+
+            if (!isValidType) {
+                alert(`File "${file.name}" is not a supported format. Please upload PDF, JPG, JPEG, or PNG files only.`);
+                return false;
+            }
+
+            if (!isValidSize) {
+                alert(`File "${file.name}" is too large. Maximum file size is 10MB.`);
+                return false;
+            }
+
+            return true;
+        });
+
+        const newFiles = validFiles.map((file) => {
+            const typedFile = file as File;
+            return {
+                file: typedFile,
+                preview: URL.createObjectURL(typedFile),
+                name: typedFile.name,
+                size: typedFile.size,
+                type: typedFile.type,
+            };
+        });
+
+        setSelectedOtherFiles((prev) => [...prev, ...newFiles]);
+    };
+
+    const handleRemoveOtherFile = (indexToRemove: number) => {
+        setSelectedOtherFiles((prev) => {
+            const newFiles = prev.filter((_, index) => index !== indexToRemove);
+            return newFiles;
+        });
+    };
+
+    const handleOtherUploadClick = () =>
+        otherFileInputRef.current?.click();
+
+    const handleOtherDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.currentTarget.classList.add("border-blue-400", "bg-blue-50");
+    };
+
+    const handleOtherDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove("border-blue-400", "bg-blue-50");
+    };
+
+    const handleOtherDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove("border-blue-400", "bg-blue-50");
+
+        const files = Array.from(e.dataTransfer.files);
+        const validFiles = files.filter((file) => {
+            const isValidType = /\.(pdf|jpg|jpeg|png)$/i.test(file.name);
+            const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+
+            if (!isValidType) {
+                alert(`File "${file.name}" is not a supported format. Please upload PDF, JPG, JPEG, or PNG files only.`);
+                return false;
+            }
+
+            if (!isValidSize) {
+                alert(`File "${file.name}" is too large. Maximum file size is 10MB.`);
+                return false;
+            }
+
+            return true;
+        });
+
+        const newFiles = validFiles.map((file) => {
+            const typedFile = file as File;
+            return {
+                file: typedFile,
+                preview: URL.createObjectURL(typedFile),
+                name: typedFile.name,
+                size: typedFile.size,
+                type: typedFile.type,
+            };
+        });
+
+        setSelectedOtherFiles((prev) => [...prev, ...newFiles]);
+    };
+
+    // Print function for Surgery Estimate Form
+    const handlePrintEstimateForm = () => {
+        const printContent = document.getElementById('surgery-estimate-form');
+        if (printContent) {
+            const originalContents = document.body.innerHTML;
+            document.body.innerHTML = printContent.innerHTML;
+            window.print();
+            document.body.innerHTML = originalContents;
+            window.location.reload();
+        }
     };
 
     return (
@@ -810,12 +1067,10 @@ const SurgeryNotesForm = ({
                                                 date: e.target.value,
                                             })
                                         }
-                                        className={`pl-10 w-full px-4 py-2.5 border ${
-                                            errors.date
-                                                ? "border-red-500"
-                                                : "border-gray-300"
-                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
-                                        required
+                                        className={`w-full px-4 py-2.5 border ${errors.date
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                            } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                                     />
                                     {errors.date && (
                                         <p className="text-red-500 text-xs mt-1">
@@ -833,10 +1088,10 @@ const SurgeryNotesForm = ({
                                 </label>
                                 <div className="relative w-full">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FileTextIcon className="h-5 w-5 text-gray-400" />{" "}
-                                        {/* Added icon */}
+                                        <FileTextIcon className="h-5 w-5 text-gray-400" />
                                     </div>
-                                    <select
+                                    <input
+                                        type="text"
                                         id="surgeryType"
                                         name="surgeryType"
                                         value={formData.type}
@@ -846,26 +1101,12 @@ const SurgeryNotesForm = ({
                                                 type: e.target.value,
                                             })
                                         }
-                                        className={`pl-10 w-full px-4 py-2.5 border ${
-                                            errors.type
-                                                ? "border-red-500"
-                                                : "border-gray-300"
-                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 appearance-none`}
-                                        required
-                                    >
-                                        <option value="">
-                                            Select surgery type
-                                        </option>
-                                        {surgeryTypes.map((type) => (
-                                            <option
-                                                key={type}
-                                                value={type}
-                                                className="bg-white"
-                                            >
-                                                {type}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        className={`pl-10 w-full px-4 py-2.5 border ${errors.type
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                            } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
+                                        placeholder="Enter surgery type..."
+                                    />
                                     {errors.type && (
                                         <p className="text-red-500 text-xs mt-1">
                                             {errors.type}
@@ -896,13 +1137,11 @@ const SurgeryNotesForm = ({
                                             notes: e.target.value,
                                         })
                                     }
-                                    className={`pl-10 w-full px-4 py-2.5 border ${
-                                        errors.notes
-                                            ? "border-red-500"
-                                            : "border-gray-300"
-                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
+                                    className={`pl-10 w-full px-4 py-2.5 border ${errors.notes
+                                        ? "border-red-500"
+                                        : "border-gray-300"
+                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                                     placeholder="Enter detailed surgery notes..."
-                                    required
                                 />
                                 {errors.notes && (
                                     <p className="text-red-500 text-xs mt-1">
@@ -914,11 +1153,19 @@ const SurgeryNotesForm = ({
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
                             <div className="px-6 py-4 border-b border-gray-100">
                                 <h4 className="font-medium text-gray-900">
-                                    Pathology Reports
+                                    Pathology Reports & Images
                                 </h4>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Upload one or more files (PDF, JPG, PNG) up to 10MB each
+                                </p>
                             </div>
                             <div className="p-6 space-y-4">
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                                <div
+                                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50"
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                >
                                     <div className="text-center">
                                         <input
                                             type="file"
@@ -933,52 +1180,222 @@ const SurgeryNotesForm = ({
                                         <button
                                             type="button"
                                             onClick={handlePathologyUploadClick}
-                                            className="cursor-pointer"
+                                            className="cursor-pointer w-full"
                                         >
                                             <UploadCloudIcon
-                                                className="mx-auto h-12 w-12 text-gray-400"
+                                                className="mx-auto h-16 w-16 text-gray-400 mb-4"
                                                 aria-hidden="true"
                                             />
-                                            <span className="mt-2 block text-sm font-medium text-blue-600 hover:text-blue-500">
-                                                Upload pathology reports
+                                            <span className="block text-lg font-medium text-blue-600 hover:text-blue-500 mb-2">
+                                                Upload Files
                                             </span>
+                                            <span className="block text-sm text-gray-600 mb-4">
+                                                Click to browse or drag and drop files here
+                                            </span>
+                                            <div className="flex justify-center space-x-4 text-xs text-gray-500">
+                                                <span className="bg-gray-100 px-2 py-1 rounded">PDF</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">JPG</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">PNG</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">Max 10MB</span>
+                                            </div>
                                         </button>
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            PDF, JPG, PNG up to 10MB each
-                                        </p>
                                     </div>
                                 </div>
+
                                 {selectedPathologyFiles.length > 0 && (
-                                    <div className="mt-6 divide-y divide-gray-100">
-                                        {selectedPathologyFiles.map(
-                                            (file, index) => (
+                                    <div className="mt-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h5 className="text-sm font-medium text-gray-900">
+                                                Selected Files ({selectedPathologyFiles.length})
+                                            </h5>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedPathologyFiles([]);
+                                                    if (pathologyFileInputRef.current) {
+                                                        pathologyFileInputRef.current.value = "";
+                                                    }
+                                                }}
+                                                className="text-sm text-red-600 hover:text-red-800 font-medium"
+                                            >
+                                                Clear All
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {selectedPathologyFiles.map((file, index) => (
                                                 <div
                                                     key={index}
-                                                    className="flex items-center justify-between py-3"
+                                                    className="relative bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200"
                                                 >
-                                                    <div className="flex items-center">
-                                                        <FileTextIcon className="h-5 w-5 text-blue-500 mr-2" />
-                                                        <div>
-                                                            <p className="text-sm font-medium text-gray-900">
-                                                                {file.name}
-                                                            </p>
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center flex-1 min-w-0">
+                                                            {getFileIcon(file.name)}
+                                                            <div className="ml-3 flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                                    {file.name}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {formatFileSize(file.size || 0)}
+                                                                </p>
+                                                            </div>
                                                         </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemovePathologyFile(index)}
+                                                            className="ml-2 p-1 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                                                            aria-label="Remove file"
+                                                        >
+                                                            <XIcon size={16} />
+                                                        </button>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleRemovePathologyFile(
-                                                                index
-                                                            )
-                                                        }
-                                                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                                                        aria-label="Remove file"
-                                                    >
-                                                        <XIcon size={16} />
-                                                    </button>
+
+                                                    {/* Preview for image files */}
+                                                    {file.preview && /\.(jpg|jpeg|png)$/i.test(file.name) && (
+                                                        <div className="mt-3">
+                                                            <img
+                                                                src={file.preview}
+                                                                alt={`Preview of ${file.name}`}
+                                                                className="w-full h-24 object-cover rounded border border-gray-200"
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {/* PDF indicator */}
+                                                    {/\.pdf$/i.test(file.name) && (
+                                                        <div className="mt-3 flex items-center text-xs text-red-600">
+                                                            <FileTextIcon className="h-4 w-4 mr-1" />
+                                                            PDF Document
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )
-                                        )}
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Other Reports Section */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+                            <div className="px-6 py-4 border-b border-gray-100">
+                                <h4 className="font-medium text-gray-900">
+                                    Other Reports & Images
+                                </h4>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Upload one or more files (PDF, JPG, PNG) up to 10MB each
+                                </p>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <div
+                                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50"
+                                    onDragOver={handleOtherDragOver}
+                                    onDragLeave={handleOtherDragLeave}
+                                    onDrop={handleOtherDrop}
+                                >
+                                    <div className="text-center">
+                                        <input
+                                            type="file"
+                                            id="other-file-upload"
+                                            name="other-file-upload"
+                                            className="hidden"
+                                            multiple
+                                            onChange={handleOtherFileChange}
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            ref={otherFileInputRef}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleOtherUploadClick}
+                                            className="cursor-pointer w-full"
+                                        >
+                                            <UploadCloudIcon
+                                                className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                                                aria-hidden="true"
+                                            />
+                                            <span className="block text-lg font-medium text-blue-600 hover:text-blue-500 mb-2">
+                                                Upload Files
+                                            </span>
+                                            <span className="block text-sm text-gray-600 mb-4">
+                                                Click to browse or drag and drop files here
+                                            </span>
+                                            <div className="flex justify-center space-x-4 text-xs text-gray-500">
+                                                <span className="bg-gray-100 px-2 py-1 rounded">PDF</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">JPG</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">PNG</span>
+                                                <span className="bg-gray-100 px-2 py-1 rounded">Max 10MB</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {selectedOtherFiles.length > 0 && (
+                                    <div className="mt-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h5 className="text-sm font-medium text-gray-900">
+                                                Selected Files ({selectedOtherFiles.length})
+                                            </h5>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedOtherFiles([]);
+                                                    if (otherFileInputRef.current) {
+                                                        otherFileInputRef.current.value = "";
+                                                    }
+                                                }}
+                                                className="text-sm text-red-600 hover:text-red-800 font-medium"
+                                            >
+                                                Clear All
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {selectedOtherFiles.map((file, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="relative bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200"
+                                                >
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center flex-1 min-w-0">
+                                                            {getFileIcon(file.name)}
+                                                            <div className="ml-3 flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                                    {file.name}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {formatFileSize(file.size || 0)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveOtherFile(index)}
+                                                            className="ml-2 p-1 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                                                            aria-label="Remove file"
+                                                        >
+                                                            <XIcon size={16} />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Preview for image files */}
+                                                    {file.preview && /\.(jpg|jpeg|png)$/i.test(file.name) && (
+                                                        <div className="mt-3">
+                                                            <img
+                                                                src={file.preview}
+                                                                alt={`Preview of ${file.name}`}
+                                                                className="w-full h-24 object-cover rounded border border-gray-200"
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {/* PDF indicator */}
+                                                    {/\.pdf$/i.test(file.name) && (
+                                                        <div className="mt-3 flex items-center text-xs text-red-600">
+                                                            <FileTextIcon className="h-4 w-4 mr-1" />
+                                                            PDF Document
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -991,6 +1408,14 @@ const SurgeryNotesForm = ({
                 <div className="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out">
                     <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transform transition-all duration-300 ease-out">
                         <div className="bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-t-2xl p-6 mb-6">
+                            <div className="flex flex-col items-center justify-center w-full mb-4">
+                                <img
+                                    src="/images/logo_asiri.png"
+                                    alt="Asiri Central Hospital Logo"
+                                    className="h-16 mb-2 print:mb-4 print:h-20"
+                                    style={{ objectFit: 'contain' }}
+                                />
+                            </div>
                             <div className="flex justify-between items-center">
                                 <div className="text-center w-full">
                                     <h4 className="text-2xl font-bold">
@@ -1004,18 +1429,32 @@ const SurgeryNotesForm = ({
                                         Neurosurgeon
                                     </p>
                                 </div>
-                                <button
-                                    onClick={() => setShowEstimateForm(false)}
-                                    className="text-white hover:bg-blue-700 rounded-full p-2 transition-colors duration-200"
-                                    aria-label="Close form"
-                                >
-                                    <XIcon size={24} />
-                                </button>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        type="button"
+                                        onClick={handlePrintEstimateForm}
+                                        className="text-white hover:bg-blue-700 rounded-full p-2 transition-colors duration-200"
+                                        aria-label="Print form"
+                                        title="Print Form"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={() => setShowEstimateForm(false)}
+                                        className="text-white hover:bg-blue-700 rounded-full p-2 transition-colors duration-200"
+                                        aria-label="Close form"
+                                    >
+                                        <XIcon size={24} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <form
                             onSubmit={handleEstimateFormSubmit}
                             className="space-y-6"
+                            id="surgery-estimate-form"
                         >
                             {/* General Information Section */}
                             <div className="border border-gray-200 rounded-lg">
@@ -1054,11 +1493,10 @@ const SurgeryNotesForm = ({
                                                         e.target.value
                                                     )
                                                 }
-                                                className={`w-full px-4 py-2.5 border ${
-                                                    estimateFormErrors.patientName
-                                                        ? "border-red-500"
-                                                        : "border-gray-300"
-                                                } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
+                                                className={`w-full px-4 py-2.5 border ${estimateFormErrors.patientName
+                                                    ? "border-red-500"
+                                                    : "border-gray-300"
+                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
                                                 required
                                             />
                                             {estimateFormErrors.patientName && (
@@ -1082,11 +1520,10 @@ const SurgeryNotesForm = ({
                                                         e.target.value
                                                     )
                                                 }
-                                                className={`w-full px-4 py-2.5 border ${
-                                                    estimateFormErrors.surgery
-                                                        ? "border-red-500"
-                                                        : "border-gray-300"
-                                                } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
+                                                className={`w-full px-4 py-2.5 border ${estimateFormErrors.surgery
+                                                    ? "border-red-500"
+                                                    : "border-gray-300"
+                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
                                                 required
                                             />
                                             {estimateFormErrors.surgery && (
@@ -1112,11 +1549,10 @@ const SurgeryNotesForm = ({
                                                             e.target.value
                                                         )
                                                     }
-                                                    className={`pl-10 w-full px-4 py-2.5 border ${
-                                                        estimateFormErrors.date
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
+                                                    className={`pl-10 w-full px-4 py-2.5 border ${estimateFormErrors.date
+                                                        ? "border-red-500"
+                                                        : "border-gray-300"
+                                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
                                                     required
                                                 />
                                             </div>
@@ -1245,11 +1681,10 @@ const SurgeryNotesForm = ({
                                                         e.target.value
                                                     )
                                                 }
-                                                className={`w-full px-4 py-2.5 border ${
-                                                    estimateFormErrors.surgeryEstimateRange
-                                                        ? "border-red-500"
-                                                        : "border-gray-300"
-                                                } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
+                                                className={`w-full px-4 py-2.5 border ${estimateFormErrors.surgeryEstimateRange
+                                                    ? "border-red-500"
+                                                    : "border-gray-300"
+                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
                                                 required
                                             />
                                             {estimateFormErrors.surgeryEstimateRange && (
@@ -1309,26 +1744,26 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.presidentialFund ===
                                                 "YES" && (
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                    <div className="relative mt-2">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                            <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                        </div>
+                                                        <input
+                                                            type="date"
+                                                            value={
+                                                                estimateForm.presidentialFundDate
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleEstimateFormChange(
+                                                                    "presidentialFundDate",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
+                                                            placeholder="Date of Issue"
+                                                        />
                                                     </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.presidentialFundDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "presidentialFundDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
+                                                )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1351,26 +1786,26 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.presidentialFundDiagnosis ===
                                                 "YES" && (
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                    <div className="relative mt-2">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                            <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                        </div>
+                                                        <input
+                                                            type="date"
+                                                            value={
+                                                                estimateForm.presidentialFundDiagnosisDate
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleEstimateFormChange(
+                                                                    "presidentialFundDiagnosisDate",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
+                                                            placeholder="Date of Issue"
+                                                        />
                                                     </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.presidentialFundDiagnosisDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "presidentialFundDiagnosisDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
+                                                )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1393,26 +1828,26 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.nitfAgrahara ===
                                                 "YES" && (
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                    <div className="relative mt-2">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                            <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                        </div>
+                                                        <input
+                                                            type="date"
+                                                            value={
+                                                                estimateForm.nitfAgraharaDate
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleEstimateFormChange(
+                                                                    "nitfAgraharaDate",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
+                                                            placeholder="Date of Issue"
+                                                        />
                                                     </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.nitfAgraharaDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "nitfAgraharaDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
+                                                )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1435,26 +1870,26 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.nitfAgraharaDiagnosis ===
                                                 "YES" && (
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                    <div className="relative mt-2">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                            <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                        </div>
+                                                        <input
+                                                            type="date"
+                                                            value={
+                                                                estimateForm.nitfAgraharaDiagnosisDate
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleEstimateFormChange(
+                                                                    "nitfAgraharaDiagnosisDate",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
+                                                            placeholder="Date of Issue"
+                                                        />
                                                     </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.nitfAgraharaDiagnosisDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "nitfAgraharaDiagnosisDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
+                                                )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1477,26 +1912,26 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.openQuotations ===
                                                 "YES" && (
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                    <div className="relative mt-2">
+                                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                            <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                                        </div>
+                                                        <input
+                                                            type="date"
+                                                            value={
+                                                                estimateForm.openQuotationsDate
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleEstimateFormChange(
+                                                                    "openQuotationsDate",
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
+                                                            placeholder="Date of Issue"
+                                                        />
                                                     </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.openQuotationsDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "openQuotationsDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
+                                                )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1738,11 +2173,10 @@ const SurgeryNotesForm = ({
                                                             e.target.value
                                                         )
                                                     }
-                                                    className={`w-full px-4 py-2.5 border ${
-                                                        estimateFormErrors.implant_patientName
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
+                                                    className={`w-full px-4 py-2.5 border ${estimateFormErrors.implant_patientName
+                                                        ? "border-red-500"
+                                                        : "border-gray-300"
+                                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
                                                     required
                                                 />
                                                 {estimateFormErrors.implant_patientName && (
@@ -1888,7 +2322,7 @@ const SurgeryNotesForm = ({
                                                                     className={
                                                                         index %
                                                                             2 ===
-                                                                        0
+                                                                            0
                                                                             ? "bg-white"
                                                                             : "bg-gray-50"
                                                                     }
@@ -1896,7 +2330,7 @@ const SurgeryNotesForm = ({
                                                                     <td className="border border-gray-200 p-3 text-sm">
                                                                         {String(
                                                                             index +
-                                                                                1
+                                                                            1
                                                                         ).padStart(
                                                                             2,
                                                                             "0"
@@ -1967,11 +2401,10 @@ const SurgeryNotesForm = ({
                                 <button
                                     type="submit"
                                     disabled={isGeneratingPDF}
-                                    className={`inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md ${
-                                        isGeneratingPDF
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : ""
-                                    }`}
+                                    className={`inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md ${isGeneratingPDF
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                        }`}
                                 >
                                     {isGeneratingPDF ? (
                                         <span className="flex items-center">
@@ -2126,60 +2559,88 @@ const SurgeryNotesForm = ({
                         </div>
                     </div>
                     {!isNotesCollapsed && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ease-in-out">
+                        <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ease-in-out">
                             {filteredNotes.length > 0 ? (
                                 filteredNotes.map((note, index) => (
                                     <div
                                         key={index}
-                                        className="relative bg-white p-5 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1"
+                                        className="relative bg-white p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-2 hover:scale-105 group overflow-hidden"
                                     >
-                                        <div className="border-b border-gray-200 pb-3 mb-3">
-                                            <p className="text-sm font-medium text-gray-500">
-                                                <span className="font-semibold text-gray-800">
-                                                    Clinic Ref No:
-                                                </span>{" "}
-                                                {note.clinic_ref_no}
-                                            </p>
-                                            <p className="text-sm font-medium text-gray-500">
-                                                <span className="font-semibold text-gray-800">
-                                                    Date:
-                                                </span>{" "}
-                                                {new Date(
-                                                    note.surgery_date
-                                                ).toLocaleDateString("en-GB", {
-                                                    day: "2-digit",
-                                                    month: "short",
-                                                    year: "numeric",
-                                                })}
-                                            </p>
+                                        {/* Decorative top border with animation */}
+                                        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 rounded-t-xl"></div>
+
+                                        {/* Background pattern */}
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gray-100 rounded-full opacity-20 transform translate-x-16 -translate-y-16"></div>
+
+                                        {/* Header section with enhanced styling */}
+                                        <div className="relative border-b border-gray-100 pb-4 mb-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="w-3 h-3 bg-gray-300 rounded-full shadow-lg"></div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Clinic Ref</span>
+                                                        <p className="text-sm font-bold text-gray-800 bg-white px-2 py-1 rounded-md shadow-sm">
+                                                            {note.clinic_ref_no}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-gray-700 bg-gray-200 px-3 py-1 rounded-full font-medium shadow-sm">
+                                                    #{index + 1}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center space-x-6">
+                                                <div className="flex items-center space-x-2 text-sm text-gray-600 bg-white px-3 py-1 rounded-lg shadow-sm">
+                                                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                                                    <span className="font-medium">
+                                                        {new Date(note.surgery_date).toLocaleDateString("en-GB", {
+                                                            day: "2-digit",
+                                                            month: "short",
+                                                            year: "numeric",
+                                                        })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center space-x-2 text-sm text-gray-600 bg-white px-3 py-1 rounded-lg shadow-sm">
+                                                    <FileTextIcon className="h-4 w-4 text-gray-500" />
+                                                    <span className="font-medium">Surgery Note</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="space-y-3">
-                                            <p className="text-sm text-gray-600">
-                                                <span className="font-semibold text-gray-800">
-                                                    Type:
-                                                </span>{" "}
-                                                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+
+                                        {/* Content section with enhanced styling */}
+                                        <div className="relative space-y-4">
+                                            <div className="flex items-center space-x-3">
+                                                <span className="text-sm font-semibold text-gray-700">
+                                                    Surgery Type:
+                                                </span>
+                                                <span className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-xs font-bold shadow-lg transform hover:scale-105 transition-transform duration-200">
                                                     {note.surgery_type}
                                                 </span>
-                                            </p>
-                                            <p className="text-sm text-gray-600">
-                                                <span className="font-semibold text-gray-800">
-                                                    Notes:
-                                                </span>{" "}
-                                                <span className="line-clamp-3">
+                                            </div>
+
+                                            <div className="bg-gray-50 rounded-xl p-4 border-l-4 border-gray-300 shadow-sm">
+                                                <div className="flex items-center space-x-2 mb-3">
+                                                    <span className="text-lg">📝</span>
+                                                    <p className="text-sm font-bold text-gray-700">
+                                                        Surgery Notes:
+                                                    </p>
+                                                </div>
+                                                <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 bg-white p-3 rounded-lg shadow-sm">
                                                     {note.surgery_notes}
-                                                </span>
-                                            </p>
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="mt-4">
-                                            <p className="text-sm font-semibold text-gray-800 mb-2">
-                                                Pathology Reports:
-                                            </p>
+                                        <div className="mt-6">
+                                            <div className="flex items-center space-x-2 mb-4">
+                                                <span className="text-lg">📋</span>
+                                                <p className="text-sm font-bold text-gray-700">
+                                                    Pathology Reports & Images:
+                                                </p>
+                                            </div>
                                             {note.pathology_report_path &&
-                                            JSON.parse(
-                                                note.pathology_report_path
-                                            ).length > 0 ? (
-                                                <div className="flex flex-wrap gap-3">
+                                                JSON.parse(
+                                                    note.pathology_report_path
+                                                ).length > 0 ? (
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                                     {JSON.parse(
                                                         note.pathology_report_path
                                                     ).map(
@@ -2205,43 +2666,162 @@ const SurgeryNotesForm = ({
                                                                     key={
                                                                         fileIndex
                                                                     }
-                                                                    className="flex flex-col items-center border border-gray-200 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                                                                    className="relative bg-white border border-gray-200 rounded-xl p-3 hover:bg-gray-50 transition-all duration-200 group shadow-sm hover:shadow-md transform hover:scale-105"
                                                                 >
-                                                                    {isImage && (
-                                                                        <img
-                                                                            src={`/${path}`}
-                                                                            alt={`Pathology Report ${
-                                                                                fileIndex +
-                                                                                1
-                                                                            }`}
-                                                                            className="w-16 h-16 object-cover rounded-md mb-2"
-                                                                        />
-                                                                    )}
-                                                                    {isPdf && (
-                                                                        <FileTextIcon className="h-10 w-10 text-red-500 mb-2" />
-                                                                    )}
-                                                                    <a
-                                                                        href={`/${path}`}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="text-blue-600 hover:text-blue-800 text-xs font-medium underline transition_colors duration-200 text-center"
-                                                                    >
-                                                                        {
-                                                                            fileName
-                                                                        }
-                                                                    </a>
+                                                                    <div className="flex flex-col items-center">
+                                                                        {isImage && (
+                                                                            <div className="relative mb-3">
+                                                                                <img
+                                                                                    src={`/storage/${path}`}
+                                                                                    alt={`Pathology Report ${fileIndex + 1}`}
+                                                                                    className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 shadow-sm group-hover:border-gray-300 transition-all duration-200"
+                                                                                />
+                                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                                                    <a
+                                                                                        href={`/storage/${path}`}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-700 text-xs font-bold bg-gray-200 px-3 py-1 rounded-full shadow-lg"
+                                                                                    >
+                                                                                        View
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        {isPdf && (
+                                                                            <div className="mb-3">
+                                                                                <div className="w-16 h-16 bg-gray-100 border-2 border-gray-200 rounded-lg flex items-center justify-center group-hover:border-gray-300 transition-all duration-200 shadow-sm">
+                                                                                    <FileTextIcon className="h-8 w-8 text-gray-500" />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="text-center">
+                                                                            <a
+                                                                                href={`/storage/${path}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-gray-600 hover:text-gray-800 text-xs font-bold underline transition-colors duration-200 text-center block truncate max-w-full hover:scale-105 transform"
+                                                                                title={fileName}
+                                                                            >
+                                                                                {isPdf ? 'View PDF Document' : 'View Image'}
+                                                                            </a>
+                                                                            <p className="text-xs text-gray-500 mt-1 font-medium">
+                                                                                {isPdf ? '📄 PDF Document' : '🖼️ Image File'}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             );
                                                         }
                                                     )}
                                                 </div>
                                             ) : (
-                                                <p className="text-sm text-gray-500 italic">
-                                                    No Reports Uploaded
-                                                </p>
+                                                <div className="text-center py-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                                    <FileTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                                                    <p className="text-sm text-gray-500 italic font-medium">
+                                                        No files uploaded
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="absolute inset-0 rounded-lg ring-2 ring-transparent hover:ring-blue-200 transition-all duration-300 pointer-events-none" />
+
+                                        {/* Other Reports Section */}
+                                        <div className="mt-6">
+                                            <div className="flex items-center space-x-2 mb-4">
+                                                <span className="text-lg">📄</span>
+                                                <p className="text-sm font-bold text-gray-700">
+                                                    Other Reports & Images:
+                                                </p>
+                                            </div>
+                                            {note.other_reports_path &&
+                                                JSON.parse(
+                                                    note.other_reports_path
+                                                ).length > 0 ? (
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                    {JSON.parse(
+                                                        note.other_reports_path
+                                                    ).map(
+                                                        (
+                                                            path: string,
+                                                            fileIndex: number
+                                                        ) => {
+                                                            const isImage =
+                                                                /\.(jpeg|jpg|png)$/i.test(
+                                                                    path
+                                                                );
+                                                            const isPdf =
+                                                                /\.pdf$/i.test(
+                                                                    path
+                                                                );
+                                                            const fileName =
+                                                                path
+                                                                    .split("/")
+                                                                    .pop(); // Extract file name
+
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        fileIndex
+                                                                    }
+                                                                    className="relative bg-white border border-gray-200 rounded-xl p-3 hover:bg-gray-50 transition-all duration-200 group shadow-sm hover:shadow-md transform hover:scale-105"
+                                                                >
+                                                                    <div className="flex flex-col items-center">
+                                                                        {isImage && (
+                                                                            <div className="relative mb-3">
+                                                                                <img
+                                                                                    src={`/storage/${path}`}
+                                                                                    alt={`Other Report ${fileIndex + 1}`}
+                                                                                    className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 shadow-sm group-hover:border-gray-300 transition-all duration-200"
+                                                                                />
+                                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                                                    <a
+                                                                                        href={`/storage/${path}`}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-700 text-xs font-bold bg-gray-200 px-3 py-1 rounded-full shadow-lg"
+                                                                                    >
+                                                                                        View
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        {isPdf && (
+                                                                            <div className="mb-3">
+                                                                                <div className="w-16 h-16 bg-gray-100 border-2 border-gray-200 rounded-lg flex items-center justify-center group-hover:border-gray-300 transition-all duration-200 shadow-sm">
+                                                                                    <FileTextIcon className="h-8 w-8 text-gray-500" />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="text-center">
+                                                                            <a
+                                                                                href={`/storage/${path}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-gray-600 hover:text-gray-800 text-xs font-bold underline transition-colors duration-200 text-center block truncate max-w-full hover:scale-105 transform"
+                                                                                title={fileName}
+                                                                            >
+                                                                                {isPdf ? 'View PDF Document' : 'View Image'}
+                                                                            </a>
+                                                                            <p className="text-xs text-gray-500 mt-1 font-medium">
+                                                                                {isPdf ? '📄 PDF Document' : '🖼️ Image File'}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                                    <FileTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                                                    <p className="text-sm text-gray-500 italic font-medium">
+                                                        No files uploaded
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="absolute inset-0 rounded-lg ring-2 ring-transparent hover:ring-gray-200 transition-all duration-300 pointer-events-none" />
                                     </div>
                                 ))
                             ) : (
