@@ -194,5 +194,9 @@ Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPa
 
 Route::get('/forgot-password', function () {
     return Inertia::render('Auth/ForgotPassword');
+<<<<<<< HEAD
 });
 
+=======
+});
+>>>>>>> origin/main

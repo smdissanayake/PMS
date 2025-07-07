@@ -12,11 +12,17 @@ class SurgeryNote extends Model
         'surgery_type',
         'surgery_notes',
         'pathology_report_path',
+<<<<<<< HEAD
         'other_reports_path',
+=======
+>>>>>>> origin/main
     ];
     
     protected $casts = [
         'pathology_report_path' => 'array',
+<<<<<<< HEAD
         'other_reports_path' => 'array',
+=======
+>>>>>>> origin/main
     ];
 }

@@ -7,6 +7,10 @@ import DashboardContent from "../../components/DashboardContent";
 import SurgeryCalendar from "../../components/SurgeryCalendar";
 import PatientHistoryForm from "../../components/PatientHistoryForm";
 import { PatientRegistration } from "../../components/PatientRegistration";
+<<<<<<< HEAD
+=======
+import PatiantReport from "./../../components/PetiantReport";
+>>>>>>> origin/main
 
 export default function Home() {
     const { auth } = usePage().props;
@@ -41,12 +45,17 @@ export default function Home() {
 
                         {activeTab === "sergerycalendar" && <SurgeryCalendar />}
 
+<<<<<<< HEAD
                         {activeTab === "reports" &&
                         <div>
                             <h1 className="text-2xl font-bold mb-4">Reports</h1>
                             <p>Reports content goes here.</p>
                         </div>
                         }
+=======
+                        {activeTab === "reports" && <PatiantReport/>}
+                        
+>>>>>>> origin/main
                     </main>
                 </div>
             </div>

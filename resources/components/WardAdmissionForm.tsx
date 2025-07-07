@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 import React, { useState, useRef, useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import Swal from "sweetalert2";
@@ -146,11 +149,19 @@ const WardAdmissionForm = ({
                     };
                 })
                 .filter((item) => item !== null) as Array<{
+<<<<<<< HEAD
                     file: File;
                     preview: string;
                     uploadTime: string;
                     type: string;
                 }>;
+=======
+                file: File;
+                preview: string;
+                uploadTime: string;
+                type: string;
+            }>;
+>>>>>>> origin/main
 
             if (newFiles.length < 2) {
                 MySwal.fire({
@@ -335,9 +346,15 @@ const WardAdmissionForm = ({
 
     const filteredAdmissions = searchDate
         ? admissions.filter(
+<<<<<<< HEAD
             (admission) =>
                 admission.admission_date.split("T")[0] === searchDate
         )
+=======
+              (admission) =>
+                  admission.admission_date.split("T")[0] === searchDate
+          )
+>>>>>>> origin/main
         : admissions;
 
     return (
@@ -585,7 +602,11 @@ const WardAdmissionForm = ({
                                             </div>
                                             {admission.image_paths &&
                                                 admission.image_paths.length >
+<<<<<<< HEAD
                                                 0 && (
+=======
+                                                    0 && (
+>>>>>>> origin/main
                                                     <div className="grid grid-cols-3 gap-2 mb-3">
                                                         {admission.image_paths.map(
                                                             (path, index) => (
@@ -651,7 +672,11 @@ const WardAdmissionForm = ({
                                             </div>
                                             {admission.image_paths &&
                                                 admission.image_paths.length >
+<<<<<<< HEAD
                                                 0 && (
+=======
+                                                    0 && (
+>>>>>>> origin/main
                                                     <div className="flex space-x-2">
                                                         <button
                                                             onClick={() =>
@@ -719,4 +744,8 @@ const WardAdmissionForm = ({
     );
 };
 
+<<<<<<< HEAD
 
+=======
+export default WardAdmissionForm;
+>>>>>>> origin/main
