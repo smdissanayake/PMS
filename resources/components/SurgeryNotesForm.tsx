@@ -29,10 +29,7 @@ interface SurgeryNoteData {
     surgery_type: string;
     surgery_notes: string;
     pathology_report_path?: string | null;
-<<<<<<< HEAD
     other_reports_path?: string | null;
-=======
->>>>>>> origin/main
     created_at?: string;
     updated_at?: string;
 }
@@ -136,7 +133,6 @@ const SurgeryNotesForm = ({
         notes: "",
     });
     const [selectedPathologyFiles, setSelectedPathologyFiles] = useState<
-<<<<<<< HEAD
         Array<{ file: File; preview: string | null; name: string; size?: number; type?: string }>
     >([]);
     const pathologyFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -147,12 +143,6 @@ const SurgeryNotesForm = ({
     >([]);
     const otherFileInputRef = React.useRef<HTMLInputElement>(null);
 
-=======
-        Array<{ file: File; preview: string | null; name: string }>
-    >([]);
-    const pathologyFileInputRef = React.useRef<HTMLInputElement>(null);
-
->>>>>>> origin/main
     const [savedNotes, setSavedNotes] = useState<SurgeryNoteData[]>([]);
     const [filteredNotes, setFilteredNotes] = useState<SurgeryNoteData[]>([]); // New state for filtered notes
     const [searchDate, setSearchDate] = useState(""); // New state for search date
@@ -189,11 +179,7 @@ const SurgeryNotesForm = ({
                     patientName: patientData.name || "",
                     age:
                         patientData.age !== undefined &&
-<<<<<<< HEAD
                             patientData.age !== null
-=======
-                        patientData.age !== null
->>>>>>> origin/main
                             ? String(patientData.age)
                             : "", // Ensure age is always a string, default to empty string if not available
                     nicPassport: patientData.nic || "",
@@ -226,7 +212,6 @@ const SurgeryNotesForm = ({
         fetchSurgeryNotes();
     }, [clinicRefNo]);
 
-<<<<<<< HEAD
     // Cleanup function to revoke object URLs when component unmounts
     useEffect(() => {
         return () => {
@@ -243,13 +228,10 @@ const SurgeryNotesForm = ({
         };
     }, []);
 
-=======
->>>>>>> origin/main
     const handlePathologyFileChange = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
-<<<<<<< HEAD
 
         // Validate file types and sizes
         const validFiles = files.filter((file) => {
@@ -270,15 +252,11 @@ const SurgeryNotesForm = ({
         });
 
         const newFiles = validFiles.map((file) => {
-=======
-        const newFiles = files.map((file) => {
->>>>>>> origin/main
             const typedFile = file as File;
             return {
                 file: typedFile,
                 preview: URL.createObjectURL(typedFile),
                 name: typedFile.name,
-<<<<<<< HEAD
                 size: typedFile.size,
                 type: typedFile.type,
             };
@@ -295,23 +273,11 @@ const SurgeryNotesForm = ({
             }
             return prevFiles.filter((_, index) => index !== indexToRemove);
         });
-=======
-            };
-        });
-        setSelectedPathologyFiles(newFiles);
-    };
-
-    const handleRemovePathologyFile = (indexToRemove: number) => {
-        setSelectedPathologyFiles((prevFiles) =>
-            prevFiles.filter((_, index) => index !== indexToRemove)
-        );
->>>>>>> origin/main
     };
 
     const handlePathologyUploadClick = () =>
         pathologyFileInputRef.current?.click();
 
-<<<<<<< HEAD
     // Add drag and drop functionality
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -380,8 +346,6 @@ const SurgeryNotesForm = ({
         return <FileTextIcon className="h-5 w-5 text-gray-500" />;
     };
 
-=======
->>>>>>> origin/main
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors: FormErrors = {};
@@ -389,19 +353,7 @@ const SurgeryNotesForm = ({
             newErrors.general =
                 "Patient Clinic Ref No is missing. Cannot save.";
         }
-<<<<<<< HEAD
         // Removed required validation for Surgery Date, Surgery Type, and Surgery Notes
-=======
-        if (!formData.date) {
-            newErrors.date = "Surgery Date is required.";
-        }
-        if (!formData.type) {
-            newErrors.type = "Surgery Type is required.";
-        }
-        if (!formData.notes.trim()) {
-            newErrors.notes = "Surgery Notes cannot be empty.";
-        }
->>>>>>> origin/main
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -420,13 +372,10 @@ const SurgeryNotesForm = ({
             data.append(`pathology_reports[${index}]`, fileObj.file);
         });
 
-<<<<<<< HEAD
         selectedOtherFiles.forEach((fileObj, index) => {
             data.append(`other_reports[${index}]`, fileObj.file);
         });
 
-=======
->>>>>>> origin/main
         try {
             const response = await axios.post("/api/surgery-notes", data, {
                 headers: {
@@ -446,13 +395,10 @@ const SurgeryNotesForm = ({
             if (pathologyFileInputRef.current) {
                 pathologyFileInputRef.current.value = "";
             }
-<<<<<<< HEAD
             setSelectedOtherFiles([]);
             if (otherFileInputRef.current) {
                 otherFileInputRef.current.value = "";
             }
-=======
->>>>>>> origin/main
         } catch (error) {
             console.error("Error saving surgery note:", error);
             if (axios.isAxiosError(error) && error.response?.data?.errors) {
@@ -556,11 +502,7 @@ const SurgeryNotesForm = ({
                         patientName: patientData.name || "",
                         age:
                             patientData.age !== undefined &&
-<<<<<<< HEAD
                                 patientData.age !== null
-=======
-                            patientData.age !== null
->>>>>>> origin/main
                                 ? String(patientData.age)
                                 : "",
                         nicPassport: patientData.nic || "",
@@ -606,7 +548,6 @@ const SurgeryNotesForm = ({
 
     const generatePDF = () => {
         const doc = new jsPDF();
-<<<<<<< HEAD
         // Add logo at the top, centered
         const logoImg = new Image();
         logoImg.src = '/images/logo_asiri.png';
@@ -695,164 +636,10 @@ const SurgeryNotesForm = ({
                 `Open Quotations: ${estimateForm.openQuotations} ${estimateForm.openQuotationsDate
                     ? `(Date: ${estimateForm.openQuotationsDate})`
                     : ""
-=======
-        doc.setFontSize(16);
-        doc.text("CENTRAL HOSPITAL", 20, 20);
-        doc.setFontSize(14);
-        doc.text("SURGERY ESTIMATE FORM", 20, 30);
-        doc.text("Brain & Spine Information Centre", 20, 40);
-        doc.setFontSize(12);
-        doc.text(`Patient Name: ${estimateForm.patientName}`, 20, 50);
-        doc.text(`Surgery: ${estimateForm.surgery}`, 20, 60);
-        doc.text(`Time for Surgery: ${estimateForm.timeForSurgery}`, 20, 70);
-        doc.text(`Stay in ICU / HDU: ${estimateForm.stayInICU}`, 20, 80);
-        doc.text(`Stay in Wards: ${estimateForm.stayInWards}`, 20, 90);
-        doc.text(`Implants: ${estimateForm.implants}`, 20, 100);
-        doc.text(`Date: ${estimateForm.date}`, 20, 110);
-        doc.text(`Dr. Sunil Perera – Consultant Neurosurgeon`, 20, 120);
-        doc.text(`Contact: ${estimateForm.contact}`, 20, 130);
-        doc.text(`Whatsapp: ${estimateForm.whatsapp}`, 20, 140);
-        doc.text(
-            `Surgery Estimate / Range: ${estimateForm.surgeryEstimateRange}`,
-            20,
-            150
-        );
-        doc.text(
-            `Presidential Fund Quotation: ${estimateForm.presidentialFund} ${
-                estimateForm.presidentialFundDate
-                    ? `(Date: ${estimateForm.presidentialFundDate})`
-                    : ""
-            }`,
-            20,
-            160
-        );
-        doc.text(
-            `Presidential Fund Dr Diagnosis: ${
-                estimateForm.presidentialFundDiagnosis
-            } ${
-                estimateForm.presidentialFundDiagnosisDate
-                    ? `(Date: ${estimateForm.presidentialFundDiagnosisDate})`
-                    : ""
-            }`,
-            20,
-            170
-        );
-        doc.text(
-            `NITF (Agrahara) Quotation: ${estimateForm.nitfAgrahara} ${
-                estimateForm.nitfAgraharaDate
-                    ? `(Date: ${estimateForm.nitfAgraharaDate})`
-                    : ""
-            }`,
-            20,
-            180
-        );
-        doc.text(
-            `NITF (Agrahara) Dr Diagnosis: ${
-                estimateForm.nitfAgraharaDiagnosis
-            } ${
-                estimateForm.nitfAgraharaDiagnosisDate
-                    ? `(Date: ${estimateForm.nitfAgraharaDiagnosisDate})`
-                    : ""
-            }`,
-            20,
-            190
-        );
-        doc.text(
-            `Open Quotations: ${estimateForm.openQuotations} ${
-                estimateForm.openQuotationsDate
-                    ? `(Date: ${estimateForm.openQuotationsDate})`
-                    : ""
-            }`,
-            20,
-            200
-        );
-        doc.text(`Check-On Drugs: ${estimateForm.checkOnDrugs}`, 20, 210);
-        doc.text(
-            `Implant Prescription: ${estimateForm.implantPrescription}`,
-            20,
-            220
-        );
-        doc.text(`Admission Letter: ${estimateForm.admissionLetter}`, 20, 230);
-        doc.text(
-            `Investigation Sheet: ${estimateForm.investigationSheet}`,
-            20,
-            240
-        );
-        doc.text(
-            `Initial Deposit Amount: ${estimateForm.initialDeposit}`,
-            20,
-            250
-        );
-        doc.text(
-            `Temporary Date and Time of Admission: ${estimateForm.tempAdmissionDate}`,
-            20,
-            260
-        );
-        doc.text(
-            `Consultation Date of Anesthetist: ${estimateForm.anesthetistConsultationDate}`,
-            20,
-            270
-        );
-        doc.text("GUARDIAN INFO:", 20, 280);
-        doc.text(`Name of the Guardian: ${estimateForm.guardianName}`, 20, 290);
-        doc.text(`Contact No: ${estimateForm.guardianContact}`, 20, 300);
-        doc.text(
-            "I hereby declare that the above data collection and filling was done in the presence of the patient and visitors.",
-            20,
-            310
-        );
-        doc.text(`Date: ${estimateForm.date}`, 20, 320);
-        doc.text(
-            `Medical Coordinator: ${estimateForm.medicalCoordinator}`,
-            20,
-            330
-        );
-
-        // Implant Request Form
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.text("IMPLANT REQUEST FORM", 20, 20);
-        doc.setFontSize(12);
-        doc.text(
-            `Patient Name: ${estimateForm.implantRequest.patientName}`,
-            20,
-            30
-        );
-        doc.text(`Age: ${estimateForm.implantRequest.age}`, 20, 40);
-        doc.text(
-            `NIC / Passport No: ${estimateForm.implantRequest.nicPassport}`,
-            20,
-            50
-        );
-        doc.text(`Address: ${estimateForm.implantRequest.address}`, 20, 60);
-        doc.text(`Contact No: ${estimateForm.implantRequest.contact}`, 20, 70);
-        doc.text(
-            `Surgery Date: ${estimateForm.implantRequest.surgeryDate}`,
-            20,
-            80
-        );
-
-        // Implant Table
-        doc.text(
-            "NO   ITEM DESCRIPTION                          QUANTITY",
-            20,
-            90
-        );
-        doc.text("--------------------------------------------------", 20, 95);
-        estimateForm.implantRequest.implants.forEach((implant, index) => {
-            const y = 100 + index * 10;
-            doc.text(
-                `${String(index + 1).padStart(
-                    2,
-                    "0"
-                )}   ${implant.description.padEnd(40, " ")} ${
-                    implant.quantity
->>>>>>> origin/main
                 }`,
                 20,
                 y
             );
-<<<<<<< HEAD
             y += 10;
             doc.text(`Check-On Drugs: ${estimateForm.checkOnDrugs}`, 20, y);
             y += 10;
@@ -969,26 +756,6 @@ const SurgeryNotesForm = ({
             setPdfGenerated(pdfUrl);
             setShowPdfModal(true);
         };
-=======
-        });
-        doc.text(`Remarks: ${estimateForm.implantRequest.remarks}`, 20, 180);
-
-        // Company Information
-        doc.text("MedAcc (Pvt) Ltd", 20, 200);
-        doc.text(
-            "No.07, Manel Peiris, Sirimal Uyana, 10320, Ratmalana, Sri Lanka",
-            20,
-            210
-        );
-        doc.text("Tel: +94 (0) 112 72 6454 / +94 (0) 112 716 668", 20, 220);
-        doc.text("Hotline: +94 (0) 77 068 032", 20, 230);
-        doc.text("Email: info@medacc.co", 20, 240);
-
-        const pdfBlob = doc.output("blob");
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-        setPdfGenerated(pdfUrl);
-        setShowPdfModal(true);
->>>>>>> origin/main
     };
 
     const toggleNotesCollapse = () => {
@@ -1134,7 +901,6 @@ const SurgeryNotesForm = ({
     };
 
     const handleCloseEstimateModal = () => {
-<<<<<<< HEAD
         setShowSingleEstimateModal(false);
     };
 
@@ -1244,12 +1010,6 @@ const SurgeryNotesForm = ({
         }
     };
 
-=======
-        setSelectedEstimate(null);
-        setShowSingleEstimateModal(false);
-    };
-
->>>>>>> origin/main
     return (
         <div className="p-6 min-h-screen bg-gray-50">
             <div className="flex items-center justify-end space-x-4">
@@ -1307,19 +1067,10 @@ const SurgeryNotesForm = ({
                                                 date: e.target.value,
                                             })
                                         }
-<<<<<<< HEAD
                                         className={`w-full px-4 py-2.5 border ${errors.date
                                             ? "border-red-500"
                                             : "border-gray-300"
                                             } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
-=======
-                                        className={`pl-10 w-full px-4 py-2.5 border ${
-                                            errors.date
-                                                ? "border-red-500"
-                                                : "border-gray-300"
-                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
-                                        required
->>>>>>> origin/main
                                     />
                                     {errors.date && (
                                         <p className="text-red-500 text-xs mt-1">
@@ -1337,17 +1088,10 @@ const SurgeryNotesForm = ({
                                 </label>
                                 <div className="relative w-full">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<<<<<<< HEAD
                                         <FileTextIcon className="h-5 w-5 text-gray-400" />
                                     </div>
                                     <input
                                         type="text"
-=======
-                                        <FileTextIcon className="h-5 w-5 text-gray-400" />{" "}
-                                        {/* Added icon */}
-                                    </div>
-                                    <select
->>>>>>> origin/main
                                         id="surgeryType"
                                         name="surgeryType"
                                         value={formData.type}
@@ -1357,35 +1101,12 @@ const SurgeryNotesForm = ({
                                                 type: e.target.value,
                                             })
                                         }
-<<<<<<< HEAD
                                         className={`pl-10 w-full px-4 py-2.5 border ${errors.type
                                             ? "border-red-500"
                                             : "border-gray-300"
                                             } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                                         placeholder="Enter surgery type..."
                                     />
-=======
-                                        className={`pl-10 w-full px-4 py-2.5 border ${
-                                            errors.type
-                                                ? "border-red-500"
-                                                : "border-gray-300"
-                                        } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 appearance-none`}
-                                        required
-                                    >
-                                        <option value="">
-                                            Select surgery type
-                                        </option>
-                                        {surgeryTypes.map((type) => (
-                                            <option
-                                                key={type}
-                                                value={type}
-                                                className="bg-white"
-                                            >
-                                                {type}
-                                            </option>
-                                        ))}
-                                    </select>
->>>>>>> origin/main
                                     {errors.type && (
                                         <p className="text-red-500 text-xs mt-1">
                                             {errors.type}
@@ -1416,21 +1137,11 @@ const SurgeryNotesForm = ({
                                             notes: e.target.value,
                                         })
                                     }
-<<<<<<< HEAD
                                     className={`pl-10 w-full px-4 py-2.5 border ${errors.notes
                                         ? "border-red-500"
                                         : "border-gray-300"
                                         } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
                                     placeholder="Enter detailed surgery notes..."
-=======
-                                    className={`pl-10 w-full px-4 py-2.5 border ${
-                                        errors.notes
-                                            ? "border-red-500"
-                                            : "border-gray-300"
-                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200`}
-                                    placeholder="Enter detailed surgery notes..."
-                                    required
->>>>>>> origin/main
                                 />
                                 {errors.notes && (
                                     <p className="text-red-500 text-xs mt-1">
@@ -1442,7 +1153,6 @@ const SurgeryNotesForm = ({
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
                             <div className="px-6 py-4 border-b border-gray-100">
                                 <h4 className="font-medium text-gray-900">
-<<<<<<< HEAD
                                     Pathology Reports & Images
                                 </h4>
                                 <p className="text-sm text-gray-600 mt-1">
@@ -1456,13 +1166,6 @@ const SurgeryNotesForm = ({
                                     onDragLeave={handleDragLeave}
                                     onDrop={handleDrop}
                                 >
-=======
-                                    Pathology Reports
-                                </h4>
-                            </div>
-                            <div className="p-6 space-y-4">
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
->>>>>>> origin/main
                                     <div className="text-center">
                                         <input
                                             type="file"
@@ -1477,7 +1180,6 @@ const SurgeryNotesForm = ({
                                         <button
                                             type="button"
                                             onClick={handlePathologyUploadClick}
-<<<<<<< HEAD
                                             className="cursor-pointer w-full"
                                         >
                                             <UploadCloudIcon
@@ -1694,54 +1396,6 @@ const SurgeryNotesForm = ({
                                                 </div>
                                             ))}
                                         </div>
-=======
-                                            className="cursor-pointer"
-                                        >
-                                            <UploadCloudIcon
-                                                className="mx-auto h-12 w-12 text-gray-400"
-                                                aria-hidden="true"
-                                            />
-                                            <span className="mt-2 block text-sm font-medium text-blue-600 hover:text-blue-500">
-                                                Upload pathology reports
-                                            </span>
-                                        </button>
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            PDF, JPG, PNG up to 10MB each
-                                        </p>
-                                    </div>
-                                </div>
-                                {selectedPathologyFiles.length > 0 && (
-                                    <div className="mt-6 divide-y divide-gray-100">
-                                        {selectedPathologyFiles.map(
-                                            (file, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-center justify-between py-3"
-                                                >
-                                                    <div className="flex items-center">
-                                                        <FileTextIcon className="h-5 w-5 text-blue-500 mr-2" />
-                                                        <div>
-                                                            <p className="text-sm font-medium text-gray-900">
-                                                                {file.name}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleRemovePathologyFile(
-                                                                index
-                                                            )
-                                                        }
-                                                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                                                        aria-label="Remove file"
-                                                    >
-                                                        <XIcon size={16} />
-                                                    </button>
-                                                </div>
-                                            )
-                                        )}
->>>>>>> origin/main
                                     </div>
                                 )}
                             </div>
@@ -1754,7 +1408,6 @@ const SurgeryNotesForm = ({
                 <div className="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out">
                     <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 transform transition-all duration-300 ease-out">
                         <div className="bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-t-2xl p-6 mb-6">
-<<<<<<< HEAD
                             <div className="flex flex-col items-center justify-center w-full mb-4">
                                 <img
                                     src="/images/logo_asiri.png"
@@ -1763,8 +1416,6 @@ const SurgeryNotesForm = ({
                                     style={{ objectFit: 'contain' }}
                                 />
                             </div>
-=======
->>>>>>> origin/main
                             <div className="flex justify-between items-center">
                                 <div className="text-center w-full">
                                     <h4 className="text-2xl font-bold">
@@ -1778,7 +1429,6 @@ const SurgeryNotesForm = ({
                                         Neurosurgeon
                                     </p>
                                 </div>
-<<<<<<< HEAD
                                 <div className="flex items-center space-x-2">
                                     <button
                                         type="button"
@@ -1799,24 +1449,12 @@ const SurgeryNotesForm = ({
                                         <XIcon size={24} />
                                     </button>
                                 </div>
-=======
-                                <button
-                                    onClick={() => setShowEstimateForm(false)}
-                                    className="text-white hover:bg-blue-700 rounded-full p-2 transition-colors duration-200"
-                                    aria-label="Close form"
-                                >
-                                    <XIcon size={24} />
-                                </button>
->>>>>>> origin/main
                             </div>
                         </div>
                         <form
                             onSubmit={handleEstimateFormSubmit}
                             className="space-y-6"
-<<<<<<< HEAD
                             id="surgery-estimate-form"
-=======
->>>>>>> origin/main
                         >
                             {/* General Information Section */}
                             <div className="border border-gray-200 rounded-lg">
@@ -1855,18 +1493,10 @@ const SurgeryNotesForm = ({
                                                         e.target.value
                                                     )
                                                 }
-<<<<<<< HEAD
                                                 className={`w-full px-4 py-2.5 border ${estimateFormErrors.patientName
                                                     ? "border-red-500"
                                                     : "border-gray-300"
                                                     } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
-=======
-                                                className={`w-full px-4 py-2.5 border ${
-                                                    estimateFormErrors.patientName
-                                                        ? "border-red-500"
-                                                        : "border-gray-300"
-                                                } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
->>>>>>> origin/main
                                                 required
                                             />
                                             {estimateFormErrors.patientName && (
@@ -1890,18 +1520,10 @@ const SurgeryNotesForm = ({
                                                         e.target.value
                                                     )
                                                 }
-<<<<<<< HEAD
                                                 className={`w-full px-4 py-2.5 border ${estimateFormErrors.surgery
                                                     ? "border-red-500"
                                                     : "border-gray-300"
                                                     } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
-=======
-                                                className={`w-full px-4 py-2.5 border ${
-                                                    estimateFormErrors.surgery
-                                                        ? "border-red-500"
-                                                        : "border-gray-300"
-                                                } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
->>>>>>> origin/main
                                                 required
                                             />
                                             {estimateFormErrors.surgery && (
@@ -1927,18 +1549,10 @@ const SurgeryNotesForm = ({
                                                             e.target.value
                                                         )
                                                     }
-<<<<<<< HEAD
                                                     className={`pl-10 w-full px-4 py-2.5 border ${estimateFormErrors.date
                                                         ? "border-red-500"
                                                         : "border-gray-300"
                                                         } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
-=======
-                                                    className={`pl-10 w-full px-4 py-2.5 border ${
-                                                        estimateFormErrors.date
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
->>>>>>> origin/main
                                                     required
                                                 />
                                             </div>
@@ -2067,18 +1681,10 @@ const SurgeryNotesForm = ({
                                                         e.target.value
                                                     )
                                                 }
-<<<<<<< HEAD
                                                 className={`w-full px-4 py-2.5 border ${estimateFormErrors.surgeryEstimateRange
                                                     ? "border-red-500"
                                                     : "border-gray-300"
                                                     } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
-=======
-                                                className={`w-full px-4 py-2.5 border ${
-                                                    estimateFormErrors.surgeryEstimateRange
-                                                        ? "border-red-500"
-                                                        : "border-gray-300"
-                                                } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
->>>>>>> origin/main
                                                 required
                                             />
                                             {estimateFormErrors.surgeryEstimateRange && (
@@ -2138,7 +1744,6 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.presidentialFund ===
                                                 "YES" && (
-<<<<<<< HEAD
                                                     <div className="relative mt-2">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                             <CalendarIcon className="h-5 w-5 text-gray-400" />
@@ -2159,28 +1764,6 @@ const SurgeryNotesForm = ({
                                                         />
                                                     </div>
                                                 )}
-=======
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
-                                                    </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.presidentialFundDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "presidentialFundDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
->>>>>>> origin/main
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2203,7 +1786,6 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.presidentialFundDiagnosis ===
                                                 "YES" && (
-<<<<<<< HEAD
                                                     <div className="relative mt-2">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                             <CalendarIcon className="h-5 w-5 text-gray-400" />
@@ -2224,28 +1806,6 @@ const SurgeryNotesForm = ({
                                                         />
                                                     </div>
                                                 )}
-=======
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
-                                                    </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.presidentialFundDiagnosisDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "presidentialFundDiagnosisDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
->>>>>>> origin/main
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2268,7 +1828,6 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.nitfAgrahara ===
                                                 "YES" && (
-<<<<<<< HEAD
                                                     <div className="relative mt-2">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                             <CalendarIcon className="h-5 w-5 text-gray-400" />
@@ -2289,28 +1848,6 @@ const SurgeryNotesForm = ({
                                                         />
                                                     </div>
                                                 )}
-=======
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
-                                                    </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.nitfAgraharaDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "nitfAgraharaDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
->>>>>>> origin/main
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2333,7 +1870,6 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.nitfAgraharaDiagnosis ===
                                                 "YES" && (
-<<<<<<< HEAD
                                                     <div className="relative mt-2">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                             <CalendarIcon className="h-5 w-5 text-gray-400" />
@@ -2354,28 +1890,6 @@ const SurgeryNotesForm = ({
                                                         />
                                                     </div>
                                                 )}
-=======
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
-                                                    </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.nitfAgraharaDiagnosisDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "nitfAgraharaDiagnosisDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
->>>>>>> origin/main
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2398,7 +1912,6 @@ const SurgeryNotesForm = ({
                                             </select>
                                             {estimateForm.openQuotations ===
                                                 "YES" && (
-<<<<<<< HEAD
                                                     <div className="relative mt-2">
                                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                             <CalendarIcon className="h-5 w-5 text-gray-400" />
@@ -2419,28 +1932,6 @@ const SurgeryNotesForm = ({
                                                         />
                                                     </div>
                                                 )}
-=======
-                                                <div className="relative mt-2">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <CalendarIcon className="h-5 w-5 text-gray-400" />
-                                                    </div>
-                                                    <input
-                                                        type="date"
-                                                        value={
-                                                            estimateForm.openQuotationsDate
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleEstimateFormChange(
-                                                                "openQuotationsDate",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400"
-                                                        placeholder="Date of Issue"
-                                                    />
-                                                </div>
-                                            )}
->>>>>>> origin/main
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2682,18 +2173,10 @@ const SurgeryNotesForm = ({
                                                             e.target.value
                                                         )
                                                     }
-<<<<<<< HEAD
                                                     className={`w-full px-4 py-2.5 border ${estimateFormErrors.implant_patientName
                                                         ? "border-red-500"
                                                         : "border-gray-300"
                                                         } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
-=======
-                                                    className={`w-full px-4 py-2.5 border ${
-                                                        estimateFormErrors.implant_patientName
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white shadow-sm hover:border-blue-400`}
->>>>>>> origin/main
                                                     required
                                                 />
                                                 {estimateFormErrors.implant_patientName && (
@@ -2839,11 +2322,7 @@ const SurgeryNotesForm = ({
                                                                     className={
                                                                         index %
                                                                             2 ===
-<<<<<<< HEAD
                                                                             0
-=======
-                                                                        0
->>>>>>> origin/main
                                                                             ? "bg-white"
                                                                             : "bg-gray-50"
                                                                     }
@@ -2851,11 +2330,7 @@ const SurgeryNotesForm = ({
                                                                     <td className="border border-gray-200 p-3 text-sm">
                                                                         {String(
                                                                             index +
-<<<<<<< HEAD
                                                                             1
-=======
-                                                                                1
->>>>>>> origin/main
                                                                         ).padStart(
                                                                             2,
                                                                             "0"
@@ -2926,18 +2401,10 @@ const SurgeryNotesForm = ({
                                 <button
                                     type="submit"
                                     disabled={isGeneratingPDF}
-<<<<<<< HEAD
                                     className={`inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md ${isGeneratingPDF
                                         ? "opacity-50 cursor-not-allowed"
                                         : ""
                                         }`}
-=======
-                                    className={`inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-200 shadow-md ${
-                                        isGeneratingPDF
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : ""
-                                    }`}
->>>>>>> origin/main
                                 >
                                     {isGeneratingPDF ? (
                                         <span className="flex items-center">
@@ -3092,16 +2559,11 @@ const SurgeryNotesForm = ({
                         </div>
                     </div>
                     {!isNotesCollapsed && (
-<<<<<<< HEAD
                         <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ease-in-out">
-=======
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ease-in-out">
->>>>>>> origin/main
                             {filteredNotes.length > 0 ? (
                                 filteredNotes.map((note, index) => (
                                     <div
                                         key={index}
-<<<<<<< HEAD
                                         className="relative bg-white p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-2 hover:scale-105 group overflow-hidden"
                                     >
                                         {/* Decorative top border with animation */}
@@ -3179,57 +2641,6 @@ const SurgeryNotesForm = ({
                                                     note.pathology_report_path
                                                 ).length > 0 ? (
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-=======
-                                        className="relative bg-white p-5 rounded-lg border border-gray-200 shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1"
-                                    >
-                                        <div className="border-b border-gray-200 pb-3 mb-3">
-                                            <p className="text-sm font-medium text-gray-500">
-                                                <span className="font-semibold text-gray-800">
-                                                    Clinic Ref No:
-                                                </span>{" "}
-                                                {note.clinic_ref_no}
-                                            </p>
-                                            <p className="text-sm font-medium text-gray-500">
-                                                <span className="font-semibold text-gray-800">
-                                                    Date:
-                                                </span>{" "}
-                                                {new Date(
-                                                    note.surgery_date
-                                                ).toLocaleDateString("en-GB", {
-                                                    day: "2-digit",
-                                                    month: "short",
-                                                    year: "numeric",
-                                                })}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <p className="text-sm text-gray-600">
-                                                <span className="font-semibold text-gray-800">
-                                                    Type:
-                                                </span>{" "}
-                                                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                                    {note.surgery_type}
-                                                </span>
-                                            </p>
-                                            <p className="text-sm text-gray-600">
-                                                <span className="font-semibold text-gray-800">
-                                                    Notes:
-                                                </span>{" "}
-                                                <span className="line-clamp-3">
-                                                    {note.surgery_notes}
-                                                </span>
-                                            </p>
-                                        </div>
-                                        <div className="mt-4">
-                                            <p className="text-sm font-semibold text-gray-800 mb-2">
-                                                Pathology Reports:
-                                            </p>
-                                            {note.pathology_report_path &&
-                                            JSON.parse(
-                                                note.pathology_report_path
-                                            ).length > 0 ? (
-                                                <div className="flex flex-wrap gap-3">
->>>>>>> origin/main
                                                     {JSON.parse(
                                                         note.pathology_report_path
                                                     ).map(
@@ -3255,7 +2666,6 @@ const SurgeryNotesForm = ({
                                                                     key={
                                                                         fileIndex
                                                                     }
-<<<<<<< HEAD
                                                                     className="relative bg-white border border-gray-200 rounded-xl p-3 hover:bg-gray-50 transition-all duration-200 group shadow-sm hover:shadow-md transform hover:scale-105"
                                                                 >
                                                                     <div className="flex flex-col items-center">
@@ -3300,40 +2710,12 @@ const SurgeryNotesForm = ({
                                                                             </p>
                                                                         </div>
                                                                     </div>
-=======
-                                                                    className="flex flex-col items-center border border-gray-200 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
-                                                                >
-                                                                    {isImage && (
-                                                                        <img
-                                                                            src={`/${path}`}
-                                                                            alt={`Pathology Report ${
-                                                                                fileIndex +
-                                                                                1
-                                                                            }`}
-                                                                            className="w-16 h-16 object-cover rounded-md mb-2"
-                                                                        />
-                                                                    )}
-                                                                    {isPdf && (
-                                                                        <FileTextIcon className="h-10 w-10 text-red-500 mb-2" />
-                                                                    )}
-                                                                    <a
-                                                                        href={`/${path}`}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="text-blue-600 hover:text-blue-800 text-xs font-medium underline transition_colors duration-200 text-center"
-                                                                    >
-                                                                        {
-                                                                            fileName
-                                                                        }
-                                                                    </a>
->>>>>>> origin/main
                                                                 </div>
                                                             );
                                                         }
                                                     )}
                                                 </div>
                                             ) : (
-<<<<<<< HEAD
                                                 <div className="text-center py-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                                                     <FileTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                                                     <p className="text-sm text-gray-500 italic font-medium">
@@ -3440,14 +2822,6 @@ const SurgeryNotesForm = ({
                                             )}
                                         </div>
                                         <div className="absolute inset-0 rounded-lg ring-2 ring-transparent hover:ring-gray-200 transition-all duration-300 pointer-events-none" />
-=======
-                                                <p className="text-sm text-gray-500 italic">
-                                                    No Reports Uploaded
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="absolute inset-0 rounded-lg ring-2 ring-transparent hover:ring-blue-200 transition-all duration-300 pointer-events-none" />
->>>>>>> origin/main
                                     </div>
                                 ))
                             ) : (

@@ -169,18 +169,12 @@ const OrderForm: React.FC<OrderFormProps> = ({
         const newWindow = window.open("", "_blank", "width=800,height=600");
 
         if (newWindow) {
-<<<<<<< HEAD
-=======
-            // Get the absolute URL for the logo
-            const logoUrl = window.location.origin + "/images/logo_asiri.png";
->>>>>>> origin/main
             // Generate HTML content
             const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-<<<<<<< HEAD
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Medical Forder Form</title>
 </head>
@@ -205,75 +199,6 @@ const OrderForm: React.FC<OrderFormProps> = ({
         <p><strong>Age:</strong> ${patientName?.age || "N/A"}</p>
         <p><strong>Gender:</strong> ${patientName?.gender || "N/A"}</p>
          <p><strong>Gender:</strong> ${patientClinicRefNo}</p>
-=======
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Medical Order Form</title>
-  <style>
-    body {
-      background-color: #f3f4f6;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 800px;
-      margin: 40px auto;
-      background-color: #ffffff;
-      padding: 30px;
-      border: 1px solid #d1d5db;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .header img {
-      max-width: 120px;
-      margin-bottom: 10px;
-    }
-    .header h1 {
-      font-size: 24px;
-      color: #1d4ed8;
-      margin-bottom: 5px;
-    }
-    .header p {
-      font-size: 14px;
-      color: #374151;
-    }
-    .section {
-      margin-bottom: 20px;
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #2563eb;
-      border-bottom: 1px solid #e5e7eb;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-    }
-    .info p {
-      font-size: 14px;
-      margin: 4px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- Letterhead / Header -->
-    <div class="header">
-      <img src="${logoUrl}" alt="Asiri Logo" />
-      <h1>Medical Order Form</h1>
-      <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
-    </div>
-
-    <!-- Patient Information Section -->
-    <div class="section">
-      <div class="section-title">Patient Information</div>
-      <div class="info">
-        <p><strong>Name:</strong> ${patientName?.name || "N/A"}</p>
-        <p><strong>Age:</strong> ${patientName?.age || "N/A"}</p>
-        <p><strong>Gender:</strong> ${patientName?.gender || "N/A"}</p>
-</p>
->>>>>>> origin/main
       </div>
     </div>
 
@@ -321,23 +246,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             newWindow.document.close();
 
             // Immediately open print window
-<<<<<<< HEAD
             newWindow.print();
-=======
-            const img = newWindow.document.querySelector('img');
-            if (img) {
-              img.onload = () => {
-                newWindow.print();
-              };
-              // Fallback: if image fails to load in 2 seconds, print anyway
-              setTimeout(() => {
-                newWindow.print();
-              }, 2000);
-            } else {
-              newWindow.print();
-            }
-            
->>>>>>> origin/main
 
             // Close window after printing
             newWindow.onafterprint = () => {

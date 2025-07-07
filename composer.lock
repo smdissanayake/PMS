@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "8fdaa81f336ffe95ed751588afccba1c",
-=======
-    "content-hash": "5e76e79c1262b9232d50a1721e38aeec",
->>>>>>> origin/main
     "packages": [
         {
             "name": "brick/math",
@@ -215,7 +211,6 @@
             "time": "2024-07-08T12:26:09+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "doctrine/dbal",
             "version": "4.2.4",
             "source": {
@@ -367,8 +362,6 @@
             "time": "2024-12-07T21:18:45+00:00"
         },
         {
-=======
->>>>>>> origin/main
             "name": "doctrine/inflector",
             "version": "2.0.10",
             "source": {
@@ -3015,7 +3008,6 @@
             "time": "2024-07-20T21:41:07+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "psr/cache",
             "version": "3.0.0",
             "source": {
@@ -3065,8 +3057,6 @@
             "time": "2021-02-03T23:26:27+00:00"
         },
         {
-=======
->>>>>>> origin/main
             "name": "psr/clock",
             "version": "1.0.0",
             "source": {
@@ -6852,54 +6842,6 @@
             "time": "2024-12-11T14:50:44+00:00"
         },
         {
-<<<<<<< HEAD
-=======
-            "name": "doctrine/deprecations",
-            "version": "1.1.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "31610dbb31faa98e6b5447b62340826f54fbc4e9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/31610dbb31faa98e6b5447b62340826f54fbc4e9",
-                "reference": "31610dbb31faa98e6b5447b62340826f54fbc4e9",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.1 || ^8.0"
-            },
-            "require-dev": {
-                "doctrine/coding-standard": "^9 || ^12",
-                "phpstan/phpstan": "1.4.10 || 2.0.3",
-                "phpstan/phpstan-phpunit": "^1.0 || ^2",
-                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.5",
-                "psr/log": "^1 || ^2 || ^3"
-            },
-            "suggest": {
-                "psr/log": "Allows logging deprecations via PSR-3 logger implementation"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Doctrine\\Deprecations\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A small layer on top of trigger_error(E_USER_DEPRECATED) or PSR-3 logging with options to disable all deprecations or selectively for packages.",
-            "homepage": "https://www.doctrine-project.org/",
-            "support": {
-                "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/1.1.4"
-            },
-            "time": "2024-12-07T21:18:45+00:00"
-        },
-        {
->>>>>>> origin/main
             "name": "fakerphp/faker",
             "version": "v1.24.1",
             "source": {

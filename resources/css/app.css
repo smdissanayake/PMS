@@ -10,7 +10,6 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
-<<<<<<< HEAD
 
 /* Print styles for Surgery Estimate Form */
 @media print {
@@ -70,5 +69,3 @@
         color: black !important;
     }
 }
-=======
->>>>>>> origin/main
