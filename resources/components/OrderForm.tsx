@@ -291,18 +291,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             newWindow.document.close();
 
             // Immediately open print window
-            const img = newWindow.document.querySelector('img');
-            if (img) {
-              img.onload = () => {
-                newWindow.print();
-              };
-              // Fallback: if image fails to load in 2 seconds, print anyway
-              setTimeout(() => {
-                newWindow.print();
-              }, 2000);
-            } else {
-              newWindow.print();
-            }
+            // newWindow.print();
             
 
             // Close window after printing
