@@ -17,11 +17,11 @@ class WardAdmissionController extends Controller
     {
         $request->validate([
             'clinicRefNo' => 'required|string|exists:patients,clinicRefNo',
-            'admission_date' => 'required|date',
-            'discharge_date' => 'required|date|after_or_equal:admission_date',
-            'icu' => 'required|string|max:255',
-            'ward' => 'required|string|max:255',
-            'images' => 'nullable|array|min:2', // At least 2 images
+            'admission_date' => 'nullable|date',
+            'discharge_date' => 'nullable|date',
+            'icu' => 'nullable|string|max:255',
+            'ward' => 'nullable|string|max:255',
+            'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,gif|max:10240', // 10MB max per image
         ]);
         
@@ -37,11 +37,11 @@ class WardAdmissionController extends Controller
         
         $wardAdmission = WardAdmission::create([
             'patient_id' => $patient->id,
-            'clinic_ref_no' => $request->clinicRefNo, // Add this line
-            'admission_date' => $request->admission_date,
-            'discharge_date' => $request->discharge_date,
-            'icu' => $request->icu,
-            'ward' => $request->ward,
+            'clinic_ref_no' => $request->clinicRefNo,
+            'admission_date' => $request->admission_date ?: null,
+            'discharge_date' => $request->discharge_date ?: null,
+            'icu' => $request->icu ?: null,
+            'ward' => $request->ward ?: null,
             'image_paths' => $imagePaths,
         ]);
         

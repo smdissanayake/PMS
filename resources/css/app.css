@@ -10,3 +10,62 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Print styles for Surgery Estimate Form */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    #surgery-estimate-form,
+    #surgery-estimate-form * {
+        visibility: visible;
+    }
+    
+    #surgery-estimate-form {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 20px;
+        margin: 0;
+        border: none;
+        box-shadow: none;
+    }
+    
+    /* Hide print button and close button when printing */
+    button[aria-label="Print form"],
+    button[aria-label="Close form"] {
+        display: none !important;
+    }
+    
+    /* Ensure all sections are expanded for printing */
+    .border.border-gray-200.rounded-lg {
+        border: 1px solid #000 !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Make text readable in print */
+    * {
+        color: black !important;
+        background: white !important;
+    }
+    
+    /* Ensure proper spacing */
+    .space-y-6 > * + * {
+        margin-top: 1.5rem !important;
+    }
+    
+    /* Hide scrollbars and other UI elements */
+    ::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    /* Ensure form elements are visible */
+    input, textarea, select {
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: black !important;
+    }
+}

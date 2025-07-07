@@ -169,81 +169,36 @@ const OrderForm: React.FC<OrderFormProps> = ({
         const newWindow = window.open("", "_blank", "width=800,height=600");
 
         if (newWindow) {
-            // Get the absolute URL for the logo
-            const logoUrl = window.location.origin + "/images/logo_asiri.png";
             // Generate HTML content
             const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Medical Order Form</title>
-  <style>
-    body {
-      background-color: #f3f4f6;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 800px;
-      margin: 40px auto;
-      background-color: #ffffff;
-      padding: 30px;
-      border: 1px solid #d1d5db;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .header img {
-      max-width: 120px;
-      margin-bottom: 10px;
-    }
-    .header h1 {
-      font-size: 24px;
-      color: #1d4ed8;
-      margin-bottom: 5px;
-    }
-    .header p {
-      font-size: 14px;
-      color: #374151;
-    }
-    .section {
-      margin-bottom: 20px;
-    }
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #2563eb;
-      border-bottom: 1px solid #e5e7eb;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-    }
-    .info p {
-      font-size: 14px;
-      margin: 4px 0;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Forder Form</title>
 </head>
-<body>
-  <div class="container">
-    <!-- Letterhead / Header -->
-    <div class="header">
-      <img src="${logoUrl}" alt="Asiri Logo" />
-      <h1>Medical Order Form</h1>
-      <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+<body style="background-color: #f3f4f6; font-family: sans-serif;">
+  <div style="max-width: 64rem; margin-left: auto; margin-right: auto; background-color: white; padding: 2rem; margin-top: 2.5rem;">
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="margin-bottom: 0.5rem;">
+        <img src="https://via.placeholder.com/50x50" alt="Logo" style="display: block; margin-left: auto; margin-right: auto;">
+      </div>
+      <h1 style="font-size: 1.5rem; font-weight: bold; color: #1d4ed8;">Medical Forder Form</h1>
+      <p style="font-size: 0.875rem; color: #6b7280;">Order Form Number: <strong>#12365</strong></p>
+      <p style="font-size: 0.875rem; color: #6b7280;">Order Date: <strong>${new Date().toLocaleDateString()}</strong></p>
     </div>
 
-    <!-- Patient Information Section -->
-    <div class="section">
-      <div class="section-title">Patient Information</div>
-      <div class="info">
-        <p><strong>Name:</strong> ${patientName?.name || "N/A"}</p>
+    <!-- Patient / Consultant Info -->
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; margin-bottom: 1.5rem; font-size: 0.875rem;">
+      <div>
+        <h2 style="font-weight: 600; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; margin-bottom: 0.5rem;">Patient Info</h2>
+        <p><strong>Patient Name:</strong> ${patientName?.name || "N/A"}</p>
         <p><strong>Age:</strong> ${patientName?.age || "N/A"}</p>
         <p><strong>Gender:</strong> ${patientName?.gender || "N/A"}</p>
-</p>
+         <p><strong>Gender:</strong> ${patientClinicRefNo}</p>
       </div>
     </div>
 
@@ -291,8 +246,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
             newWindow.document.close();
 
             // Immediately open print window
-            // newWindow.print();
-            
+            newWindow.print();
+
 
             // Close window after printing
             newWindow.onafterprint = () => {

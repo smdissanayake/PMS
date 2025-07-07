@@ -33,27 +33,39 @@ class SurgeryNoteController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'clinic_ref_no' => 'required|string|max:255',
-            'surgery_date' => 'required|date',
-            'surgery_type' => 'required|string|max:255',
-            'surgery_notes' => 'required|string',
+            'surgery_date' => 'nullable|date',
+            'surgery_type' => 'nullable|string|max:255',
+            'surgery_notes' => 'nullable|string',
             'pathology_reports.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Validate each file in the array
+            'other_reports.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Validate each file in the array
         ]);
         
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
         
-        $data = $request->except('pathology_reports'); // Get all data except files
+        $data = $request->except('pathology_reports', 'other_reports'); // Get all data except files
         
         if ($request->hasFile('pathology_reports')) {
             $uploadedPaths = [];
             foreach ($request->file('pathology_reports') as $file) {
                 $path = $file->store('pathology_reports', 'public'); // Store the file on the 'public' disk
-                $uploadedPaths[] = 'storage/' . $path; // Get public URL path
+                $uploadedPaths[] = $path; // Store just the relative path
             }
             $data['pathology_report_path'] = json_encode($uploadedPaths); // Store paths as JSON string
         } else {
             $data['pathology_report_path'] = null;
+        }
+        
+        if ($request->hasFile('other_reports')) {
+            $uploadedPaths = [];
+            foreach ($request->file('other_reports') as $file) {
+                $path = $file->store('other_reports', 'public'); // Store the file on the 'public' disk
+                $uploadedPaths[] = $path; // Store just the relative path
+            }
+            $data['other_reports_path'] = json_encode($uploadedPaths); // Store paths as JSON string
+        } else {
+            $data['other_reports_path'] = null;
         }
         
         $surgeryNote = SurgeryNote::create($data);
