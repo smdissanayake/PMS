@@ -39,6 +39,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   
   // Form states
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [customCategory, setCustomCategory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
@@ -156,6 +157,23 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
           chb: result.chb,
           category: result.category
         });
+        // If the loaded category is not in the fixed list, treat as custom
+        const fixedCategories = [
+          'Neck Pain',
+          'Back Pain',
+          'Headache',
+          'Vascular',
+          'Pediatric',
+          'Brain Tumors',
+          'Spinal Tumors',
+          'Other'
+        ];
+        if (result.category && !fixedCategories.includes(result.category)) {
+          setFormData(prev => ({ ...prev, category: 'Other' }));
+          setCustomCategory(result.category);
+        } else {
+          setCustomCategory('');
+        }
         setSelectedPatientId(result.id);
         setIsUpdateMode(true);
         setSearchQuery(searchValue);
@@ -212,9 +230,13 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
       const url = isUpdateMode ? `/patients/${selectedPatientId}` : '/patients';
       
       // For update, exclude clinicRefNo from the data
-      const submitData = isUpdateMode 
+      let submitData = isUpdateMode 
         ? { ...formData, clinicRefNo: undefined } 
         : formData;
+      // If category is 'Other', use customCategory
+      if (formData.category === 'Other') {
+        submitData = { ...submitData, category: customCategory };
+      }
 
       const response = await fetch(url, {
         method: method,
@@ -260,6 +282,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
       // Reset form and states
       setFormData(initialFormData);
+      setCustomCategory('');
       setIsUpdateMode(false);
       setSelectedPatientId(null);
       setSearchQuery("");
@@ -288,6 +311,12 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // If category is changed and not 'Other', clear customCategory
+    if (name === 'category') {
+      if (value !== 'Other') {
+        setCustomCategory('');
+      }
+    }
     // Clear validation error for this field on change
     if (validationErrors[name]) {
       setValidationErrors(prev => ({ ...prev, [name]: [] }));
@@ -296,6 +325,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
 
   const handleClear = () => {
     setFormData(initialFormData);
+    setCustomCategory('');
     setValidationErrors({});
     setError(null);
     setSuccessMessage(null);
@@ -313,6 +343,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
     setSuggestions([]);
     setShowSuggestions(false);
     setFormData(initialFormData);
+    setCustomCategory('');
     setError(null);
     setValidationErrors({});
   };
@@ -320,6 +351,7 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
   const handleSwitchToUpdate = () => {
     setIsUpdateMode(true);
     setFormData(initialFormData);
+    setCustomCategory('');
     setError(null);
     setValidationErrors({});
   };
@@ -558,7 +590,6 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                 </label>
                 <select name="category" value={formData.category} onChange={handleInputChange} className={`w-full px-4 py-2.5 border ${validationErrors.category ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white`}>
                   <option value="">Select Category</option>
-                  
                   <option value="Neck Pain">Neck Pain</option>
                   <option value="Back Pain">Back Pain</option>
                   <option value="Headache">Headache</option>
@@ -568,6 +599,16 @@ export const PatientRegistration: React.FC<PatientRegistrationProps> = ({
                   <option value="Spinal Tumors">Spinal Tumors</option>
                   <option value="Other">Other</option>
                 </select>
+                {formData.category === 'Other' && (
+                  <input
+                    type="text"
+                    name="customCategory"
+                    value={customCategory}
+                    onChange={e => setCustomCategory(e.target.value)}
+                    placeholder="Enter custom category"
+                    className={`mt-2 w-full px-4 py-2.5 border ${validationErrors.category ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                  />
+                )}
               </div>
             </div>
           </div>
