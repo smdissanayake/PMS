@@ -198,13 +198,18 @@ class InvestigationReportController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($report) {
-                    // Generate thumbnail URL based on file type
+                    // Generate thumbnail URL based on file type and environment
+                    $isLocal = app()->environment('local');
+                    if ($isLocal) {
+                        $baseUrl = asset('storage/' . $report->file_path);
+                    } else {
+                        $baseUrl = 'https://srv600-files.hstgr.io/135454c86045ad25/files/public_html/public/storage/' . $report->file_path;
+                    }
+
                     $thumbnailUrl = null;
                     if (in_array($report->file_type, ['jpg', 'jpeg', 'png'])) {
-                        // For images, use the full Hostinger file path
-                        $thumbnailUrl = 'https://srv600-files.hstgr.io/135454c86045ad25/files/public_html/public/storage/' . $report->file_path;
+                        $thumbnailUrl = $baseUrl;
                     } elseif ($report->file_type === 'pdf') {
-                        // For PDFs, you might want to use a PDF icon or first page thumbnail
                         $thumbnailUrl = asset('images/pdf-icon.png'); // Make sure this icon exists in your public folder
                     }
 
@@ -218,7 +223,7 @@ class InvestigationReportController extends Controller
                         'orderType' => $report->medicalOrder ? $report->medicalOrder->type : null,
                         'patientName' => $report->patient ? $report->patient->firstName . ' ' . $report->patient->lastName : null,
                         'thumbnailUrl' => $thumbnailUrl,
-                        'fileUrl' => 'https://srv600-files.hstgr.io/135454c86045ad25/files/public_html/public/storage/' . $report->file_path // Use full Hostinger file path
+                        'fileUrl' => $baseUrl
                     ];
                 });
 
