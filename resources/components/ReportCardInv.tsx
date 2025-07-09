@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FileIcon, FileTextIcon, DownloadIcon, EyeIcon } from 'lucide-react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -65,12 +65,20 @@ export const ReportCardInv: React.FC<ReportCardProps> = ({
     }
   };
 
+  // Memoize the image URL with cache busting only when report.thumbnailUrl or uploadDate changes
+  const imageUrl = useMemo(() => {
+    return report.thumbnailUrl ? `${report.thumbnailUrl}?t=${new Date(report.uploadDate).getTime()}` : '/images/pdf-icon.png';
+  }, [report.thumbnailUrl, report.uploadDate]);
+
   if (viewMode === 'list') {
     return (
       <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
         <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mr-4">
           {report.fileType === 'image' && report.thumbnailUrl ? (
-            <img src={report.thumbnailUrl} alt={report.fileName} className="w-full h-full object-cover" />
+            <>
+              
+              <img src={imageUrl} alt={report.fileName} className="w-full h-full object-cover" />
+            </>
           ) : (
             <FileTextIcon size={24} className="text-blue-500" />
           )}
@@ -113,11 +121,17 @@ export const ReportCardInv: React.FC<ReportCardProps> = ({
               <FileIcon size={48} className="text-blue-400" />
             </div>
           ) : (
-            <img 
-              src={report.thumbnailUrl || '/images/pdf-icon.png'} 
-              alt={report.fileName} 
-              className="w-full h-full object-cover" 
-            />
+            // <img
+            //   src={imageUrl}
+            //   alt={report.fileName}
+            //   className="w-full h-full object-cover"
+            // />
+            <img
+            src={imageUrl}
+            alt={report.fileName}
+            className="w-full h-full object-cover"
+            onError={e => { e.currentTarget.src = '/images/pdf-icon.png'; }}
+          />
           )}
         </div>
         <div className="p-4">
