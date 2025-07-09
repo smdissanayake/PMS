@@ -40,7 +40,7 @@ export const Sidebar = ({
     },
     {
       id: "sergerycalendar",
-      label: "Sergery Calendar",
+      label: "surgery Calendar",
       icon: <CalendarIcon size={20} />,
     },
     {
@@ -52,9 +52,8 @@ export const Sidebar = ({
 
   return (
     <div
-      className={`bg-white border-r border-gray-200 min-h-screen flex flex-col transition-all duration-300 ${
-        isCollapsed ? "w-16" : "w-64"
-      }`}
+      className={`bg-white border-r border-gray-200 min-h-screen flex flex-col transition-all duration-300 ${isCollapsed ? "w-16" : "w-64"
+        }`}
     >
       <div className="p-5 border-gray-200">
         {/* Company Logo */}
@@ -67,9 +66,8 @@ export const Sidebar = ({
             />
           </div>
         )}
-        <div className={`text-xl font-semibold text-blue-600 h-fit truncate ${
-          isCollapsed ? "text-center" : ""
-        }`}>
+        <div className={`text-xl font-semibold text-blue-600 h-fit truncate ${isCollapsed ? "text-center" : ""
+          }`}>
           {/* Logo removed due to missing file */}
         </div>
       </div>
@@ -79,18 +77,16 @@ export const Sidebar = ({
             <li key={item.id}>
               <button
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center w-full px-5 py-3 text-left ${
-                  activeTab === item.id
+                className={`flex items-center w-full px-5 py-3 text-left ${activeTab === item.id
                     ? "text-blue-600 bg-blue-50 border-r-4 border-blue-500"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
                 title={isCollapsed ? item.label : undefined}
               >
                 <span className="mr-3">{item.icon}</span>
                 <span
-                  className={`transition-opacity duration-300 ${
-                    isCollapsed ? "opacity-0 w-0" : "opacity-100"
-                  }`}
+                  className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"
+                    }`}
                 >
                   {item.label}
                 </span>
@@ -106,9 +102,8 @@ export const Sidebar = ({
         >
           <SettingsIcon size={20} className="mr-3" />
           <span
-            className={`transition-opacity duration-300 ${
-              isCollapsed ? "opacity-0 w-0" : "opacity-100"
-            }`}
+            className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"
+              }`}
           >
             Settings
           </span>
@@ -119,9 +114,8 @@ export const Sidebar = ({
         >
           <LogOutIcon size={20} className="mr-3" />
           <span
-            className={`transition-opacity duration-300 ${
-              isCollapsed ? "opacity-0 w-0" : "opacity-100"
-            }`}
+            className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"
+              }`}
           >
             Logout
           </span>
