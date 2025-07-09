@@ -5,10 +5,16 @@ import axios from 'axios';
 const StatisticsCards = () => {
   const [todaysVisits, setTodaysVisits] = useState(0);
   const [totalPatients, setTotalPatients] = useState(0);
+  const [admittedPatients, setAdmittedPatients] = useState({ value: 0, change: '0', changeType: 'increase' });
+  const [pendingReports, setPendingReports] = useState({ value: 0, change: '0', changeType: 'increase' });
   const [loading, setLoading] = useState(true);
+  const [loadingAdmitted, setLoadingAdmitted] = useState(true);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   useEffect(() => {
     fetchTodaysVisits();
+    fetchAdmittedPatientsStats();
+    fetchPendingReportsStats();
   }, []);
 
   const fetchTodaysVisits = async () => {
@@ -20,6 +26,38 @@ const StatisticsCards = () => {
       console.error('Error fetching today\'s visits:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdmittedPatientsStats = async () => {
+    setLoadingAdmitted(true);
+    try {
+      const response = await axios.get('/api/ward-admissions/statistics');
+      setAdmittedPatients({
+        value: response.data.totalAdmittedPatients,
+        change: response.data.change,
+        changeType: response.data.changeType
+      });
+    } catch (error) {
+      console.error('Error fetching admitted patients stats:', error);
+    } finally {
+      setLoadingAdmitted(false);
+    }
+  };
+
+  const fetchPendingReportsStats = async () => {
+    setLoadingReports(true);
+    try {
+      const response = await axios.get('/api/patient-reports/statistics');
+      setPendingReports({
+        value: response.data.totalReports,
+        change: response.data.change,
+        changeType: response.data.changeType
+      });
+    } catch (error) {
+      console.error('Error fetching pending reports stats:', error);
+    } finally {
+      setLoadingReports(false);
     }
   };
 
@@ -40,19 +78,26 @@ const StatisticsCards = () => {
     subtitle: 'from last month',
     onClick: () => window.open('/todays-visits', '_blank')
   }, {
+    name: 'Admitted Patients',
+    value: loadingAdmitted ? '...' : admittedPatients.value.toString(),
+    change: loadingAdmitted ? '...' : admittedPatients.change,
+    icon: BedIcon,
+    changeType: admittedPatients.changeType,
+    subtitle: 'from last month'
+  }, {
     name: 'Pending Reports',
-    value: '23',
-    change: '+8',
+    value: loadingReports ? '...' : pendingReports.value.toString(),
+    change: loadingReports ? '...' : pendingReports.change,
     icon: FileTextIcon,
-    changeType: 'increase',
+    changeType: pendingReports.changeType,
     subtitle: 'from last month'
   }];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map(stat => (
-        <div 
-          key={stat.name} 
+        <div
+          key={stat.name}
           className={`bg-white rounded-xl p-6 ${stat.onClick ? 'cursor-pointer hover:shadow-lg transition-shadow duration-200' : ''}`}
           onClick={stat.onClick}
         >

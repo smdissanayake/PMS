@@ -43,17 +43,17 @@ class SurgeryEstimateController extends Controller
             'guardianName' => 'nullable|string|max:255',
             'guardianContact' => 'nullable|string|max:255',
             'medicalCoordinator' => 'nullable|string|max:255',
-            'implantRequest' => 'required|array',
-            'implantRequest.patientName' => 'required|string|max:255',
-            'implantRequest.age' => 'nullable|string|max:255',
-            'implantRequest.nicPassport' => 'nullable|string|max:255',
-            'implantRequest.address' => 'nullable|string|max:255',
-            'implantRequest.contact' => 'nullable|string|max:255',
-            'implantRequest.surgeryDate' => 'nullable|date',
-            'implantRequest.implants' => 'required|array',
-            'implantRequest.implants.*.description' => 'required|string|max:255',
-            'implantRequest.implants.*.quantity' => 'nullable|string|max:255',
-            'implantRequest.remarks' => 'nullable|string',
+            // 'implantRequest' => 'required|array',
+            // 'implantRequest.patientName' => 'required|string|max:255',
+            // 'implantRequest.age' => 'nullable|string|max:255',
+            // 'implantRequest.nicPassport' => 'nullable|string|max:255',
+            // 'implantRequest.address' => 'nullable|string|max:255',
+            // 'implantRequest.contact' => 'nullable|string|max:255',
+            // 'implantRequest.surgeryDate' => 'nullable|date',
+            // 'implantRequest.implants' => 'required|array',
+            // 'implantRequest.implants.*.description' => 'required|string|max:255',
+            // 'implantRequest.implants.*.quantity' => 'nullable|string|max:255',
+            // 'implantRequest.remarks' => 'nullable|string',
         ]);
         
         if ($validator->fails()) {
@@ -64,8 +64,9 @@ class SurgeryEstimateController extends Controller
         // dd($request->all()); 
         
         try {
+            \Log::info('SurgeryEstimateController.store: Attempting to create surgery estimate', $request->all());
             $surgeryEstimate = SurgeryEstimate::create([
-                'clinic_ref_no' => $request->input('clinic_ref_no'), // Ensure clinic_ref_no is saved
+                'clinic_ref_no' => $request->input('clinic_ref_no'),
                 'patient_name' => $request->input('patientName'),
                 'surgery' => $request->input('surgery'),
                 'time_for_surgery' => $request->input('timeForSurgery'),
@@ -96,11 +97,15 @@ class SurgeryEstimateController extends Controller
                 'guardian_name' => $request->input('guardianName'),
                 'guardian_contact' => $request->input('guardianContact'),
                 'medical_coordinator' => $request->input('medicalCoordinator'),
-                'implant_request_data' => $request->input('implantRequest'),
+                'implant_request_data' => json_encode($request->input('implantRequest')),
             ]);
             
             return response()->json(['message' => 'Surgery estimate saved successfully', 'data' => $surgeryEstimate], 201);
         } catch (\Exception $e) {
+            \Log::error('SurgeryEstimateController.store: Failed to save surgery estimate', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['error' => 'Failed to save surgery estimate', 'details' => $e->getMessage()], 500);
         }
     }
@@ -139,17 +144,6 @@ class SurgeryEstimateController extends Controller
             'guardianName' => 'nullable|string|max:255',
             'guardianContact' => 'nullable|string|max:255',
             'medicalCoordinator' => 'nullable|string|max:255',
-            'implantRequest' => 'required|array',
-            'implantRequest.patientName' => 'required|string|max:255',
-            'implantRequest.age' => 'nullable|string|max:255',
-            'implantRequest.nicPassport' => 'nullable|string|max:255',
-            'implantRequest.address' => 'nullable|string|max:255',
-            'implantRequest.contact' => 'nullable|string|max:255',
-            'implantRequest.surgeryDate' => 'nullable|date',
-            'implantRequest.implants' => 'required|array',
-            'implantRequest.implants.*.description' => 'required|string|max:255',
-            'implantRequest.implants.*.quantity' => 'nullable|string|max:255',
-            'implantRequest.remarks' => 'nullable|string',
         ]);
         
         if ($validator->fails()) {
@@ -190,7 +184,7 @@ class SurgeryEstimateController extends Controller
                 'guardian_name' => $request->input('guardianName'),
                 'guardian_contact' => $request->input('guardianContact'),
                 'medical_coordinator' => $request->input('medicalCoordinator'),
-                'implant_request_data' => $request->input('implantRequest'),
+                'implant_request_data' => json_encode($request->input('implantRequest')),
             ]);
             
             return response()->json(['message' => 'Surgery estimate updated successfully', 'data' => $surgeryEstimate], 200);
@@ -204,7 +198,7 @@ class SurgeryEstimateController extends Controller
         try {
             $surgeryEstimate = SurgeryEstimate::findOrFail($id);
             $surgeryEstimate->delete();
-
+            
             return response()->json(['message' => 'Surgery estimate deleted successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to delete surgery estimate', 'details' => $e->getMessage()], 500);
