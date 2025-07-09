@@ -147,7 +147,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             title: "X-ray Spine",
             options: {
                 types: ["Cervical", "Dorsal", "Lumbar"],
-                views: ["AP Lateral", "Lateral in Flexion", "Extension"],
+                views: ["LP or Lateral", "Lateral in Flexion and Extension"],
             },
         },
     ];
@@ -164,7 +164,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
     const handleGenerateOrderSummary = async () => {
         // Store orders in localStorage
         localStorage.setItem("orderData", JSON.stringify(orders));
-        
+
         // Open a new window
         const newWindow = window.open("", "_blank", "width=800,height=600");
 
@@ -248,22 +248,19 @@ const OrderForm: React.FC<OrderFormProps> = ({
     <!-- Order Blocks -->
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       ${orders
-          .map(
-              (order) => `
+                    .map(
+                        (order) => `
         <div style="background-color: #f9fafb; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 1rem;">
-          <p style="color: #1d4ed8; font-weight: 600; margin-bottom: 0.5rem;">${
-              order.type
-          } ${order.subType || ""} ${order.additionalType || ""}</p>
-          <p style="font-size: 0.875rem; color: #374151;"><strong>Consultant Name:</strong> ${
-              order.consultantName || "—"
-          }</p>
-          <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;"><strong>Special Notes:</strong> ${
-              order.specialNotes || "—"
-          }</p>
+          <p style="color: #1d4ed8; font-weight: 600; margin-bottom: 0.5rem;">${order.type
+                            } ${order.subType || ""} ${order.additionalType || ""}</p>
+          <p style="font-size: 0.875rem; color: #374151;"><strong>Consultant Name:</strong> ${order.consultantName || "—"
+                            }</p>
+          <p style="font-size: 0.875rem; color: #374151; margin-top: 0.25rem;"><strong>Special Notes:</strong> ${order.specialNotes || "—"
+                            }</p>
         </div>
       `
-          )
-          .join("")}
+                    )
+                    .join("")}
     </div>
 
     <!-- Signature -->
@@ -289,7 +286,20 @@ const OrderForm: React.FC<OrderFormProps> = ({
             newWindow.document.close();
 
             // Immediately open print window
-            newWindow.print();
+
+            // Wait for the image to load before printing
+            const logoImg = newWindow.document.querySelector('img');
+            if (logoImg) {
+                logoImg.onload = () => {
+                    newWindow.print();
+                };
+                // Fallback: if image fails to load in 2 seconds, print anyway
+                setTimeout(() => {
+                    newWindow.print();
+                }, 2000);
+            } else {
+                newWindow.print();
+            }
 
             // Close window after printing
             newWindow.onafterprint = () => {
@@ -308,7 +318,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             alert("Please allow pop-ups for this site.");
         }
     };
-    
+
     const Toast = Swal.mixin({
         toast: true,
         position: "top-end",
@@ -326,7 +336,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             setIsLoading(true);
             const response = await fetch(`/medical-orders/patient/${patientClinicRefNo}`);
             const data = await response.json();
-            
+
             if (response.ok) {
                 // The response is already an array of orders, no need to access data.data
                 const pendingOrders = data.filter((order: SavedOrder) => order.status === 'pending');
@@ -388,10 +398,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
         try {
             // Process each order individually
             for (const order of orders) {
-            // Prepare data for API request
-            const orderData = {
-                patient_id: patientId,
-                patient_clinic_ref_no: patientClinicRefNo,
+                // Prepare data for API request
+                const orderData = {
+                    patient_id: patientId,
+                    patient_clinic_ref_no: patientClinicRefNo,
                     type: order.type,
                     sub_type: order.subType,
                     additional_type: order.additionalType,
@@ -401,36 +411,36 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     age: order.age,
                     status: 'pending' // Set initial status as pending
                 };
-                
+
                 console.log('Sending order data:', orderData);
-            
+
                 // Send POST request to the API endpoint for each order
-            const response = await fetch('/medical-orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                },
-                body: JSON.stringify(orderData)
-            });
-            
-            const data = await response.json();
-            
+                const response = await fetch('/medical-orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                const data = await response.json();
+
                 if (!response.ok) {
                     throw new Error(data.message || 'Failed to save order');
                 }
             }
-            
+
             console.log('All orders saved successfully');
             Toast.fire({
                 icon: "success",
                 title: "Orders saved successfully"
             });
-            
+
             // Refresh the orders list
             fetchSavedOrders();
-            
+
         } catch (error) {
             console.error('Error saving orders:', error);
             Toast.fire({
@@ -763,21 +773,19 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setDateFilter('today')}
-                                        className={`px-3 py-1 text-sm rounded-full ${
-                                            dateFilter === 'today'
-                                                ? 'bg-blue-100 text-blue-700'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                        className={`px-3 py-1 text-sm rounded-full ${dateFilter === 'today'
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
                                     >
                                         Today
                                     </button>
                                     <button
                                         onClick={() => setDateFilter('all')}
-                                        className={`px-3 py-1 text-sm rounded-full ${
-                                            dateFilter === 'all'
-                                                ? 'bg-blue-100 text-blue-700'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                        className={`px-3 py-1 text-sm rounded-full ${dateFilter === 'all'
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
                                     >
                                         All Orders
                                     </button>
@@ -794,11 +802,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
                                 </button>
                                 <button
                                     onClick={() => setDateFilter('custom')}
-                                    className={`px-3 py-1 text-sm rounded-full ${
-                                        dateFilter === 'custom'
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
+                                    className={`px-3 py-1 text-sm rounded-full ${dateFilter === 'custom'
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
                                 >
                                     {selectedDate.toLocaleDateString()}
                                 </button>
@@ -864,11 +871,11 @@ const OrderForm: React.FC<OrderFormProps> = ({
                             </div>
                         ) : (
                             <p className="text-gray-500 text-center py-4">
-                                {dateFilter === 'today' 
+                                {dateFilter === 'today'
                                     ? 'No orders found for today'
                                     : dateFilter === 'custom'
-                                    ? `No orders found for ${selectedDate.toLocaleDateString()}`
-                                    : 'No saved orders found'}
+                                        ? `No orders found for ${selectedDate.toLocaleDateString()}`
+                                        : 'No saved orders found'}
                             </p>
                         )}
                     </div>
