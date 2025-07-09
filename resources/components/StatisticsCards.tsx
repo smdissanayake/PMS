@@ -75,7 +75,7 @@ const StatisticsCards = () => {
   const stats = [{
     name: 'Total Patients',
     value: loading ? '...' : totalPatients.toString(),
-    change: '+12%',
+    // No change property for this card
     icon: UsersIcon,
     changeType: 'increase',
     subtitle: 'All',
@@ -83,7 +83,7 @@ const StatisticsCards = () => {
   }, {
     name: "Today's Visits",
     value: loading ? '...' : todaysVisits.toString(),
-    change: '+5',
+    // No change property for this card
     icon: CalendarIcon,
     changeType: 'increase',
     subtitle: 'All',
@@ -91,14 +91,14 @@ const StatisticsCards = () => {
   }, {
     name: 'Patient Admitted Count',
     value: loadingAdmitted ? '...' : admittedPatients.value.toString(),
-    change: loadingAdmitted ? '...' : admittedPatients.change,
+    // No change property for this card
     icon: BedIcon,
     changeType: admittedPatients.changeType,
     subtitle: 'All'
   }, {
     name: 'Pending Reports',
     value: pendingMedicalOrders === null ? '...' : pendingMedicalOrders.toString(),
-    change: loadingReports ? '...' : pendingReports.change,
+    // No change property for this card
     icon: FileTextIcon,
     changeType: pendingReports.changeType,
     subtitle: 'All'
@@ -114,9 +114,12 @@ const StatisticsCards = () => {
         >
           <div className="flex items-center justify-between mb-4">
             <stat.icon size={24} className="text-[#4287f5]" />
-            <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
-              {stat.change}
-            </span>
+            {/* Only show change if it exists */}
+            {('change' in stat && stat.change !== undefined) ? (
+              <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
+                {stat.change}
+              </span>
+            ) : null}
           </div>
           <h3 className="text-3xl font-semibold text-gray-900 mb-2">
             {stat.value}
