@@ -200,7 +200,7 @@ const SurgeryEstimateCard: React.FC<SurgeryEstimateCardProps> = ({
                             </p>
                             {estimate.implant_request_data.implants &&
                                 estimate.implant_request_data.implants.length >
-                                    0 && (
+                                0 && (
                                     <div className="mt-2">
                                         <p className="font-medium">Implants:</p>
                                         <ul className="list-disc list-inside ml-4">
@@ -224,6 +224,12 @@ const SurgeryEstimateCard: React.FC<SurgeryEstimateCardProps> = ({
                     )}
                 </div>
                 <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+                        onClick={() => onEdit(estimate)}
+                    >
+                        Update
+                    </button>
                     <button
                         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
                         onClick={() => {

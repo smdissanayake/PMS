@@ -10,6 +10,7 @@ import {
     ChevronUpIcon,
     InfoIcon,
     HistoryIcon, // Added for View History button
+    PrinterIcon, // Added for Print PDF button
 } from "lucide-react";
 import PathologyUploader from "./PathologyUploader";
 import axios from "axios"; // Import axios
@@ -167,6 +168,8 @@ const SurgeryNotesForm = ({
     const [showSingleEstimateModal, setShowSingleEstimateModal] =
         useState(false);
     const [showPastEstimatesModal, setShowPastEstimatesModal] = useState(false); // New state for past estimates modal
+    const [isEditingEstimate, setIsEditingEstimate] = useState(false);
+    const [editingEstimateId, setEditingEstimateId] = useState<number | null>(null);
 
     useEffect(() => {
         if (patientData) {
@@ -485,11 +488,22 @@ const SurgeryNotesForm = ({
                 ...estimateForm,
                 clinic_ref_no: clinicRefNo,
             });
-            const response = await axios.post("/api/surgery-estimates", {
-                ...estimateForm,
-                clinic_ref_no: clinicRefNo,
-            });
-            console.log("Surgery estimate saved successfully:", response.data);
+            let response;
+            if (isEditingEstimate && editingEstimateId) {
+                // Update existing estimate
+                response = await axios.put(`/api/surgery-estimates/${editingEstimateId}`, {
+                    ...estimateForm,
+                    clinic_ref_no: clinicRefNo,
+                });
+                console.log("Surgery estimate updated successfully:", response.data);
+            } else {
+                // Create new estimate
+                response = await axios.post("/api/surgery-estimates", {
+                    ...estimateForm,
+                    clinic_ref_no: clinicRefNo,
+                });
+                console.log("Surgery estimate saved successfully:", response.data);
+            }
             generatePDF();
             // Reset form fields, preserving pre-loaded patient data
             setEstimateForm((prev) => {
@@ -514,6 +528,13 @@ const SurgeryNotesForm = ({
             });
             setEstimateFormErrors({}); // Clear errors
             setShowEstimateForm(false);
+            // Reset editing state
+            setIsEditingEstimate(false);
+            setEditingEstimateId(null);
+            // Refresh the estimates list if we were editing
+            if (isEditingEstimate) {
+                fetchPatientEstimates();
+            }
         } catch (error) {
             console.error("Error saving surgery estimate:", error);
             if (axios.isAxiosError(error)) {
@@ -755,6 +776,17 @@ const SurgeryNotesForm = ({
             const pdfUrl = URL.createObjectURL(pdfBlob);
             setPdfGenerated(pdfUrl);
             setShowPdfModal(true);
+
+            // Automatically trigger print dialog after a short delay
+            setTimeout(() => {
+                const printWindow = window.open(pdfUrl, '_blank');
+                if (printWindow) {
+                    printWindow.onload = function () {
+                        printWindow.print();
+                        printWindow.close();
+                    };
+                }
+            }, 1000);
         };
     };
 
@@ -835,6 +867,32 @@ const SurgeryNotesForm = ({
     };
 
     const handleEditEstimate = (estimate: any) => {
+        // Parse implant request data if it's a JSON string
+        let implantRequestData = {
+            patientName: "",
+            age: "",
+            nicPassport: "",
+            address: "",
+            contact: "",
+            surgeryDate: "",
+            implants: [],
+            remarks: "",
+        };
+
+        if (estimate.implant_request_data) {
+            try {
+                // If it's a string, parse it as JSON
+                if (typeof estimate.implant_request_data === 'string') {
+                    implantRequestData = JSON.parse(estimate.implant_request_data);
+                } else {
+                    // If it's already an object, use it directly
+                    implantRequestData = estimate.implant_request_data;
+                }
+            } catch (error) {
+                console.error('Error parsing implant request data:', error);
+            }
+        }
+
         // Load the estimate data into the form for editing
         setEstimateForm({
             patientName: estimate.patient_name || "",
@@ -843,23 +901,23 @@ const SurgeryNotesForm = ({
             stayInICU: estimate.stay_in_icu || "",
             stayInWards: estimate.stay_in_wards || "",
             implants: estimate.implants_general || "",
-            date: estimate.date || "",
+            date: estimate.date ? new Date(estimate.date).toISOString().split('T')[0] : "",
             contact: estimate.contact || "",
             whatsapp: estimate.whatsapp || "",
             surgeryEstimateRange: estimate.surgery_estimate_range || "",
             presidentialFund: estimate.presidential_fund || "NO",
-            presidentialFundDate: estimate.presidential_fund_date || "",
+            presidentialFundDate: estimate.presidential_fund_date ? new Date(estimate.presidential_fund_date).toISOString().split('T')[0] : "",
             presidentialFundDiagnosis:
                 estimate.presidential_fund_diagnosis || "NO",
             presidentialFundDiagnosisDate:
-                estimate.presidential_fund_diagnosis_date || "",
+                estimate.presidential_fund_diagnosis_date ? new Date(estimate.presidential_fund_diagnosis_date).toISOString().split('T')[0] : "",
             nitfAgrahara: estimate.nitf_agrahara || "NO",
-            nitfAgraharaDate: estimate.nitf_agrahara_date || "",
+            nitfAgraharaDate: estimate.nitf_agrahara_date ? new Date(estimate.nitf_agrahara_date).toISOString().split('T')[0] : "",
             nitfAgraharaDiagnosis: estimate.nitf_agrahara_diagnosis || "NO",
             nitfAgraharaDiagnosisDate:
-                estimate.nitf_agrahara_diagnosis_date || "",
+                estimate.nitf_agrahara_diagnosis_date ? new Date(estimate.nitf_agrahara_diagnosis_date).toISOString().split('T')[0] : "",
             openQuotations: estimate.open_quotations || "NO",
-            openQuotationsDate: estimate.open_quotations_date || "",
+            openQuotationsDate: estimate.open_quotations_date ? new Date(estimate.open_quotations_date).toISOString().split('T')[0] : "",
             checkOnDrugs: estimate.check_on_drugs || "NO",
             implantPrescription: estimate.implant_prescription || "NO",
             admissionLetter: estimate.admission_letter || "NO",
@@ -867,25 +925,18 @@ const SurgeryNotesForm = ({
             initialDeposit: estimate.initial_deposit || "",
             tempAdmissionDate: estimate.temp_admission_date || "",
             anesthetistConsultationDate:
-                estimate.anesthetist_consultation_date || "",
+                estimate.anesthetist_consultation_date ? new Date(estimate.anesthetist_consultation_date).toISOString().split('T')[0] : "",
             guardianName: estimate.guardian_name || "",
             guardianContact: estimate.guardian_contact || "",
             medicalCoordinator: estimate.medical_coordinator || "",
-            implantRequest: estimate.implant_request_data || {
-                patientName: "",
-                age: "",
-                nicPassport: "",
-                address: "",
-                contact: "",
-                surgeryDate: "",
-                implants: [],
-                remarks: "",
-            },
+            implantRequest: implantRequestData,
         });
         setShowSingleEstimateModal(false); // Close the display card
         setShowEstimateForm(true); // Open the form for editing
         setErrors({}); // Clear any previous errors
         setEstimateFormErrors({}); // Clear any previous estimate form errors
+        setIsEditingEstimate(true);
+        setEditingEstimateId(estimate.id);
     };
 
     const handleDeleteEstimate = async (id: number) => {
@@ -1021,7 +1072,32 @@ const SurgeryNotesForm = ({
                     Save Note
                 </button>
                 <button
-                    onClick={() => setShowEstimateForm(true)}
+                    onClick={() => {
+                        setShowEstimateForm(true);
+                        setIsEditingEstimate(false);
+                        setEditingEstimateId(null);
+                        // Reset form to initial state
+                        setEstimateForm((prev) => {
+                            const resetState = { ...initialEstimateFormState };
+                            if (patientData) {
+                                resetState.patientName = patientData.name || "";
+                                resetState.contact = patientData.contact_no || "";
+                                resetState.implantRequest = {
+                                    ...resetState.implantRequest,
+                                    patientName: patientData.name || "",
+                                    age:
+                                        patientData.age !== undefined &&
+                                            patientData.age !== null
+                                            ? String(patientData.age)
+                                            : "",
+                                    nicPassport: patientData.nic || "",
+                                    address: patientData.address || "",
+                                    contact: patientData.contact_no || "",
+                                };
+                            }
+                            return resetState;
+                        });
+                    }}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-sm"
                 >
                     <DollarSignIcon size={16} className="mr-2" />
@@ -2434,7 +2510,7 @@ const SurgeryNotesForm = ({
                                                 size={16}
                                                 className="mr-2"
                                             />
-                                            Generate PDF
+                                            {isEditingEstimate ? "Update Estimate" : "Generate PDF"}
                                         </>
                                     )}
                                 </button>
@@ -2482,6 +2558,22 @@ const SurgeryNotesForm = ({
                                 className="px-6 py-2.5 text-sm font-medium text-white bg-gray-500 rounded-lg hover:bg-gray-600 transition-all duration-200 shadow-md"
                             >
                                 Close
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const printWindow = window.open(pdfGenerated, '_blank');
+                                    if (printWindow) {
+                                        printWindow.onload = function () {
+                                            printWindow.print();
+                                            printWindow.close();
+                                        };
+                                    }
+                                }}
+                                className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md"
+                            >
+                                <PrinterIcon size={16} className="mr-2" />
+                                Print PDF
                             </button>
                             <a
                                 href={pdfGenerated}

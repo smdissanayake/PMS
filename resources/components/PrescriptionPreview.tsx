@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { XIcon, PrinterIcon } from 'lucide-react';
 
 // Props ලබා ගන්නා interface එක
@@ -20,9 +20,33 @@ const PrescriptionPreview = ({
   nextVisit,
   onClose
 }: PrescriptionPreviewProps) => {
-  // Print කිරීමට function එක
+  // Add a ref for the printable content
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // Print only the content inside printRef
   const handlePrint = () => {
-    window.print();
+    if (!printRef.current) return;
+    const printContents = printRef.current.innerHTML;
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Prescription</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            /* Add any additional print styles here */
+          </style>
+        </head>
+        <body>
+          ${printContents}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
 
   return (
@@ -53,11 +77,19 @@ const PrescriptionPreview = ({
         </div>
 
         {/* Main Content */}
-        <div className="p-6 space-y-6">
+        <div ref={printRef} className="p-6 space-y-6">
           {/* රෝහල/වෛද්‍ය තොරතුරු */}
           <div className="text-center border-b border-gray-200 pb-4">
+            {/* Hospital Logo */}
+            <div className="mb-4 flex justify-center">
+              <img
+                src="/images/logo_asiri.png"
+                alt="Asiri Central Hospital Logo"
+                className="h-16 w-auto object-contain"
+              />
+            </div>
             <h2 className="text-xl font-semibold text-gray-900">
-              City General Hospital
+              Asiri Central Hospital
             </h2>
           </div>
 
@@ -81,25 +113,31 @@ const PrescriptionPreview = ({
           </div>
 
           {/* ඖෂධ ලැයිස්තුව */}
-          <div className="space-y-4">
-            {medications.map((med, index) => (
-              <div key={med.id} className="border-b border-gray-100 pb-3 last:border-0">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-gray-500">{index + 1}.</span>
-                  <div>
-                    <p className="font-medium text-gray-900">{med.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {med.dosage} - {med.frequency} - {med.duration}
-                    </p>
-                    {med.instructions && (
-                      <p className="text-sm text-gray-500 italic mt-1">
-                        Note: {med.instructions}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-lg">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">#</th>
+                  <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Name</th>
+                  <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Dosage</th>
+                  <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Frequency</th>
+                  <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Duration</th>
+                  <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Instructions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {medications.map((med, index) => (
+                  <tr key={med.id} className="border-b last:border-0">
+                    <td className="px-4 py-2 text-gray-700 align-top">{index + 1}</td>
+                    <td className="px-4 py-2 text-gray-900 font-medium align-top">{med.name}</td>
+                    <td className="px-4 py-2 text-gray-700 align-top">{med.dosage}</td>
+                    <td className="px-4 py-2 text-gray-700 align-top">{med.frequency}</td>
+                    <td className="px-4 py-2 text-gray-700 align-top">{med.duration}</td>
+                    <td className="px-4 py-2 text-gray-700 align-top">{med.instructions || ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {/* ඊළඟ හමුවීම */}
