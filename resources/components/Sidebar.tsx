@@ -95,32 +95,7 @@ export const Sidebar = ({
           ))}
         </ul>
       </nav>
-      <div className="p-5 border-t border-gray-200">
-        <button
-          className="flex items-center text-gray-600 hover:text-gray-800 w-full px-2 py-2"
-          title={isCollapsed ? "Settings" : undefined}
-        >
-          <SettingsIcon size={20} className="mr-3" />
-          <span
-            className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"
-              }`}
-          >
-            Settings
-          </span>
-        </button>
-        <button
-          className="flex items-center text-gray-600 hover:text-gray-800 w-full px-2 py-2 mt-2"
-          title={isCollapsed ? "Logout" : undefined}
-        >
-          <LogOutIcon size={20} className="mr-3" />
-          <span
-            className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"
-              }`}
-          >
-            Logout
-          </span>
-        </button>
-      </div>
+      
     </div>
   );
 };
