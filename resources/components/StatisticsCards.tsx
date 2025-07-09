@@ -78,7 +78,7 @@ const StatisticsCards = () => {
     subtitle: 'from last month',
     onClick: () => window.open('/todays-visits', '_blank')
   }, {
-    name: 'Admitted Patients',
+    name: 'Patient Admitted Count',
     value: loadingAdmitted ? '...' : admittedPatients.value.toString(),
     change: loadingAdmitted ? '...' : admittedPatients.change,
     icon: BedIcon,
