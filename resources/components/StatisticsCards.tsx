@@ -10,11 +10,13 @@ const StatisticsCards = () => {
   const [loading, setLoading] = useState(true);
   const [loadingAdmitted, setLoadingAdmitted] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [pendingMedicalOrders, setPendingMedicalOrders] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTodaysVisits();
     fetchAdmittedPatientsStats();
     fetchPendingReportsStats();
+    fetchPendingMedicalOrders();
   }, []);
 
   const fetchTodaysVisits = async () => {
@@ -61,36 +63,45 @@ const StatisticsCards = () => {
     }
   };
 
+  const fetchPendingMedicalOrders = async () => {
+    try {
+      const response = await axios.get('/medical-orders/pending-reports-count');
+      setPendingMedicalOrders(response.data.pending_reports_count);
+    } catch (error) {
+      console.error('Error fetching pending medical orders:', error);
+    }
+  };
+
   const stats = [{
     name: 'Total Patients',
     value: loading ? '...' : totalPatients.toString(),
-    change: '+12%',
+    // No change property for this card
     icon: UsersIcon,
     changeType: 'increase',
-    subtitle: 'from last month',
+    subtitle: 'All',
     onClick: () => window.open('/patient-details', '_blank')
   }, {
     name: "Today's Visits",
     value: loading ? '...' : todaysVisits.toString(),
-    change: '+5',
+    // No change property for this card
     icon: CalendarIcon,
     changeType: 'increase',
-    subtitle: 'from last month',
+    subtitle: 'All',
     onClick: () => window.open('/todays-visits', '_blank')
   }, {
     name: 'Patient Admitted Count',
     value: loadingAdmitted ? '...' : admittedPatients.value.toString(),
-    change: loadingAdmitted ? '...' : admittedPatients.change,
+    // No change property for this card
     icon: BedIcon,
     changeType: admittedPatients.changeType,
-    subtitle: 'from last month'
+    subtitle: 'All'
   }, {
     name: 'Pending Reports',
-    value: loadingReports ? '...' : pendingReports.value.toString(),
-    change: loadingReports ? '...' : pendingReports.change,
+    value: pendingMedicalOrders === null ? '...' : pendingMedicalOrders.toString(),
+    // No change property for this card
     icon: FileTextIcon,
     changeType: pendingReports.changeType,
-    subtitle: 'from last month'
+    subtitle: 'All'
   }];
 
   return (
@@ -103,9 +114,11 @@ const StatisticsCards = () => {
         >
           <div className="flex items-center justify-between mb-4">
             <stat.icon size={24} className="text-[#4287f5]" />
-            <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
-              {stat.change}
-            </span>
+            {/* Only show change if it exists */}
+            {('change' in stat && stat.change !== undefined) ? (
+              <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
+              </span>
+            ) : null}
           </div>
           <h3 className="text-3xl font-semibold text-gray-900 mb-2">
             {stat.value}

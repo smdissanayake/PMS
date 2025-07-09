@@ -5,7 +5,7 @@ import AddDrugModal from "./AddDrugModal";
 import PatientVisitsChart from "./PatientVisitsChart";
 import PatientCategoryChart from "./PatientCategoryChart";
 import axios from "axios"; // Import axios
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
 
 interface Patient {
     id: number;
