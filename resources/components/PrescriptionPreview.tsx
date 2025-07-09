@@ -45,8 +45,25 @@ const PrescriptionPreview = ({
     `);
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    // Wait for the logo image to load before printing
+    const logoImg = printWindow.document.querySelector('img[src*="logo_asiri.png"]');
+    if (logoImg) {
+      const img = logoImg as HTMLImageElement;
+      img.onload = function () {
+        printWindow.print();
+        printWindow.close();
+      };
+      // If the image is already cached and loaded
+      if (img.complete) {
+        img.onload = null;
+        printWindow.print();
+        printWindow.close();
+      }
+    } else {
+      // No logo, just print
+      printWindow.print();
+      printWindow.close();
+    }
   };
 
   return (
@@ -83,7 +100,7 @@ const PrescriptionPreview = ({
             {/* Hospital Logo */}
             <div className="mb-4 flex justify-center">
               <img
-                src="/images/logo_asiri.png"
+                src={`${window.location.origin}/images/logo_asiri.png`}
                 alt="Asiri Central Hospital Logo"
                 className="h-16 w-auto object-contain"
               />
