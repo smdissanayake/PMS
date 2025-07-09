@@ -28,7 +28,7 @@ const TodaysVisitsTable = () => {
         try {
             setLoading(true);
             const response = await axios.get('/api/patient-notes/today');
-            setVisits(response.data);
+            setVisits(response.data.visits); // <-- FIXED LINE
             setError(null);
         } catch (err) {
             setError('Failed to fetch today\'s visits. Please try again later.');
