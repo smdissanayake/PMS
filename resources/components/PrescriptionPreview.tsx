@@ -112,16 +112,7 @@ const PrescriptionPreview = ({
 
           {/* රෝගී තොරතුරු */}
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-600">Patient: Sarah Johnson</p>
-              <p className="text-gray-600">Age: 27</p>
-            </div>
-            <div className="text-right">
-              <p className="text-gray-600">
-                Date: {new Date().toLocaleDateString()}
-              </p>
-              <p className="text-gray-600">ID: 970123-45-6789</p>
-            </div>
+            {/* Removed hardcoded patient details */}
           </div>
 
           {/* Rx Symbol */}
