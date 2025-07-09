@@ -314,18 +314,6 @@ const DashboardContent = () => {
                 <div className="grid grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <div className="text-sm text-gray-600">
-                            Total categories
-                        </div>
-                        <div className="text-2xl font-semibold">
-                            {isLoadingDrugStats ? (
-                                <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
-                            ) : (
-                                drugStatistics.totalCategories
-                            )}
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="text-sm text-gray-600">
                             Drugs Classes
                         </div>
                         <div className="text-2xl font-semibold">
