@@ -10,11 +10,13 @@ const StatisticsCards = () => {
   const [loading, setLoading] = useState(true);
   const [loadingAdmitted, setLoadingAdmitted] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [pendingMedicalOrders, setPendingMedicalOrders] = useState<number | null>(null);
 
   useEffect(() => {
     fetchTodaysVisits();
     fetchAdmittedPatientsStats();
     fetchPendingReportsStats();
+    fetchPendingMedicalOrders();
   }, []);
 
   const fetchTodaysVisits = async () => {
@@ -61,13 +63,22 @@ const StatisticsCards = () => {
     }
   };
 
+  const fetchPendingMedicalOrders = async () => {
+    try {
+      const response = await axios.get('/medical-orders/pending-reports-count');
+      setPendingMedicalOrders(response.data.pending_reports_count);
+    } catch (error) {
+      console.error('Error fetching pending medical orders:', error);
+    }
+  };
+
   const stats = [{
     name: 'Total Patients',
     value: loading ? '...' : totalPatients.toString(),
     change: '+12%',
     icon: UsersIcon,
     changeType: 'increase',
-    subtitle: 'from last month',
+    subtitle: 'All',
     onClick: () => window.open('/patient-details', '_blank')
   }, {
     name: "Today's Visits",
@@ -75,7 +86,7 @@ const StatisticsCards = () => {
     change: '+5',
     icon: CalendarIcon,
     changeType: 'increase',
-    subtitle: 'from last month',
+    subtitle: 'All',
     onClick: () => window.open('/todays-visits', '_blank')
   }, {
     name: 'Patient Admitted Count',
@@ -83,14 +94,14 @@ const StatisticsCards = () => {
     change: loadingAdmitted ? '...' : admittedPatients.change,
     icon: BedIcon,
     changeType: admittedPatients.changeType,
-    subtitle: 'from last month'
+    subtitle: 'All'
   }, {
     name: 'Pending Reports',
-    value: loadingReports ? '...' : pendingReports.value.toString(),
+    value: pendingMedicalOrders === null ? '...' : pendingMedicalOrders.toString(),
     change: loadingReports ? '...' : pendingReports.change,
     icon: FileTextIcon,
     changeType: pendingReports.changeType,
-    subtitle: 'from last month'
+    subtitle: 'All'
   }];
 
   return (

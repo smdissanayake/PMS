@@ -135,6 +135,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [App\Http\Controllers\Api\MedicalOrderController::class, 'index']);
         Route::post('/', [App\Http\Controllers\Api\MedicalOrderController::class, 'store']);
         Route::get('/patient/{patientClinicRefNo}', [App\Http\Controllers\Api\MedicalOrderController::class, 'getPatientOrders']);
+        Route::get('/pending-reports-count', [App\Http\Controllers\Api\MedicalOrderController::class, 'getPendingReportsCount']);
         Route::get('/{id}', [MedicalOrderController::class, 'show']);
         Route::delete('/{id}', [MedicalOrderController::class, 'destroy']);
     });

@@ -141,4 +141,17 @@ class MedicalOrderController extends Controller
             ], 500);
         }
     }
+
+    public function getPendingReportsCount()
+    {
+        try {
+            $count = MedicalOrder::where('status', 'pending')->count();
+            return response()->json(['pending_reports_count' => $count]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch pending reports count'
+            ], 500);
+        }
+    }
 } 
