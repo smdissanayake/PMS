@@ -117,7 +117,6 @@ const StatisticsCards = () => {
             {/* Only show change if it exists */}
             {('change' in stat && stat.change !== undefined) ? (
               <span className={`text-sm font-medium ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
-                {/* {stat.change} */}
               </span>
             ) : null}
           </div>
