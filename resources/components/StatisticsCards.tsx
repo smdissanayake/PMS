@@ -40,13 +40,6 @@ const StatisticsCards = () => {
     subtitle: 'from last month',
     onClick: () => window.open('/todays-visits', '_blank')
   }, {
-    name: 'Admitted Patients',
-    value: '156',
-    change: '-2',
-    icon: BedIcon,
-    changeType: 'decrease',
-    subtitle: 'from last month'
-  }, {
     name: 'Pending Reports',
     value: '23',
     change: '+8',
@@ -56,7 +49,7 @@ const StatisticsCards = () => {
   }];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
       {stats.map(stat => (
         <div 
           key={stat.name} 
