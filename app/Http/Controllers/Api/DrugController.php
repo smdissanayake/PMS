@@ -65,4 +65,34 @@ class DrugController extends Controller
     {
         //
     }
+    
+    /**
+     * Get drug statistics for dashboard
+     */
+    public function statistics()
+    {
+        try {
+            $totalDrugs = \App\Models\Drug::count();
+            $uniqueDrugClasses = \App\Models\Drug::whereNotNull('drug_class')
+                ->distinct('drug_class')
+                ->count('drug_class');
+            
+            // Get unique formulations as another category
+            $uniqueFormulations = \App\Models\Drug::whereNotNull('formulation')
+                ->distinct('formulation')
+                ->count('formulation');
+            
+            return response()->json([
+                'totalDrugs' => $totalDrugs,
+                'uniqueDrugClasses' => $uniqueDrugClasses,
+                'uniqueFormulations' => $uniqueFormulations,
+                'totalCategories' => $uniqueDrugClasses + $uniqueFormulations, // Combined categories
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch drug statistics',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

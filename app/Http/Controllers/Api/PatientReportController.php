@@ -108,4 +108,43 @@ class PatientReportController extends Controller
     {
         //
     }
+
+    /**
+     * Get patient report statistics for dashboard
+     */
+    public function statistics()
+    {
+        try {
+            // Get total reports (all time)
+            $totalReports = PatientReport::count();
+            
+            // Get reports from last month
+            $lastMonthReports = PatientReport::whereMonth('created_at', now()->subMonth()->month)
+                ->whereYear('created_at', now()->subMonth()->year)
+                ->count();
+            
+            // Get reports from current month
+            $currentMonthReports = PatientReport::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count();
+            
+            // Calculate change
+            $change = $currentMonthReports - $lastMonthReports;
+            $changeType = $change >= 0 ? 'increase' : 'decrease';
+            $changeValue = abs($change);
+            
+            return response()->json([
+                'totalReports' => $totalReports,
+                'currentMonthReports' => $currentMonthReports,
+                'lastMonthReports' => $lastMonthReports,
+                'change' => $changeType === 'increase' ? '+' . $changeValue : '-' . $changeValue,
+                'changeType' => $changeType
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch patient report statistics',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -71,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/drugs', [DrugController::class, 'index']);
     Route::post('/drugs', [DrugController::class, 'store']);
+    Route::get('/drugs/statistics', [DrugController::class, 'statistics']);
 
     // Routes for Prescriptions and Special Items
     Route::post('/prescriptions', [PrescriptionController::class, 'store']);
@@ -177,12 +178,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/patients/{patientId}/ward-admissions', [WardAdmissionController::class, 'getPatientAdmissions']);
     Route::post('/api/ward-admissions', [WardAdmissionController::class, 'store']);
     Route::delete('/api/ward-admissions/{id}', [WardAdmissionController::class, 'destroy']);
+    Route::get('/api/ward-admissions/statistics', [WardAdmissionController::class, 'statistics']);
 
     // Surgery Estimate Routes
     Route::post('/api/surgery-estimates', [SurgeryEstimateController::class, 'store']);
     Route::get('/api/surgery-estimates/{clinicRefNo}', [SurgeryEstimateController::class, 'indexByClinicRefNo']);
     Route::put('/api/surgery-estimates/{id}', [SurgeryEstimateController::class, 'update']);
     Route::delete('/api/surgery-estimates/{id}', [SurgeryEstimateController::class, 'destroy']);
+
+    // Patient Reports Statistics Route
+    Route::get('/api/patient-reports/statistics', [PatientReportController::class, 'statistics']);
 
     Route::put('/patients/{id}', [PatientController::class, 'update']);
 });

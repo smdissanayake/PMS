@@ -84,4 +84,43 @@ class WardAdmissionController extends Controller
         
         return response()->json(['message' => 'Ward admission record deleted successfully'], 200);
     }
+    
+    /**
+     * Get ward admission statistics for dashboard
+     */
+    public function statistics()
+    {
+        try {
+            // Get total admitted patients (all time)
+            $totalAdmittedPatients = WardAdmission::count();
+            
+            // Get admitted patients from last month
+            $lastMonthAdmitted = WardAdmission::whereMonth('created_at', now()->subMonth()->month)
+                ->whereYear('created_at', now()->subMonth()->year)
+                ->count();
+            
+            // Get admitted patients from current month
+            $currentMonthAdmitted = WardAdmission::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count();
+            
+            // Calculate change
+            $change = $currentMonthAdmitted - $lastMonthAdmitted;
+            $changeType = $change >= 0 ? 'increase' : 'decrease';
+            $changeValue = abs($change);
+            
+            return response()->json([
+                'totalAdmittedPatients' => $totalAdmittedPatients,
+                'currentMonthAdmitted' => $currentMonthAdmitted,
+                'lastMonthAdmitted' => $lastMonthAdmitted,
+                'change' => $changeType === 'increase' ? '+' . $changeValue : '-' . $changeValue,
+                'changeType' => $changeType
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch ward admission statistics',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

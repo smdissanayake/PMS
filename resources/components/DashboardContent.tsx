@@ -32,12 +32,35 @@ const DashboardContent = () => {
     const [suggestions, setSuggestions] = useState<Array<{ id: number; clinicRefNo: string; chb: string; name: string }>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+    const [drugStatistics, setDrugStatistics] = useState({
+        totalDrugs: 0,
+        uniqueDrugClasses: 0,
+        totalCategories: 0
+    });
+    const [isLoadingDrugStats, setIsLoadingDrugStats] = useState(false);
 
     useEffect(() => {
         if (isFormUploadModalOpen) {
             fetchPatientClinicRefNos();
         }
     }, [isFormUploadModalOpen]);
+
+    const fetchDrugStatistics = async () => {
+        setIsLoadingDrugStats(true);
+        try {
+            const response = await axios.get("/drugs/statistics");
+            setDrugStatistics(response.data);
+        } catch (error) {
+            console.error("Error fetching drug statistics:", error);
+            // Keep default values if API fails
+        } finally {
+            setIsLoadingDrugStats(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDrugStatistics();
+    }, []);
 
     const fetchPatientClinicRefNos = async () => {
         try {
@@ -77,6 +100,8 @@ const DashboardContent = () => {
 
     const handleAddDrug = (drugDetails: any) => {
         console.log("Adding drug:", drugDetails);
+        // Refresh drug statistics after adding a new drug
+        fetchDrugStatistics();
     };
 
     const handleFormUploadClick = () => {
@@ -155,14 +180,14 @@ const DashboardContent = () => {
     ) => {
         const value = event.target.value.trim(); // Trim whitespace from input
         setClinicRefNo(value);
-        
+
         // Only show suggestions if there's input
         if (value) {
             const lowerCaseValue = value.toLowerCase();
             const filtered = patientClinicRefNos.filter((patient) =>
                 patient.clinicRefNo.toLowerCase().includes(lowerCaseValue)
             );
-            
+
             // Sort filtered results to prioritize those starting with the input
             const sorted = filtered.sort((a, b) => {
                 const aStartsWith = a.clinicRefNo.toLowerCase().startsWith(lowerCaseValue);
@@ -265,7 +290,7 @@ const DashboardContent = () => {
     return (
         <div className="space-y-4 flex-1">
             <StatisticsCards />
-            
+
             {/* Charts Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <PatientVisitsChart />
@@ -291,39 +316,35 @@ const DashboardContent = () => {
                         <div className="text-sm text-gray-600">
                             Total categories
                         </div>
-                        <div className="text-2xl font-semibold">20</div>
+                        <div className="text-2xl font-semibold">
+                            {isLoadingDrugStats ? (
+                                <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                            ) : (
+                                drugStatistics.totalCategories
+                            )}
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <div className="text-sm text-gray-600">
                             Drugs Classes
                         </div>
-                        <div className="text-2xl font-semibold">8</div>
+                        <div className="text-2xl font-semibold">
+                            {isLoadingDrugStats ? (
+                                <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                            ) : (
+                                drugStatistics.uniqueDrugClasses
+                            )}
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <div className="text-sm text-gray-600">All Drugs</div>
-                        <div className="text-2xl font-semibold">1520</div>
-                    </div>
-                </div>
-            </div>
-            {/* Order Form Section */}
-            <div className="bg-white rounded-xl p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        Order Form Edit
-                    </h2>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <div className="text-sm text-gray-600">
-                            Form Categories
+                        <div className="text-2xl font-semibold">
+                            {isLoadingDrugStats ? (
+                                <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                            ) : (
+                                drugStatistics.totalDrugs
+                            )}
                         </div>
-                        <div className="text-2xl font-semibold">20</div>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="text-sm text-gray-600">
-                            Form Categories
-                        </div>
-                        <div className="text-2xl font-semibold">20</div>
                     </div>
                 </div>
             </div>
