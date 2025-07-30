@@ -233,7 +233,7 @@ const PatientProfile = () => {
         try {
             let endpoint = '';
             let paramName = '';
-            
+
             // Determine endpoint and parameter name based on search type
             switch (searchType) {
                 case 'chb':
@@ -343,7 +343,7 @@ const PatientProfile = () => {
                         <option value="chb">CHB</option>
                         <option value="name">Name</option>
                     </select>
-                    
+
                     <div className="relative flex-grow">
                         <input
                             type="text"
@@ -469,9 +469,8 @@ const PatientProfile = () => {
                         </div>
 
                         <div
-                            className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ease-in-out ${
-                                isRecordsExpanded ? "block" : "hidden"
-                            }`}
+                            className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ease-in-out ${isRecordsExpanded ? "block" : "hidden"
+                                }`}
                         >
                             {isLoadingRecords && (
                                 <p className="text-gray-500 text-sm">
@@ -481,11 +480,67 @@ const PatientProfile = () => {
                             {!isLoadingRecords && records.length === 0 && patientReport ? (
                                 <div className="text-center">
                                     <p className="text-gray-500 mb-4">No records found. Displaying patient report:</p>
-                                    <img 
-                                        src={`/storage/${patientReport.file_path}`} 
-                                        alt="Patient Report" 
-                                        className="max-w-full h-auto mx-auto"
-                                    />
+                                    {(() => {
+                                        const filePath = `/storage/${patientReport.file_path}`;
+                                        const ext = patientReport.file_path.split('.').pop()?.toLowerCase();
+                                        return (
+                                            <div>
+                                                {ext === 'pdf' ? (
+                                                    <>
+                                                        <iframe
+                                                            src={filePath}
+                                                            title="Patient Report PDF"
+                                                            className="w-full max-w-2xl h-[600px] mx-auto border rounded mb-2"
+                                                        ></iframe>
+                                                        <a
+                                                            href={filePath}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition mb-2"
+                                                        >
+                                                            Open PDF in New Tab
+                                                        </a>
+                                                    </>
+                                                ) : ["jpg", "jpeg", "png", "heic"].includes(ext || "") ? (
+                                                    <>
+                                                        <img
+                                                            src={filePath}
+                                                            alt="Patient Report"
+                                                            className="max-w-full h-auto mx-auto mb-2"
+                                                            onError={e => {
+                                                                if (ext === 'heic') {
+                                                                    e.currentTarget.style.display = 'none';
+                                                                    const fallback = document.createElement('div');
+                                                                    fallback.innerHTML = '<div class="text-red-600 text-sm mb-2">HEIC image preview is not supported in this browser. <a href="' + filePath + '" target="_blank" rel="noopener noreferrer" class="underline">Download/View HEIC</a></div>';
+                                                                    e.currentTarget.parentElement?.appendChild(fallback);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <a
+                                                            href={filePath}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition mb-2"
+                                                        >
+                                                            Open Image in New Tab
+                                                        </a>
+                                                        {ext === 'heic' && (
+                                                            <div className="text-xs text-gray-500 mt-1">If the image does not display, <a href={filePath} target="_blank" rel="noopener noreferrer" className="underline">download or open in a compatible viewer</a>.</div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <a
+                                                        href={filePath}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition mb-2"
+                                                    >
+                                                        Download/View Report in New Tab
+                                                    </a>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             ) : !isLoadingRecords && records.length === 0 && !patientReport ? (
                                 <p className="text-gray-500 text-sm">
@@ -1003,22 +1058,20 @@ const PatientProfile = () => {
                                             </h5>
                                             {record.allergies && (
                                                 <p
-                                                    className={`text-sm ${
-                                                        record.allergies
+                                                    className={`text-sm ${record.allergies
                                                             ? "text-yellow-700 bg-yellow-50 p-1 rounded-md"
                                                             : ""
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {record.allergies}
                                                 </p>
                                             )}
                                             {record.allergensInput && (
                                                 <p
-                                                    className={`text-sm ${
-                                                        record.allergensInput
+                                                    className={`text-sm ${record.allergensInput
                                                             ? "text-yellow-700 bg-yellow-50 p-1 rounded-md"
                                                             : ""
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <span className="font-medium">
                                                         Details:
@@ -1044,11 +1097,10 @@ const PatientProfile = () => {
                                             )}
                                             {record.drugsTaken && (
                                                 <p
-                                                    className={`text-sm ${
-                                                        record.drugsTaken
+                                                    className={`text-sm ${record.drugsTaken
                                                             ? "text-red-700 bg-red-50 p-1 rounded-md"
                                                             : ""
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <span className="font-medium">
                                                         Specific Drugs Taken:
@@ -1079,7 +1131,7 @@ const PatientProfile = () => {
                 </>
             )}
 
-            <FloatingActionButton />
+            {patientData && <FloatingActionButton onTabChange={setActiveTab} />}
         </div>
     );
 };

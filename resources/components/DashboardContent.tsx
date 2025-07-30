@@ -4,7 +4,7 @@ import StatisticsCards from "./StatisticsCards";
 import AddDrugModal from "./AddDrugModal";
 import PatientVisitsChart from "./PatientVisitsChart";
 import PatientCategoryChart from "./PatientCategoryChart";
-import axios from "axios"; // Import axios
+import axios, { AxiosProgressEvent } from "axios"; // Import axios
 import Swal from "sweetalert2";
 
 interface Patient {
@@ -38,6 +38,8 @@ const DashboardContent = () => {
         totalCategories: 0
     });
     const [isLoadingDrugStats, setIsLoadingDrugStats] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
 
     useEffect(() => {
         if (isFormUploadModalOpen) {
@@ -131,6 +133,8 @@ const DashboardContent = () => {
         formData.append("clinic_ref_no", clinicRefNo);
         formData.append("file", selectedFile);
 
+        setIsUploading(true);
+        setUploadProgress(0);
         try {
             const response = await axios.post(
                 "/api/patient-reports",
@@ -139,34 +143,54 @@ const DashboardContent = () => {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
+                    onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+                        if (progressEvent.total) {
+                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            setUploadProgress(percentCompleted);
+                        }
+                    },
                 }
             );
-            console.log("Report added successfully:", response.data);
+            setUploadProgress(100);
             Swal.fire("Success!", "Report uploaded successfully.", "success");
             handleCloseFormUploadModal();
         } catch (error) {
             console.error("Error uploading report:", error);
             Swal.fire("Error!", "Failed to upload report.", "error");
+        } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
         }
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
-            // Check if file is a PDF
-            if (file.type === 'application/pdf') {
+            // Allow only jpg, jpeg, png, heic, pdf
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/heic',
+                'image/heif',
+                'application/pdf'
+            ];
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.heic', '.heif', '.pdf'];
+            const fileName = file.name.toLowerCase();
+            const isAllowedType = allowedTypes.includes(file.type) || allowedExtensions.some(ext => fileName.endsWith(ext));
+            if (!isAllowedType) {
                 Swal.fire(
                     "Error!",
-                    "PDF files are not allowed. Please upload JPG or PNG files only.",
+                    "Only JPG, PNG, HEIC, and PDF files are allowed.",
                     "error"
                 );
                 return;
             }
-            // Check if file is an image
-            if (!file.type.startsWith('image/')) {
+            // Check file size (max 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
                 Swal.fire(
                     "Error!",
-                    "Only image files (JPG, PNG) are allowed.",
+                    "File size exceeds 10MB. Please choose a smaller file.",
                     "error"
                 );
                 return;
@@ -462,15 +486,16 @@ const DashboardContent = () => {
                                                 id="file-upload"
                                                 name="file-upload"
                                                 type="file"
-                                                accept=".jpg,.jpeg,.png"
+                                                accept=".jpg,.jpeg,.png,.heic,.heif,.pdf"
                                                 className="sr-only"
                                                 onChange={handleFileChange}
+                                                disabled={isUploading}
                                             />
                                         </label>
                                         <p className="pl-1">or drag and drop</p>
                                     </div>
                                     <p className="text-xs text-gray-500">
-                                        JPG, PNG up to 2MB
+                                        JPG, PNG, HEIC, PDF up to 10MB
                                     </p>
                                 </div>
                                 {selectedFile && (
@@ -481,6 +506,17 @@ const DashboardContent = () => {
                                             </svg>
                                             <span className="ml-2 text-sm text-green-700">{selectedFile.name}</span>
                                         </div>
+                                        {isUploading && (
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+                                                <div
+                                                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                                    style={{ width: `${uploadProgress}%` }}
+                                                ></div>
+                                            </div>
+                                        )}
+                                        {!isUploading && uploadProgress === 100 && (
+                                            <div className="text-green-600 text-xs mt-2">Upload complete!</div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -489,14 +525,16 @@ const DashboardContent = () => {
                             <button
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                                 onClick={handleCloseFormUploadModal}
+                                disabled={isUploading}
                             >
                                 Cancel
                             </button>
                             <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={handleAddForm}
+                                disabled={isUploading || !selectedFile}
                             >
-                                Upload Report
+                                {isUploading ? 'Uploading...' : 'Upload Report'}
                             </button>
                         </div>
                     </div>

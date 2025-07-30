@@ -14,24 +14,51 @@ interface AddSurgeryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Surgery) => void;
+  initialValues?: Partial<Surgery> | null;
 }
 
-const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSubmit, initialValues }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    patient_name: '',
-    ref_no: '',
+    patientName: '',
+    refNo: '',
     uhid: '',
-    surgery_name: '',
+    surgeryName: '',
     date: '',
     time: ''
   });
 
+  // Sync initialValues to formData when modal opens for edit
+  React.useEffect(() => {
+    if (isOpen && initialValues) {
+      setFormData({
+        patientName: initialValues.patientName || '',
+        refNo: initialValues.refNo || '',
+        uhid: initialValues.uhid || '',
+        surgeryName: initialValues.surgeryName || '',
+        date: initialValues.date || '',
+        time: initialValues.time || '',
+      });
+      setSearchQuery(initialValues.refNo || '');
+    } else if (isOpen && !initialValues) {
+      setFormData({
+        patientName: '',
+        refNo: '',
+        uhid: '',
+        surgeryName: '',
+        date: '',
+        time: ''
+      });
+      setSearchQuery('');
+    }
+  }, [isOpen, initialValues]);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<Array<{ id: number; clinicRefNo: string; name: string }>>([]);
+  const [suggestions, setSuggestions] = useState<Array<{ id: number; clinicRefNo: string; chb?: string; name: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+  const [searchType, setSearchType] = useState('clinicRefNo');
 
   // Add debounce function
   const debounce = (func: Function, wait: number) => {
@@ -48,21 +75,18 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
       setSuggestions([]);
       return;
     }
-
     try {
-      const response = await fetch(`/patients/search-suggestions?query=${encodeURIComponent(query)}`, {
+      const response = await fetch(`/patients/search-suggestions?query=${encodeURIComponent(query)}&type=${encodeURIComponent(searchType)}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
         },
       });
-
       const data = await response.json();
       setSuggestions(data);
       setShowSuggestions(true);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
       setSuggestions([]);
     }
   };
@@ -71,8 +95,8 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
   const debouncedFetchSuggestions = debounce(fetchSuggestions, 300);
 
   // Add handleSuggestionClick function
-  const handleSuggestionClick = async (suggestion: { id: number; clinicRefNo: string; name: string }) => {
-    setSearchQuery(suggestion.clinicRefNo);
+  const handleSuggestionClick = async (suggestion: { id: number; clinicRefNo: string; chb?: string; name: string }) => {
+    setSearchQuery(searchType === 'clinicRefNo' ? suggestion.clinicRefNo : searchType === 'chb' ? (suggestion.chb || '') : suggestion.name);
     setShowSuggestions(false);
     setIsLoadingSearch(true);
 
@@ -89,8 +113,8 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
       if (response.ok) {
         setFormData(prev => ({
           ...prev,
-          ref_no: patientData.clinicRefNo,
-          patient_name: `${patientData.firstName} ${patientData.lastName}`,
+          refNo: patientData.clinicRefNo,
+          patientName: `${patientData.firstName} ${patientData.lastName}`,
           uhid: patientData.uhid || ''
         }));
       }
@@ -107,13 +131,13 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
     setIsSubmitting(true);
 
     try {
-      await onSubmit(formData);
+      await onSubmit(formData as Surgery);
       // Reset form and close modal on success
       setFormData({
-        patient_name: '',
-        ref_no: '',
+        patientName: '',
+        refNo: '',
         uhid: '',
-        surgery_name: '',
+        surgeryName: '',
         date: '',
         time: ''
       });
@@ -129,7 +153,7 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg p-6 w-full max-w-xl min-w-[400px]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Schedule Surgery</h2>
           <button
@@ -150,42 +174,65 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
+          <div className="mb-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Search Patient
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  debouncedFetchSuggestions(e.target.value);
+            <div className="flex items-center gap-2 ">
+              <select
+                value={searchType}
+                onChange={e => {
+                  setSearchType(e.target.value);
+                  setSearchQuery('');
+                  setSuggestions([]);
+                  setShowSuggestions(false);
                 }}
-                onFocus={() => setShowSuggestions(true)}
-                placeholder="Search by Clinic Ref No..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon className="h-5 w-5 text-gray-400" />
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm "
+                style={{ minWidth: 110 }}
+              >
+                <option value="clinicRefNo">Clinic Ref No</option>
+                <option value="chb">CHB</option>
+                <option value="name">Name</option>
+              </select>
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    debouncedFetchSuggestions(e.target.value);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  placeholder={`Search by ${searchType === 'clinicRefNo' ? 'Clinic Ref No' : searchType === 'chb' ? 'CHB' : 'Patient Name'}...`}
+                  className="w-full pl-8 pr-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-gray-400" />
+                </div>
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                    {suggestions.map((suggestion) => (
+                      <div
+                        key={suggestion.id}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-xs"
+                      >
+                        <div className="font-medium text-gray-900">
+                          {searchType === 'clinicRefNo' && suggestion.clinicRefNo}
+                          {searchType === 'chb' && (suggestion.chb || '')}
+                          {searchType === 'name' && suggestion.name}
+                        </div>
+                        <div className="text-gray-500 text-xs">
+                          {searchType !== 'clinicRefNo' && `Clinic Ref: ${suggestion.clinicRefNo}`}
+                          {searchType !== 'chb' && `CHB: ${suggestion.chb || ''}`}
+                          {searchType !== 'name' && `Name: ${suggestion.name}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                {suggestions.map((suggestion) => (
-                  <div
-                    key={suggestion.id}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    <div className="font-medium text-gray-900">
-                      {suggestion.clinicRefNo}
-                    </div>
-                    <div className="text-gray-500">{suggestion.name}</div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -195,7 +242,7 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
               </label>
               <input 
                 type="text" 
-                value={formData.patient_name} 
+                value={formData.patientName} 
                 readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50" 
               />
@@ -219,10 +266,10 @@ const AddSurgeryModal: React.FC<AddSurgeryModalProps> = ({ isOpen, onClose, onSu
             </label>
             <input 
               type="text" 
-              value={formData.surgery_name} 
+              value={formData.surgeryName} 
               onChange={e => setFormData({
                 ...formData,
-                surgery_name: e.target.value
+                surgeryName: e.target.value
               })} 
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
               placeholder="Enter surgery name"

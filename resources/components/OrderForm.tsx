@@ -312,7 +312,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             setTimeout(() => {
                 newWindow.close();
                 // After printing, save to database
-                saveOrderToDatabase();
+                
             }, 100);
         } else {
             alert("Please allow pop-ups for this site.");

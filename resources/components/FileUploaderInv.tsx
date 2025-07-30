@@ -66,6 +66,30 @@ export const FileUploaderInv: React.FC<FileUploaderInvProps> = ({ patientClinicR
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      // Accept only allowed types: pdf, jpg, jpeg, png, heic
+      const allowedTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/heic',
+        'image/heif'
+      ];
+      let isAllowed = allowedTypes.includes(file.type);
+      if (!isAllowed && file.type === 'application/octet-stream') {
+        // Fallback: check extension (case-insensitive)
+        const ext = file.name.split('.').pop();
+        if (ext && ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif'].includes(ext.toLowerCase())) {
+          isAllowed = true;
+        }
+      }
+      if (!isAllowed) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid File Type',
+          text: 'Only PDF, JPG, PNG, HEIC, or HEIF files are allowed.'
+        });
+        return;
+      }
       setSelectedFile(file);
     }
   }, []);
@@ -270,14 +294,14 @@ export const FileUploaderInv: React.FC<FileUploaderInvProps> = ({ patientClinicR
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        onClick={() => document.getElementById('file-input')?.click()}
+        onClick={() => document.getElementById('file-upload-inv')?.click()}
       >
         <input
-          id="file-input"
           type="file"
-          className="hidden"
           onChange={handleFileChange}
-          accept=".pdf,.jpg,.jpeg,.png"
+          accept=".pdf,.jpg,.jpeg,.png,.heic,.heif"
+          className="hidden"
+          id="file-upload-inv"
         />
         <UploadCloudIcon size={36} className="text-blue-500 mb-2" />
         <p className="text-gray-700 font-medium mb-1">

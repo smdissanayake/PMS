@@ -30,6 +30,15 @@ Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
 });
 
+// Forgot Password API routes
+Route::post('/forgot-password/send-code', [ForgotPasswordController::class, 'sendCode']);
+Route::post('/forgot-password/verify-code', [ForgotPasswordController::class, 'verifyCode']);
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword']);
+
+Route::get('/forgot-password', function () {
+    return Inertia::render('Auth/ForgotPassword');
+});
+
 // Protected Routes - Require Authentication
 Route::middleware(['auth'])->group(function () {
     // Home page (tab switching)
@@ -152,12 +161,15 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('surgeries')->group(function () {
         Route::get('/', [SurgeryController::class, 'index']);
         Route::post('/', [SurgeryController::class, 'store']);
+        Route::put('/{id}', [SurgeryController::class, 'update']);
         Route::delete('/{id}', [SurgeryController::class, 'destroy']);    
     });
 
     // Patient Reports Routes (Moved here for clarity and consistency)
     Route::post('/api/patient-reports', [PatientReportController::class, 'store']);
     Route::get('/api/patient-reports', [PatientReportController::class, 'index']);
+    // Patient Reports file view route (public for direct file viewing)
+    Route::get('/api/patient-reports/{id}/file', [App\Http\Controllers\Api\PatientReportController::class, 'file']);
 
     // Surgery Notes Routes (Moved here for clarity and consistency)
     Route::post('/api/surgery-notes', [SurgeryNoteController::class, 'store']);
@@ -191,14 +203,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/patient-reports/statistics', [PatientReportController::class, 'statistics']);
 
     Route::put('/patients/{id}', [PatientController::class, 'update']);
-});
-
-// Forgot Password API routes
-Route::post('/forgot-password/send-code', [ForgotPasswordController::class, 'sendCode']);
-Route::post('/forgot-password/verify-code', [ForgotPasswordController::class, 'verifyCode']);
-Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword']);
-
-Route::get('/forgot-password', function () {
-    return Inertia::render('Auth/ForgotPassword');
 });
 

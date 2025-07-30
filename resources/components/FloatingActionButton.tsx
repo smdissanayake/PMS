@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { PlusIcon, BedIcon, FileTextIcon, ClipboardIcon, UserPlusIcon, XIcon } from 'lucide-react';
-const FloatingActionButton = () => {
+interface FloatingActionButtonProps {
+  onTabChange: (tab: string) => void;
+}
+const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ onTabChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleMenu = () => {
@@ -21,23 +24,27 @@ const FloatingActionButton = () => {
   const actions = [{
     icon: <BedIcon size={16} />,
     label: 'Admit to Ward',
-    color: 'bg-blue-500'
+    color: 'bg-blue-500',
+    tab: 'ward',
   }, {
     icon: <FileTextIcon size={16} />,
     label: 'Add Surgery Note',
-    color: 'bg-green-500'
+    color: 'bg-green-500',
+    tab: 'surgery',
   }, {
     icon: <ClipboardIcon size={16} />,
     label: 'Create Order',
-    color: 'bg-purple-500'
+    color: 'bg-purple-500',
+    tab: 'orders',
   }, {
     icon: <UserPlusIcon size={16} />,
     label: 'Refer Patient',
-    color: 'bg-orange-500'
+    color: 'bg-orange-500',
+    tab: 'history',
   }];
   return <div className="fixed bottom-6 right-6" ref={menuRef}>
       {isOpen && <div className="absolute bottom-16 right-0 bg-white rounded-lg shadow-lg overflow-hidden mb-2 w-48 transition-all duration-200 ease-in-out">
-          {actions.map((action, index) => <button key={index} className="flex items-center w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors">
+          {actions.map((action, index) => <button key={index} className="flex items-center w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors" onClick={() => { onTabChange(action.tab); setIsOpen(false); }}>
               <span className={`${action.color} p-1 rounded text-white mr-3`}>
                 {action.icon}
               </span>
