@@ -25,7 +25,7 @@ class InvestigationReportController extends Controller
             $validator = Validator::make($request->all(), [
                 'medical_order_id' => 'required|exists:medical_orders,id',
                 'patient_clinic_ref_no' => 'required|exists:patients,clinicRefNo',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic,heif|max:20480', // 20MB max, allow heic/heif
                 'notes' => 'nullable|string'
             ]);
 
@@ -139,7 +139,16 @@ class InvestigationReportController extends Controller
                 ], 404);
             }
 
-            return response()->download($filePath, $report->file_name);
+            $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $mimeType = match($extension) {
+                'pdf' => 'application/pdf',
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'heic', 'heif' => 'image/heic',
+                default => 'application/octet-stream',
+            };
+
+            return response()->download($filePath, $report->file_name, ['Content-Type' => $mimeType]);
         } catch (\Exception $e) {
             Log::error('Error downloading investigation report:', [
                 'message' => $e->getMessage(),
@@ -198,13 +207,8 @@ class InvestigationReportController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($report) {
-                    // Generate thumbnail URL based on file type and environment
-                    $isLocal = app()->environment('local');
-                    if ($isLocal) {
-                        $baseUrl = asset('storage/' . $report->file_path);
-                    } else {
-                        $baseUrl = 'https://srv600-files.hstgr.io/135454c86045ad25/files/public_html/public/storage/' . $report->file_path;
-                    }
+                    // Always use Laravel asset() helper for URLs
+                    $baseUrl = asset('storage/' . $report->file_path);
 
                     $thumbnailUrl = null;
                     if (in_array($report->file_type, ['jpg', 'jpeg', 'png'])) {

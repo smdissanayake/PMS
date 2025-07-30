@@ -66,6 +66,27 @@ const RecentReportsSection = () => {
                 {report.status === 're-upload' && <UploadIcon className="w-3.5 h-3.5 mr-1 inline-block" />}
                 {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
               </span>
+              {/* View button for complete reports */}
+              {report.status === 'complete' && (
+                <button
+                  className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  onClick={() => {
+                    // Assume file URL is /storage/reports/{id}.{type}
+                    const ext = report.type.toLowerCase();
+                    const fileUrl = `/storage/reports/${report.id}.${ext}`;
+                    if (ext === 'pdf') {
+                      window.open(fileUrl, '_blank');
+                    } else if (["jpg", "jpeg", "png", "heic", "heif"].includes(ext)) {
+                      window.open(fileUrl, '_blank');
+                    } else {
+                      window.open(fileUrl, '_blank');
+                    }
+                  }}
+                  title="View Report"
+                >
+                  View
+                </button>
+              )}
               {report.status === 're-upload' && <button className="p-1 text-gray-400 hover:text-gray-500">
                   <XIcon className="w-4 h-4" />
                 </button>}

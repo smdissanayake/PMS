@@ -48,7 +48,7 @@ class PatientReportController extends Controller
         try {
             $request->validate([
                 'clinic_ref_no' => 'required|string|max:255',
-                'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // Added jpeg and proper PNG mime type
+                'file' => 'required|file|mimes:pdf,jpg,jpeg,png,heic|max:10240', // Allow up to 10MB
             ]);
             
             $file = $request->file('file');
@@ -146,5 +146,30 @@ class PatientReportController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+    * Serve the patient report file for viewing or download
+    */
+    public function file($id)
+    {
+        $report = PatientReport::findOrFail($id);
+        $filePath = storage_path('app/public/' . $report->file_path);
+        if (!file_exists($filePath)) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeType = match($extension) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'heic', 'heif' => 'image/heic',
+            default => 'application/octet-stream',
+        };
+        // For browser view, use inline; for download, use attachment
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"',
+        ]);
     }
 }

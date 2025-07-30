@@ -22,6 +22,7 @@ const SurgeryCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSurgery, setEditingSurgery] = useState<Surgery | null>(null);
 
   // Fetch surgeries from the database
   const fetchSurgeries = async () => {
@@ -67,6 +68,15 @@ const SurgeryCalendar = () => {
 
   // Handle adding new surgery
   const handleAddSurgery = async (surgeryData: Omit<Surgery, 'id'>) => {
+    // Convert camelCase to snake_case for backend compatibility
+    const payload = {
+      patient_name: surgeryData.patientName,
+      ref_no: surgeryData.refNo,
+      uhid: surgeryData.uhid,
+      surgery_name: surgeryData.surgeryName,
+      date: surgeryData.date,
+      time: surgeryData.time,
+    };
     try {
       const response = await fetch('/surgeries', {
         method: 'POST',
@@ -75,7 +85,7 @@ const SurgeryCalendar = () => {
           'Accept': 'application/json',
           'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
         },
-        body: JSON.stringify(surgeryData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -93,26 +103,53 @@ const SurgeryCalendar = () => {
 
   // Handle editing surgery
   const handleEditSurgery = async (id: string, updatedData: Partial<Surgery>) => {
-    try {
-      const response = await fetch(`/surgeries/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-        },
-        body: JSON.stringify(updatedData),
-      });
+    setEditingSurgery({
+      id,
+      patientName: updatedData.patientName || '',
+      refNo: updatedData.refNo || '',
+      uhid: updatedData.uhid || '',
+      surgeryName: updatedData.surgeryName || '',
+      date: updatedData.date || '',
+      time: updatedData.time || '',
+    });
+    setIsAddModalOpen(true);
+  };
 
-      if (!response.ok) {
-        throw new Error('Failed to update surgery');
+  const handleModalSubmit = async (formData: any) => {
+    if (editingSurgery) {
+      // Edit mode
+      const payload = {
+        patient_name: formData.patientName,
+        ref_no: formData.refNo,
+        uhid: formData.uhid,
+        surgery_name: formData.surgeryName,
+        date: formData.date,
+        time: formData.time,
+      };
+      try {
+        const response = await fetch(`/surgeries/${editingSurgery.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update surgery');
+        }
+        await fetchSurgeries();
+        setIsAddModalOpen(false);
+        setEditingSurgery(null);
+      } catch (error) {
+        console.error('Error updating surgery:', error);
+        alert('Failed to update surgery. Please try again.');
       }
-
-      // Refresh the surgeries list
-      await fetchSurgeries();
-    } catch (error) {
-      console.error('Error updating surgery:', error);
-      alert('Failed to update surgery. Please try again.');
+    } else {
+      // Add mode
+      await handleAddSurgery(formData);
+      setIsAddModalOpen(false);
     }
   };
 
@@ -255,10 +292,11 @@ const SurgeryCalendar = () => {
           />
         </div>
       </div>
-      <AddSurgeryModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        onSubmit={handleAddSurgery} 
+      <AddSurgeryModal
+        isOpen={isAddModalOpen}
+        onClose={() => { setIsAddModalOpen(false); setEditingSurgery(null); }}
+        onSubmit={handleModalSubmit}
+        initialValues={editingSurgery}
       />
     </div>
   );

@@ -40,7 +40,7 @@ export const Sidebar = ({
     },
     {
       id: "sergerycalendar",
-      label: "surgery Calendar",
+      label: "Surgery Calendar",
       icon: <CalendarIcon size={20} />,
     },
     {

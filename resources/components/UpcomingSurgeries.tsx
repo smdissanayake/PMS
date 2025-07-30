@@ -84,12 +84,6 @@ const UpcomingSurgeries: React.FC<UpcomingSurgeriesProps> = ({
                 <p>Surgery: {surgery.surgeryName}</p>
                 <p>Time: {formatTime(surgery.time)}</p>
               </div>
-              <button
-                onClick={() => onView(surgery.id)}
-                className="text-sm text-blue-600 hover:text-blue-800"
-              >
-                View Patient Details →
-              </button>
             </div>
           ))
         )}

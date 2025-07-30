@@ -13,12 +13,12 @@ class SurgeryController extends Controller
     {
         try {
             $validated = $request->validate([
-                'patient_name' => 'required|string',
-                'ref_no' => 'required|string',
-                'uhid' => 'required|string',
-                'surgery_name' => 'required|string',
-                'date' => 'required|date',
-                'time' => 'required|date_format:H:i',
+                'patient_name' => 'nullable|string',
+                'ref_no' => 'nullable|string',
+                'uhid' => 'nullable|string',
+                'surgery_name' => 'nullable|string',
+                'date' => 'nullable|date',
+                'time' => 'nullable|date_format:H:i',
             ]);
 
             // Check for existing surgery
@@ -36,12 +36,12 @@ class SurgeryController extends Controller
             }
 
             $surgeryId = DB::table('surgeries')->insertGetId([
-                'patient_name' => $validated['patient_name'],
-                'ref_no' => $validated['ref_no'],
-                'uhid' => $validated['uhid'],
-                'surgery_name' => $validated['surgery_name'],
-                'date' => $validated['date'],
-                'time' => $validated['time'],
+                'patient_name' => $validated['patient_name'] ?? null,
+                'ref_no' => $validated['ref_no'] ?? null,
+                'uhid' => $validated['uhid'] ?? null,
+                'surgery_name' => $validated['surgery_name'] ?? null,
+                'date' => $validated['date'] ?? null,
+                'time' => $validated['time'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -90,6 +90,54 @@ class SurgeryController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to fetch surgeries',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'patient_name' => 'nullable|string',
+                'ref_no' => 'nullable|string',
+                'uhid' => 'nullable|string',
+                'surgery_name' => 'nullable|string',
+                'date' => 'nullable|date',
+                'time' => 'nullable|date_format:H:i',
+            ]);
+
+            $surgery = DB::table('surgeries')->where('id', $id)->first();
+            if (!$surgery) {
+                return response()->json([
+                    'message' => 'Surgery not found'
+                ], 404);
+            }
+
+            DB::table('surgeries')->where('id', $id)->update([
+                'patient_name' => $validated['patient_name'] ?? null,
+                'ref_no' => $validated['ref_no'] ?? null,
+                'uhid' => $validated['uhid'] ?? null,
+                'surgery_name' => $validated['surgery_name'] ?? null,
+                'date' => $validated['date'] ?? null,
+                'time' => $validated['time'] ?? null,
+                'updated_at' => now(),
+            ]);
+
+            $updatedSurgery = DB::table('surgeries')->where('id', $id)->first();
+
+            return response()->json([
+                'message' => 'Surgery updated successfully',
+                'surgery' => $updatedSurgery
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update surgery',
                 'error' => $e->getMessage()
             ], 500);
         }
